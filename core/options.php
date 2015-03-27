@@ -54,6 +54,9 @@ function add_option( $option , $value = null ) {
  */
 function update_option( $option, $value = null ) {
 
+    // On vide le cache de l'option en paramètre
+    remove_cache( $option );
+
     if ( is_array($option) ) {
 
         foreach ( $option as $k => $v ) {
@@ -79,14 +82,22 @@ function update_option( $option, $value = null ) {
  *
  * @return string
  */
-function get_option($option) {
+function get_option( $option ) {
 
     // On redefinit la variable $option
     $option = (string) $option;
 
-    $option_name = xmldb('options')->select( '[name="'.$option.'"]' , null );
+    if ( !get_cache( $option ) ) {
 
-    return isset( $option_name['value'] ) ? $option_name['value'] : '';
+        $option_name = xmldb('options')->select( '[name="'.$option.'"]' , null );
+
+        if ( isset ( $option_name['value'] ) ){
+            return set_cache( $option , $option_name['value'] );
+        } else {
+            return '';
+        }
+    }
+    return get_cache( $option );
 }
 
 
@@ -103,6 +114,9 @@ function remove_option($option) {
 
     // On redefinit la variable $option
     $option = (string) $option;
+
+    // On vide le cache de l'option en paramètre
+    remove_cache( $option );
 
     return xmldb('options')->deleteWhere( '[name="'.$option.'"]' );
 }
@@ -126,5 +140,3 @@ function option_exists($option) {
 
     return ( count( xmldb('options')->select('[name="'.$option.'"]', null ) ) > 0) ? true : false;
 }
-
-

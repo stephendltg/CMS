@@ -66,7 +66,7 @@ function set_cache( $key , $data = null , $group ='default' ) {
         $object_cache[$group][$key] = $data;
         // On trie le cache
         ksort( $object_cache[$group] );
-        return true;
+        return $data;
     }
     return false;
 }
