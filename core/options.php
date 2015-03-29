@@ -54,16 +54,15 @@ function add_option( $option , $value = null ) {
  */
 function update_option( $option, $value = null ) {
 
-    // On vide le cache de l'option en paramètre
-    remove_cache( $option );
-
     if ( is_array($option) ) {
 
         foreach ( $option as $k => $v ) {
+            remove_cache ( $k );
             xmldb('options')->updateWhere( '[name="'.$k.'"]' , array('value' => $v) );
         }
 
     } else {
+        remove_cache( $option );
         return xmldb('options')->updateWhere( '[name="'.$option.'"]' , array('value' => $value) );
     }
 }

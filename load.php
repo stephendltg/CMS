@@ -35,7 +35,7 @@ debug_mode();
 
 //echo wp_guess_url();
 
-// On charge les fonctions primordiales ( Hook, et DataBase )
+// On charge les fonctions primordiales ( Hook, cache et DataBase )
 require( ABSPATH . INC . '/hook.php' );
 require( ABSPATH . INC . '/cache.php' );
 require( ABSPATH . INC . '/xmldb.php' );

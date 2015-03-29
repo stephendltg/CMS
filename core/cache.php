@@ -10,10 +10,49 @@
 
 
 // On initialise les transcients global
-global $object_cache ;
+global $object_cache, $object_merge ;
 
 if ( ! isset( $object_cache ) )
 	$object_cache = array();
+
+if ( ! isset( $object_merge ) )
+	$object_merge = array();
+
+
+/**
+ * Chargement du cache temporaire ( durée de vie 1 jour, objectif limiter l'accès disque dur )
+ *
+ */
+
+define ('FILE_CACHED', CONTENT_DIR . '/cache_' . md5( HOME ) );
+
+if ( file_exists( FILE_CACHED ) ){
+    if ( ( time() - filemtime ( FILE_CACHED ) ) < DAY_IN_SECONDS ) {
+        $object_merge = $object_cache = json_decode( file_get_contents ( FILE_CACHED ), true );
+    }else {
+        unlink ( FILE_CACHED );
+    }
+}
+add_action ( 'muplugins_loaded' , 'save_cache' );
+
+
+
+/**
+ * function save_cache
+ *
+ */
+function save_cache() {
+
+    global $object_cache, $object_merge ;
+
+    $prepare_object_cache = json_encode ( $object_cache );
+
+    if ( $prepare_object_cache != json_encode ( $object_merge ) ){
+        $file = fopen( FILE_CACHED , 'w+');
+        fwrite ( $file, $prepare_object_cache );
+        fclose( $file );
+    }
+}
 
 
 /**
