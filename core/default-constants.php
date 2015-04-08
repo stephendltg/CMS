@@ -45,7 +45,7 @@ function init_constants() {
 function plugin_directory_constants() {
 
     if ( !defined('HOME') )
-		define( 'HOME', get_option('sitename') );
+		define( 'HOME', get_option('siteurl') );
 
 	if ( !defined('PLUGIN_DIR') )
 		define( 'PLUGIN_DIR', CONTENT_DIR . '/plugins' );
@@ -82,42 +82,35 @@ function theme_directory_constants() {
 function wp_cookie_constants() {
 
 	if ( !defined( 'COOKIEHASH' ) ) {
-		$siteurl = get_option( 'siteurl' );
-		if ( $siteurl )
-			define( 'COOKIEHASH', md5( $siteurl ) );
-		else
-			define( 'COOKIEHASH', '' );
+        define( 'COOKIEHASH', md5( HOME ) );
 	}
 
 	if ( !defined('USER_COOKIE') )
-		define('USER_COOKIE', 'wordpressuser_' . COOKIEHASH);
+		define('USER_COOKIE', 'cmsuser_' . COOKIEHASH);
 
 	if ( !defined('PASS_COOKIE') )
-		define('PASS_COOKIE', 'wordpresspass_' . COOKIEHASH);
+		define('PASS_COOKIE', 'cmsspass_' . COOKIEHASH);
 
 	if ( !defined('AUTH_COOKIE') )
-		define('AUTH_COOKIE', 'wordpress_' . COOKIEHASH);
+		define('AUTH_COOKIE', 'cms_' . COOKIEHASH);
 
 	if ( !defined('SECURE_AUTH_COOKIE') )
-		define('SECURE_AUTH_COOKIE', 'wordpress_sec_' . COOKIEHASH);
+		define('SECURE_AUTH_COOKIE', 'cms_sec_' . COOKIEHASH);
 
 	if ( !defined('LOGGED_IN_COOKIE') )
-		define('LOGGED_IN_COOKIE', 'wordpress_logged_in_' . COOKIEHASH);
+		define('LOGGED_IN_COOKIE', 'cms_logged_in_' . COOKIEHASH);
 
 	if ( !defined('TEST_COOKIE') )
-		define('TEST_COOKIE', 'wordpress_test_cookie');
-
-	if ( !defined('COOKIEPATH') )
-		define('COOKIEPATH', preg_replace('|https?://[^/]+|i', '', get_option('home') . '/' ) );
+		define('TEST_COOKIE', 'cms_test_cookie');
 
 	if ( !defined('SITECOOKIEPATH') )
-		define('SITECOOKIEPATH', preg_replace('|https?://[^/]+|i', '', get_option('siteurl') . '/' ) );
+		define('SITECOOKIEPATH', preg_replace('|https?://[^/]+|i', '', HOME . '/' ) );
 
 	if ( !defined('ADMIN_COOKIE_PATH') )
 		define( 'ADMIN_COOKIE_PATH', SITECOOKIEPATH . 'wp-admin' );
 
 	if ( !defined('PLUGINS_COOKIE_PATH') )
-		define( 'PLUGINS_COOKIE_PATH', preg_replace('|https?://[^/]+|i', '', WP_PLUGIN_URL)  );
+		define( 'PLUGINS_COOKIE_PATH', preg_replace('|https?://[^/]+|i', '', PLUGIN_URL)  );
 
 	if ( !defined('COOKIE_DOMAIN') )
 		define('COOKIE_DOMAIN', false);

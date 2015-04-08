@@ -92,8 +92,14 @@ function debug_mode() {
  */
 function cms_not_installed() {
 
-    if ( !defined ('XMLDB') || option_exists('sitename') == false ) {
-        // On redirige vers setup-config
+    if ( !defined ('XMLDB') || option_exists('siteurl') == false ) {
+        if ( file_exists( ABSPATH . INC . '/setup-config.php' ) ) {
+            $path = guess_url() . '/core/setup-config.php';
+            header ('Location: '.$path );
+            die();
+        } else {
+            cms_maintenance( '503' , 'HTTP Error 503: Service indisponible' , 'Votre CMS est mal configuré et des fichiers importants sont manquants !' );
+        }
     }
 }
 
