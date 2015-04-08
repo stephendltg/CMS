@@ -6,13 +6,117 @@
  * @package     CMS
  * @subpackage  xmldb
  *
+ * @author      Romanenko Sergey / Awilum <awilum@msn.com>
+ * @copyright   2012-2014 Romanenko Sergey / Awilum <awilum@msn.com>
  */
+
+
+/***********************************************/
+/*                     XML                     */
+/***********************************************/
+
+/**
+ * Create safe xml data. Removes dangerous characters for string.
+ *
+ *  <code>
+ *      $xml_safe = XML_safe($xml_unsafe);
+ *  </code>
+ *
+ * @return string
+ */
+function esc_xml( $str , $flag = true ) {
+
+    // On redefini les variables
+    $str  = (string) $str;
+    $flag = (bool) $flag;
+
+    // On supprime les caractères invisibles
+    $non_displayables = array('/%0[0-8bcef]/', '/%1[0-9a-f]/', '/[\x00-\x08]/', '/\x0b/', '/\x0c/', '/[\x0e-\x1f]/');
+    do {
+        $cleaned = $str;
+        $str = preg_replace( $non_displayables , '' , $str );
+    } while ( $cleaned != $str );
+
+    // htmlspecialchars
+    if ($flag) $str = htmlspecialchars( $str , ENT_QUOTES , 'utf-8' );
+
+    return $str;
+}
 
 
 /**
- * Classe Table
+ * Get XML file
  *
+ *  <code>
+ *      $xml_file = XML_loadFile('path/to/file.xml');
+ *  </code>
+ *
+ * @return array
  */
+function load_xml( $file , $force = false ) {
+
+    // On redefini les variables
+    $file  = (string) $file;
+    $force = (bool) $force;
+
+    // For CMS API XML file force method
+    if ($force) {
+        $xml = file_get_contents( $file );
+        $data = simplexml_load_string( $xml );
+        return $data;
+    } else {
+        if ( file_exists( $file ) && is_file( $file ) ) {
+            $xml = file_get_contents( $file );
+            $data = simplexml_load_string( $xml );
+            return $data;
+        } else {
+            return false;
+        }
+    }
+}
+
+
+
+/***********************************************/
+/*                     DB                      */
+/***********************************************/
+
+/**
+ * Création d'une data base
+ *
+ * @return boolean
+ */
+function create( $db_name, $chmod = 0775 ) {
+
+    // On redefinit la variable
+    $db_name = (string) $db_name;
+
+    if ( is_dir( ABASTH . '/' . $db_name ) ) return false;
+    return mkdir( ABASTH . '/' . $db_name, $chmod );
+}
+
+
+
+/***********************************************/
+/*                     New Table               */
+/***********************************************/
+
+
+ /*
+ * Déclaration d'une nouvelle classe 'table'
+ *
+ * @return new table
+ */
+function xmldb( $table_name ){
+    return new Table( $table_name );
+}
+
+
+/***********************************************/
+/*                     Class Table               */
+/***********************************************/
+
+
 class Table
 {
     /**
@@ -172,7 +276,7 @@ class Table
 
         // Load table
         if (file_exists(Table::$tables_dir . '/' . $table_name.'.table.xml') && is_file(Table::$tables_dir . '/' . $table_name.'.table.xml')) {
-            $data = array('xml_object'   => XML_loadFile(Table::$tables_dir . '/' . $table_name.'.table.xml'),
+            $data = array('xml_object'   => load_xml(Table::$tables_dir . '/' . $table_name.'.table.xml'),
                           'xml_filename' => Table::$tables_dir . '/' . $table_name.'.table.xml');
 
             return $data;
@@ -395,7 +499,7 @@ class Table
             $inc_upd = $inc + 1;
 
             // Add record
-            $node = $this->table['xml_object']->addChild(XML_safe($this->name));
+            $node = $this->table['xml_object']->addChild(esc_xml($this->name));
 
             // Update autoincrement
             Table::_updateWhere($this->table, "options", array('autoincrement' => $inc_upd));
@@ -416,7 +520,7 @@ class Table
 
                 // User fields
                 foreach ($fields as $key => $value) {
-                    $node->addChild($key, XML_safe($value));
+                    $node->addChild($key, esc_xml($value));
                 }
             }
 
@@ -682,7 +786,7 @@ class Table
                 foreach ($fields as $key => $value) {
                     // Else: Strict Mode Error
                     // Creating default object from empty value
-                    @$xml_arr->$key = XML_safe($value, false);
+                    @$xml_arr->$key = esc_xml($value, false);
                 }
             }
 
@@ -744,7 +848,7 @@ class Table
                     unset($xml_arr->$key);
 
                     // And add new one
-                    $xml_arr->addChild($key, XML_safe($value, false));
+                    $xml_arr->addChild($key, esc_xml($value, false));
 
                 }
             }
@@ -829,7 +933,7 @@ class Table
         // If its exists then delete it
         if (count($fields) !== 0) {
             foreach ($fields as $key => $value) {
-                $xml_arr->$key = XML_safe($value, false);
+                $xml_arr->$key = esc_xml($value, false);
             }
         }
 

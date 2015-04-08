@@ -27,7 +27,7 @@ function check_php_versions() {
                 ' de PHP.</p><p>Ce cms a besoin au minimum de la version 5.3 .</p>';
 
         // Appel page maintenance
-        maintenance ( 'error PHP', 'details error:', $msg);
+        cms_maintenance( 'error PHP', 'details error:', $msg);
 	}
 }
 
@@ -92,69 +92,8 @@ function debug_mode() {
  */
 function cms_not_installed() {
 
-    if ( !defined ('XMLDB') || !file_exists( XMLDB .'/options.table.xml') ) {
-
-        // Tableau d'erreurs
-        $errors = array();
-
-        // Repertoire à analyser
-        $dir_array = array('content');
-
-        // On vérife que le mod rewrite existe
-        if ( function_exists('apache_get_modules') ) {
-            if ( ! in_array( 'mod_rewrite', apache_get_modules() ) ) {
-                $errors['mod_rewrite'] = ' n\'est pas installé !';
-            }
-        }
-        else {
-            $errors['apache'] = ' est absent!';
-        }
-
-        // On vérifie la persmission du repertoire du cms
-        if ( ! is_writable(ABSPATH) ) {
-            $errors[ ABSPATH ] = ' n\'est pas accessible en écriture, il sera impossible de créer un fichier config !';
-        }
-
-
-        // On vérifie la persmission du fichier config
-        if ( file_exists ( ABSPATH . 'config.php' ) && !is_writable('config.php') ) {
-            $errors['config.php'] = ' n\'est pas accessible en écriture !';
-        }
-
-        // On vérifie la permission du fichier htaccess
-        if ( file_exists('.htacess') && !is_writable('.htaccess') ) {
-        $errors['htaccess'] = ' n\'est pas accessible en écriture !';
-        }
-
-        // On vérifier les permissions des repertoire à analyser
-        foreach ( $dir_array as $dir ) {
-            if ( !is_writable($dir.'/') ) {
-                $errors[$dir] = ' n\'est pas accessible en écriture !';
-            }
-        }
-
-        // Si le serveur est bien configurer on peut installer le CMS sinon on informe l'utilisateur
-        if ( empty($errors) ) {
-            if ( file_exists('core/setup-config.php') ) {
-            $host  = $_SERVER['HTTP_HOST'];
-            $uri   = rtrim( dirname( $_SERVER['PHP_SELF'] ) , '/\\' );
-            header("Location: http://$host$uri/core/setup-config.php");
-            die();
-            } else {
-                maintenance ('Service indisponible', 'Details error :', 'Votre site est corrompu !');
-            }
-
-        }
-
-        // Si le serveur n'est pas bien configurer on met le site en maintenance avec les infos adéquat
-        $msg ='<ul>';
-        foreach( $errors as $k=>$v){
-            $msg .= "<li>$k : $v</li>";
-        }
-        $msg .='</ul>';
-
-        // Appel page maintenance
-        maintenance ( 'Installation abort', 'Details error :', $msg );
+    if ( !defined ('XMLDB') || option_exists('sitename') == false ) {
+        // On redirige vers setup-config
     }
 }
 
@@ -166,17 +105,18 @@ function cms_not_installed() {
  */
 function get_mu_plugins() {
 	$mu_plugins = array();
+
 	if ( !is_dir( MU_PLUGIN_DIR ) )
+        return $mu_plugins;
+	if ( !$dh = opendir( MU_PLUGIN_DIR ) )
 		return $mu_plugins;
-	if ( ! $dh = opendir( MU_PLUGIN_DIR ) )
-		return $mu_plugins;
+
 	while ( ( $plugin = readdir( $dh ) ) !== false ) {
 		if ( substr( $plugin, -4 ) == '.php' )
 			$mu_plugins[] = MU_PLUGIN_DIR . '/' . $plugin;
 	}
 	closedir( $dh );
-	sort( $mu_plugins );
-
+	sort( $mu_plugins ); // On charge les mu plugins par ordre alphabétique
 	return $mu_plugins;
 }
 
@@ -185,7 +125,7 @@ function get_mu_plugins() {
  * Mise en maintenance de CMS
  *
  */
-function maintenance( $title = 'maintenance' , $subtitle='Site en maintenance', $message = 'Oups, Nous sommes désolé !' ) {
+function cms_maintenance( $title = 'maintenance' , $subtitle='Site en maintenance', $message = 'Oups, Nous sommes désolé !' ) {
 
     $protocol = $_SERVER["SERVER_PROTOCOL"];
 	if ( 'HTTP/1.1' != $protocol && 'HTTP/1.0' != $protocol )

@@ -1,4 +1,4 @@
-<?php
+<?php defined('ABSPATH') or die('No direct script access.');
 /**
  * CHARGEMENT DU CMS
  *
@@ -8,20 +8,14 @@
  * @version 1
  */
 
-
-// On définit le coeur de CMS
-define( 'INC', 'core' );
-
 // On inclus les fichier pour l'initialisation du CMS.
 require( ABSPATH . INC . '/default-constants.php' );
-require( ABSPATH . INC . '/load-functions.php' );
 
 // On initialise les constantes: WP_DEBUG, WP_CONTENT_DIR.
 init_constants();
 
 // On vérifie la version de PHP.
 check_php_versions();
-
 
 // Mise à l'heure
 setting_the_time();
@@ -39,7 +33,6 @@ debug_mode();
 require( ABSPATH . INC . '/hook.php' );
 require( ABSPATH . INC . '/cache.php' );
 require( ABSPATH . INC . '/xmldb.php' );
-require( ABSPATH . INC . '/xml.php' );
 require( ABSPATH . INC . '/options.php' );
 
 // Run the installer if WordPress is not installed.
@@ -53,7 +46,6 @@ cms_not_installed();
 
 // On définit les constantes pour plugins
 plugin_directory_constants();
-
 
 // On charge les must plugins ( plugins non désactivable ).
 foreach ( get_mu_plugins() as $mu_plugin ) {

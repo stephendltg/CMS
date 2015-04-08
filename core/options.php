@@ -9,8 +9,6 @@
  */
 
 
-
-
 /**
  * Ajoute une option
  *
@@ -34,7 +32,7 @@ function add_option( $option , $value = null ) {
 
     } else {
 
-        $_option = $options->select('[name="'.$option.'"]', null);
+        $_option = xmldb('options')->select('[name="'.$option.'"]', null);
         if (count($_option) == 0) {
             return xmldb('options')->insert(array('name' => $option, 'value' => $value));
         }
@@ -101,7 +99,7 @@ function get_option( $option ) {
 
 
 /**
- * Supprime une option
+ * Supprimer une option
  *
  *  <code>
  *      remove_option('pages_limit');

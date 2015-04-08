@@ -24,10 +24,6 @@ function init_constants() {
 	if ( !defined('DEBUG') )
 		define( 'DEBUG', false );
 
-	/**
-	 * Private
-	 */
-
     /** Definit l'encodage des documents. */
     if ( !defined('CHARSET') )
         define('CHARSET', 'UTF-8');
@@ -48,20 +44,20 @@ function init_constants() {
  */
 function plugin_directory_constants() {
 
-    if ( !defined('CONTENT_URL') )
-		define( 'CONTENT_URL', HOME . '/content');
+    if ( !defined('HOME') )
+		define( 'HOME', get_option('sitename') );
 
 	if ( !defined('PLUGIN_DIR') )
 		define( 'PLUGIN_DIR', CONTENT_DIR . '/plugins' );
 
 	if ( !defined('PLUGIN_URL') )
-		define( 'PLUGIN_URL', CONTENT_URL . '/plugins' );
+		define( 'PLUGIN_URL', HOME . '/plugins' );
 
 	if ( !defined('MU_PLUGIN_DIR') )
 		define( 'MU_PLUGIN_DIR', CONTENT_DIR . '/mu-plugins' );
 
 	if ( !defined('MU_PLUGIN_URL') )
-		define( 'MU_PLUGIN_URL', CONTENT_URL . '/mu-plugins' );
+		define( 'MU_PLUGIN_URL', HOME . '/mu-plugins' );
 }
 
 /**
