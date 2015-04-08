@@ -24,10 +24,9 @@ if ( file_exists( ABSPATH . 'config.php') ) {
 } else {
 
     //On tente de reconstruire le fichier config
-    if ( file_exists('core/setup-config.php') ) {
-        $host  = $_SERVER['HTTP_HOST'];
-        $uri   = rtrim( dirname( $_SERVER['PHP_SELF'] ) , '/\\' );
-        header("Location: http://$host$uri/core/setup-config.php");
+    if ( file_exists( ABSPATH . INC . '/setup-config.php' ) ) {
+        $path = guess_url() . '/core/setup-config.php';
+        header ('Location: '.$path );
         die();
     }
     else {

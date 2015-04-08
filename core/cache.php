@@ -1,7 +1,7 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Gestion du cache du CMS (limiter les requêtes xml)
+ * Gestion du cache du CMS (limiter les requêtes xml donc l'accès disque)
  *
  * @package     cms
  * @subpackage  cache

@@ -2,6 +2,10 @@
 
 define( 'ABSPATH', dirname (dirname( __FILE__ ) ) . '/' );
 
+/** On inclut les fonctions primordiales  */
+require( ABSPATH . '/core/load-functions.php' );
+
+
 
 // Gestion des erreurs
 $errors = array();
@@ -54,7 +58,6 @@ foreach ( $dir_array as $dir ) {
 
 // On applique le contexte du document
 header( 'Content-Type: text/html; charset=utf-8' );
-
 
 if ( empty($errors) ) {
 

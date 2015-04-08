@@ -251,3 +251,38 @@ function magic_quotes() {
         array_walk_recursive($_REQUEST, 'stripslashesGPC');
     }
 }
+
+
+
+/**
+ * Guess the URL for the site.
+ *
+ *
+ * @return string The guessed URL.
+ */
+function guess_url() {
+	if ( defined('HOME') && '' != HOME ) {
+		$url = HOME;
+	} else {
+		$abspath_fix = str_replace( '\\', '/', ABSPATH );
+		$script_filename_dir = dirname( $_SERVER['SCRIPT_FILENAME'] );
+
+		if ( $script_filename_dir . '/' == $abspath_fix ) {
+			$path = preg_replace( '#/[^/]*$#i', '', $_SERVER['PHP_SELF'] );
+		} else {
+			if ( false !== strpos( $_SERVER['SCRIPT_FILENAME'], $abspath_fix ) ) {
+				$directory = str_replace( ABSPATH, '', $script_filename_dir );
+				$path = preg_replace( '#/' . preg_quote( $directory, '#' ) . '/[^/]*$#i', '' , $_SERVER['REQUEST_URI'] );
+			} elseif ( false !== strpos( $abspath_fix, $script_filename_dir ) ) {
+				$subdirectory = substr( $abspath_fix, strpos( $abspath_fix, $script_filename_dir ) + strlen( $script_filename_dir ) );
+				$path = preg_replace( '#/[^/]*$#i', '' , $_SERVER['REQUEST_URI'] ) . $subdirectory;
+			} else {
+				$path = $_SERVER['REQUEST_URI'];
+			}
+		}
+
+		$url = 'http://' . $_SERVER['HTTP_HOST'] . $path;
+	}
+
+	return rtrim($url, '/');
+}

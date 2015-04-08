@@ -1,7 +1,7 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Gestion du cache du CMS (limiter les requêtes xml)
+ * Gestion du cache du CMS ( Stock le cache du CMS un fichier : optimisation accès disque )
  *
  * @package     cms
  * @subpackage  cms_cache
@@ -14,7 +14,7 @@ define ('CMS_FILE_CACHED', CONTENT_DIR . '/cache_' . md5( HOME ) );
 add_action ( 'muplugins_loaded' , 'cms_load_cache' , 1 );
 add_action ( 'muplugins_loaded' , 'cms_save_cache' , 99 );
 
-/** function cms_save_cache **/
+/** function cms_load_cache **/
 function cms_load_cache() {
     if ( file_exists( CMS_FILE_CACHED ) && is_file( CMS_FILE_CACHED ) ){
         if ( ( time() - filemtime ( CMS_FILE_CACHED ) ) < DAY_IN_SECONDS ) {
