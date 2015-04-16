@@ -32,7 +32,7 @@ debug_mode();
 // On charge les fonctions primordiales ( Hook, cache et DataBase )
 require( ABSPATH . INC . '/hook.php' );
 require( ABSPATH . INC . '/cache.php' );
-//require( ABSPATH . INC . '/xmldb.php' );
+require( ABSPATH . INC . '/xmldb.php' );
 require( ABSPATH . INC . '/jsondb.php' );
 require( ABSPATH . INC . '/options.php' );
 
