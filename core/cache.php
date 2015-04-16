@@ -30,8 +30,8 @@ function get_cache( $key , $group = 'default' ) {
     global $object_cache;
 
     // On redefinit les variables
-    $key = (string) $key;
-    $group = (string) $group;
+    $key    = (string) $key;
+    $group  = (string) $group;
 
     if ( !array_key_exists( $group , $object_cache )  )
         return false;
@@ -58,8 +58,8 @@ function set_cache( $key , $data = null , $group ='default' ) {
     global $object_cache;
 
     // On redefinit les variables
-    $key = (string) $key;
-    $group = (string) $group;
+    $key    = (string) $key;
+    $group  = (string) $group;
 
     if ( isset($data) ) {
         $object_cache['autoincremente'] += 1; // Nombre d'operation sur cache
@@ -85,8 +85,8 @@ function remove_cache( $key , $group = 'default' ) {
     global $object_cache;
 
     // On redefinit les variables
-    $key = (string) $key;
-    $group = (string) $group;
+    $key    = (string) $key;
+    $group  = (string) $group;
 
     if ( !array_key_exists( $group , $object_cache )  )
         return false;
@@ -113,7 +113,7 @@ function reset_cache() {
     global $object_cache;
 
     foreach( $object_cache as $group => $value){
-        unset ($object_cache[$group]);
+        unset ( $object_cache[$group] );
     }
     return true;
 }

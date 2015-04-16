@@ -19,14 +19,22 @@
 function init_constants() {
 
 	if ( !defined('CONTENT_DIR') )
-        define('CONTENT_DIR', ABSPATH . '/content');
+        define('CONTENT_DIR', ABSPATH . 'content');
 
 	if ( !defined('DEBUG') )
 		define( 'DEBUG', false );
 
-    /** Definit l'encodage des documents. */
+    // Definit l'encodage des documents.
     if ( !defined('CHARSET') )
         define('CHARSET', 'UTF-8');
+
+    // Definit le stockage de la bd
+    if ( !defined('XMLDB') )
+		define ('XMLDB', ABSPATH . 'storage');
+
+    // Definit le stockage de la bd
+    if ( !defined('JSONDB') )
+		define ('JSONDB', ABSPATH . 'storage');
 
 	// Constantes de temps
 	define( 'MINUTE_IN_SECONDS', 60 );
@@ -124,6 +132,7 @@ function wp_cookie_constants() {
  *
  */
 function functionality_constants() {
+
 
 
 }

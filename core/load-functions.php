@@ -22,8 +22,8 @@ function check_php_versions() {
 
     if ( version_compare( $php_version, "5.3.0", "<" ) ) {
 
-        $msg =  '<p>Votre serveur utilise la version '.
-                $php_version.
+        $msg =  '<p>Votre serveur utilise la version ' .
+                $php_version .
                 ' de PHP.</p><p>Ce cms a besoin au minimum de la version 5.3 .</p>';
 
         // Appel page maintenance
@@ -62,14 +62,17 @@ function timer_start() {
  *
  * @return value
  */
-function timer_stop( $display = 0, $precision = 3 ) {
-	global $timestart, $timeend;
+function timer_stop( $precision = 3 ) {
+
+	global $timestart;
+
+    // On redefini les variables
+    $precision   = (int) $precision;
+
 	$timeend = microtime( true );
-	$timetotal = $timeend - $timestart;
-	$r = number_format( $timetotal, $precision );
-	if ( $display )
-		echo $r;
-	return $r;
+	$timeend = $timeend - $timestart;
+	$timeend = number_format( $timeend, $precision );
+	return $timeend;
 }
 
 /**
@@ -110,6 +113,7 @@ function cms_not_installed() {
  * @return array trié alaphabétiquement des mu-plugins
  */
 function get_mu_plugins() {
+
 	$mu_plugins = array();
 
 	if ( !is_dir( MU_PLUGIN_DIR ) )
@@ -118,10 +122,12 @@ function get_mu_plugins() {
 		return $mu_plugins;
 
 	while ( ( $plugin = readdir( $dh ) ) !== false ) {
-		if ( substr( $plugin, -4 ) == '.php' )
+		if ( substr( $plugin, -4 ) == '.php' ) {
 			$mu_plugins[] = MU_PLUGIN_DIR . '/' . $plugin;
+            unset ($plugin); // delete memory
+        }
 	}
-	closedir( $dh );
+    closedir( $dh );
 	sort( $mu_plugins ); // On charge les mu plugins par ordre alphabétique
 	return $mu_plugins;
 }
@@ -291,4 +297,24 @@ function guess_url() {
 	}
 
 	return rtrim($url, '/');
+}
+
+
+/**
+ * CMS_GC_DISABLE
+ *
+ * On teste que gc_enable est actif et si oui on le desactive pour lancer l'optimisation d'une boucle.
+ * ( à lancer avant la boucle )
+ *
+ * On utilise gc_collect_cycles() pour chaque itération afin d'optimiser celle-ci ( return nbr de cycles collectés )
+ *
+ * @return boolean
+ */
+function CMS_GC_DISABLE() {
+
+    if ( gc_enabled() ) {
+        gc_disable();
+        return true;
+    }
+    return false;
 }

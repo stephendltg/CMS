@@ -11,9 +11,6 @@
 define ('DEBUG' , true );
 // On definit les paramètres du site
 
-/** Paramètre de la database */
-define ('XMLDB', ABSPATH . 'storage');
-
 
 /** Definit l'url du site. */
 define ('HOME', 'http://localhost/www/enote');

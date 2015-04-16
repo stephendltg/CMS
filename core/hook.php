@@ -59,7 +59,7 @@ if ( ! isset( $wp_actions ) )
  * @param array   $args           Arguments à passer à la fonction ajouté, si : do_action ('action_name' , null )
  */
 
-function add_action( $action_name, $added_function = null, $priority = 10, $args = array() ) {
+function add_action( $action_name , $added_function = null , $priority = 10 , $args = array() ) {
 
     global $hook_actions;
 
@@ -92,7 +92,7 @@ function add_action( $action_name, $added_function = null, $priority = 10, $args
  * @return mixed
  */
 
-function do_action( $action_name, $args = null , $return = false ) {
+function do_action( $action_name , $args = null , $return = false ) {
 
     global $hook_actions;
 
@@ -108,13 +108,11 @@ function do_action( $action_name, $args = null , $return = false ) {
     foreach ( $hook_actions[$action_name] as $priority=>$actions ) {
         foreach ( $actions as $actions=>$action ){
             if ( isset($args) ) {
-
                 if ( $return ) { return call_user_func_array( $action['function'], $args ); }
                 else { call_user_func_array( $action['function'], $args ); }
-
             } else {
-                    if ( $return ) { return call_user_func_array( $action['function'], $action['args'] ); }
-                    else { call_user_func_array( $action['function'], $action['args'] ); }
+                if ( $return ) { return call_user_func_array( $action['function'], $action['args'] ); }
+                else { call_user_func_array( $action['function'], $action['args'] ); }
             }
         }
     }
@@ -198,22 +196,18 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
 
     // On redefini les arguments
     $filter_name     = (string) $filter_name;
-    $function_to_add = $function_to_add;
+    //$function_to_add = $function_to_add;
     $priority        = (int) $priority;
     $accepted_args   = (int) $accepted_args;
 
     // On vérifie qu'il n'y a pas le même filtre avec la même priorité. Thanks to WP :)
     if ( isset ( $hook_filter[$filter_name]["$priority"] ) ) {
-
         foreach ( $hook_filter[$filter_name]["$priority"] as $filter ) {
-
             if ( $filter['function'] == $function_to_add ) { return true; }
         }
     }
-
     // On stocke le hook par nom d'action puis par priorité
     $hook_filter[$filter_name]["$priority"][] = array( 'function' => $function_to_add, 'accepted_args' => $accepted_args );
-
     // On trie les hook par priorité ( 1 à ... )
     ksort( $hook_filter[$filter_name]["$priority"] );
 
