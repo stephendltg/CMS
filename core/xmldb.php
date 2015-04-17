@@ -468,7 +468,7 @@ class Table
      * @param  array   $fields Record fields to insert
      * @return boolean
      */
-    public function insert(array $fields = null)
+    public function insert( array $fields = null)
     {
         // Set save flag to true
         $save = true;

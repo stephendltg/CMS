@@ -37,7 +37,7 @@ require( ABSPATH . INC . '/jsondb.php' );
 require( ABSPATH . INC . '/options.php' );
 
 // Run the installer if WordPress is not installed.
-cms_not_installed();
+//cms_not_installed();
 
 // Load most of WordPress.
 //require( ABSPATH . INC . '/post.php' );

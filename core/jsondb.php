@@ -93,12 +93,6 @@ function db_create( $db_name , $chmod = 0775 ) {
 /*                     DB Table                */
 /***********************************************/
 
-// On initialise les filtres global
-global $json_file ;
-
-if ( ! isset( $json_file ) )
-	$json_file = array();
-
 
 /**
  * Création d'une table dans la data base
@@ -114,7 +108,7 @@ function T_Create( $table_name , $fields , $db = JSONDB ) {
     $table_name  = (string) $table_name;
     $db          = (string) $db;
 
-    if (  file_exists( $db . '/' . $table_name . '.table.json' ) &&
+    if ( ! file_exists( $db . '/' . $table_name . '.table.json' ) &&
         is_dir( dirname( $db ) ) &&
         is_writable( dirname( $db ) ) &&
         isset( $fields ) &&
@@ -156,24 +150,30 @@ function T_Drop( $table_name , $db = JSONDB ) {
 }
 
 
+/***********************************************/
+/*                     TABLE CONNECT           */
+/***********************************************/
+
 /**
 * Prépare la lecture d'une table
 *
 *
 * @param  string    $table_name Nom de la table
 * @param  string    $db Nom de la DB
-* @return boolean
+* @return array     Donnée d'une table json
 */
-function json_prepare( $table_name , $db = JSONDB ) {
+function json_connect( $table_name , $db = JSONDB ) {
 
-    global $json_file;
+    $json_data = array();
 
     // On redefinit les variables
     $table_name = (string) $table_name;
     $db         = (string) $db;
 
-    if ( $json_file['json_object'] = json_loadfile ( $db . '/' . $table_name . '.table.json' ) )
-        $json_file['json_filename'] = $db . '/' . $table_name . '.table.json';
+    if ( $json_data['json_object'] = json_loadfile ( $db . '/' . $table_name . '.table.json' ) ) {
+        $json_data['json_filename'] = $db . '/' . $table_name . '.table.json';
+        return $json_data;
+    }
     return false;
 }
 
@@ -182,14 +182,21 @@ function json_prepare( $table_name , $db = JSONDB ) {
 * Ferme la lecture d'une table ( libère la mémoire et bloque l'accès à la variable globale )
 *
 *
+* @param  string    $json_data Donnée d'une table json
 * @return boolean
 */
-function json_close( ) {
+function json_close( &$json_data ) {
 
-    global $json_file;
+    // On sauvegarde uniquement s'il y a une des modifications sur la table
+    if ( isset ( $json_data['update'] ) && $json_data['update'] === true ) {
+        unset ( $json_data['update'] );
+        if ( file_put_contents( $json_data['json_filename'] , json_encode($json_data['json_object']) , LOCK_EX) === false )
+            return false;
+    }
 
-    unset ( $json_file['json_filename'] );
-    unset ( $json_file['json_object'] );
+    unset ( $json_data['json_filename'] );
+    unset ( $json_data['json_object'] );
+    return true;
 }
 
 
@@ -197,42 +204,45 @@ function json_close( ) {
 * Lire les infos d'une table
 *
 *
+* @param  string    $json_data Donnée d'une table json
 * @return array
 */
-function json_info() {
-
-    global $json_file;
+function json_info( &$json_data ) {
 
     return array(
-        'table_name'        => basename(  $json_file['json_filename'] ),
-        'table_size'        => filesize(  $json_file['json_filename'] ),
-        'table_last_change' => filemtime( $json_file['json_filename'] ),
-        'table_last_access' => fileatime( $json_file['json_filename'] ),
-        'table_fields'      => $json_file['json_object']['fields'],
-        'records_count'     => count( $json_file['json_object'] )-2
+        'table_name'        => basename(  $json_data['json_filename'] ),
+        'table_size'        => filesize(  $json_data['json_filename'] ),
+        'table_last_change' => filemtime( $json_data['json_filename'] ),
+        'table_last_access' => fileatime( $json_data['json_filename'] ),
+        'table_fields'      => $json_data['json_object']['fields'],
+        'records_count'     => count( $json_data['json_object'] )-2
     );
 }
 
+
+/***********************************************/
+/*                     FIELDS                  */
+/***********************************************/
 
 /**
 * Ajouté un champ à une table
 *
 *
 * @param  string    $name Nom du champs
+* @param  string    $json_data Donnée d'une table json
 * @return boolean
 */
-function add_field( $name ) {
-
-    global $json_file;
+function add_field( $name , &$json_data) {
 
     // On redefinit les variables
     $name = (string) $name;
 
-    if ( in_array( $name , $json_file['json_object']['fields'] ) || $name == '' )
+    if ( in_array( $name , $json_data['json_object']['fields'] ) === true || $name == '' )
         return false;
 
-    $json_file['json_object']['fields'][]= esc_json( $name );
-    return file_put_contents( $json_file['json_filename'] , json_encode($json_file['json_object']) , LOCK_EX);
+    $json_data['json_object']['fields'][]= esc_json( $name );
+    $json_data['update']= true;
+    return true;
 }
 
 
@@ -241,19 +251,21 @@ function add_field( $name ) {
 *
 *
 * @param  string    $name Nom du champs
+* @param  string    $json_data Donnée d'une table json
 * @return boolean
 */
-function delete_field( $name ) {
-
-    global $json_file;
+function delete_field( $name , &$json_data ) {
 
     // On redefinit les variables
     $name = (string) $name;
 
-    if ( $key = array_search( $name , $json_file['json_object']['fields'] ) + 1 ) {
-        unset ( $json_file['json_object']['fields'][$key-1] ); // On supprimer le champs
-        $json_file['json_object']['fields'] = array_values ( $json_file['json_object']['fields'] ); // On reaffecte les index du tableau
-        return file_put_contents( $json_file['json_filename'] , json_encode($json_file['json_object']) , LOCK_EX);
+    if ( in_array( $name , $json_data['json_object']['fields'] ) === true ) {
+
+        $key = array_search( $name , $json_data['json_object']['fields'] );
+        unset ( $json_data['json_object']['fields'][ $key ] ); // On supprimer le champs
+        $json_data['json_object']['fields'] = array_values ( $json_data['json_object']['fields'] ); // On reaffecte les index du tableau
+        $json_data['update']= true;
+        return true;
     }
     return false;
 }
@@ -262,42 +274,232 @@ function delete_field( $name ) {
 * Modifier un champ à une table
 *
 *
+* @param  string    $oldname Nom de l'ancien champs
 * @param  string    $name Nom du champs
+* @param  string    $json_data Donnée d'une table json
 * @return boolean
 */
-function update_field( $oldname , $name ) {
-
-    global $json_file;
+function update_field( $oldname , $name , &$json_data ) {
 
     // On redefinit les variables
     $oldname = (string) $oldname;
     $name    = (string) $name;
-    if ( $key = array_search( $name , $json_file['json_object']['fields'] ) + 1 ) {
-        $json_file['json_object']['fields'][$key-1] = $name;
-        return file_put_contents( $json_file['json_filename'] , json_encode($json_file['json_object']) , LOCK_EX);
+
+    if ( in_array( $oldname , $json_data['json_object']['fields'] ) === true ) {
+
+        $key = array_search( $oldname , $json_data['json_object']['fields'] );
+        $json_data['json_object']['fields'][$key] = $name;
+        $json_data['update']= true;
+        return true;
     }
     return false;
 }
 
 
+/**
+* Vérifier l'existence d'un champ
+*
+*
+* @param  string    $fields tableau de champs à ajouter
+* @return boolean
+*/
+function exists_field( $name , &$json_data ) {
 
+    // On redefinit les variables
+    $name    = (string) $name;
+
+    if ( in_array( $name , $json_data['json_object']['fields'] ) === true )
+        return true;
+
+    return false;
+}
+
+
+/***********************************************/
+/*                     RECORD                  */
+/***********************************************/
+
+/**
+* Inserer un enregistrement
+*
+*
+* @param  string    $name Nom du champs
+* @param  string    $json_data Donnée d'une table json
+* @return boolean
+*/
+function insert( array $fields = null , &$json_data ) {
+
+    if ( count($fields) > 0 ) {
+        foreach ($fields as $field => $value) {
+            if ( ! exists_field( $field , $json_data ) )
+                return false;
+            $fields[$field] = esc_json ( $value );
+        }
+        $fields['id'] = $json_data['json_object']['autoincremente']++;
+        $json_data['json_object'][ $fields['id'] ] = $fields;
+        $json_data['update']= true;
+        return true;
+    }
+    return false;
+}
+
+
+/**
+* Selectionner un enregistrement
+*
+*
+* @param  string    $name Nom du champs
+* @param  string    $json_data Donnée d'une table json
+* @return boolean
+*/
+function select( &$json_data, $query = null,  $row_count = 'all', $offset = null, array $fields = null, $order_by = 'id', $order = 'ASC' ) {
+
+    // On redefinit les variables
+    $query    = ($query === null)  ? null : (string) $query;
+    $offset   = ($offset === null) ? null : (int) $offset;
+    $order_by = (string) $order_by;
+    $order    = (string) $order;
+
+    // Trie de la requête
+    if ($query !== null) {
+
+        $query = parse_ini_string ( $query );
+        for( $i = 0 ; $i <= ( count( $json_data['json_object'] ) - 3 ) ; $i++ ) {
+            $tmp[$i] = array_intersect_assoc ( $query , $json_data['json_object'][$i] );
+            if ( $tmp[$i] == null  ) unset ($tmp[$i]);
+        }
+
+    } else {
+        for( $i = 1 ; $i <= ( count( $json_data['json_object'] ) -2 ) ; $i++ ) {
+            $tmp[$i] = $json_data['json_object'][$i];
+        }
+    }
+
+    var_dump($tmp);
+
+    // Trie du nombre de colonne à donner en résultat
+    $records = array ();
+
+    if ( $row_count == null ) {
+        if (isset($tmp[0])) {
+            $records   = $tmp[0];
+            $one_record = true;
+        }
+    } else {
+        $records = $tmp;
+    }
+
+    //var_dump($records);
+
+
+    /*
+    // If array of fields is exits then get records with this fields only
+    if ( count($fields) > 0 ) {
+
+        if (count($_records) > 0) {
+
+            $count = 0;
+            foreach ($_records as $key => $record) {
+
+                foreach ($fields as $field) {
+                    $record_array[$count][$field] = (string) $record->$field;
+                }
+
+                $record_array[$count]['id'] = (int) $record->id;
+
+                if ($order_by == 'id') {
+                    $record_array[$count]['sort'] = (int) $record->$order_by;
+                } else {
+                    $record_array[$count]['sort'] = (string) $record->$order_by;
+                }
+
+                $count++;
+
+            }
+
+            // Sort records
+            $records = Table::subvalSort($record_array, 'sort', $order);
+
+            // Slice records array
+            if ($offset === null && is_int($row_count)) {
+                $records = array_slice($records, -$row_count, $row_count);
+            } elseif ($offset !== null && is_int($row_count)) {
+                $records = array_slice($records, $offset, $row_count);
+            }
+
+        }
+
+    } else {
+
+        // Convert from XML object to array
+
+        if (! $one_record) {
+            $count = 0;
+            foreach ($_records as $xml_objects) {
+
+                $vars = get_object_vars($xml_objects);
+
+                foreach ($vars as $key => $value) {
+                    $records[$count][$key] = (string) $value;
+
+                    if ($order_by == 'id') {
+                        $records[$count]['sort'] = (int) $vars['id'];
+                    } else {
+                        $records[$count]['sort'] = (string) $vars[$order_by];
+                    }
+                }
+
+                $count++;
+            }
+
+            // Sort records
+            $records = Table::subvalSort($records, 'sort', $order);
+
+            // Slice records array
+            if ($offset === null && is_int($row_count)) {
+                $records = array_slice($records, -$row_count, $row_count);
+            } elseif ($offset !== null && is_int($row_count)) {
+                $records = array_slice($records, $offset, $row_count);
+            }
+
+        } else {
+
+            // Single record
+            $vars = get_object_vars($_records[0]);
+            foreach ($vars as $key => $value) {
+                $records[$key] = (string) $value;
+            }
+        }
+    }
+
+    // Return records
+    return $records;
+
+    */
+}
 
 db_create ( 'test');
 
 //table1
 T_Create( 'testing', array ( 'looser', 'encore', 'manger', 'hache', 'vert'), ABSPATH.'test' ) ;
 // Table 2
-T_Create( 'esteban', array ( 'fabienne', 'manger'), ABSPATH.'test' ) ;
+//T_Create( 'esteban', array ( 'fabienne', 'manger'), ABSPATH.'test' ) ;
 
 //T_Drop( 'testing' , ABSPATH.'test' );
 
-json_prepare( 'testing' , ABSPATH.'test' );
+$mabase = json_connect( 'testing' , ABSPATH.'test' );
 
-//update_field('looser','stephen');
-//add_field('gagos');
-delete_field('manger');
+//update_field('gagos','merde',$mabase);
+//add_field('gagos' , $mabase );
+//add_field('manger' , $mabase );
+//add_field('jouer' , $mabase );
+//delete_field('jouer' , $mabase);
 
-var_dump( $json_file );
+//var_dump (json_info($mabase) );
+//insert ( array ('looser'=>'mangeoirà biche', 'encore'=>'fabiennene'), $mabase );
+//insert ( array ('merde'=>'login', 'manger'=>'esteban'), $mabase );
 
-json_close();
+select ( $mabase , 'looser=login' );
+
+json_close( $mabase );
 
