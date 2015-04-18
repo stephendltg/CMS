@@ -360,43 +360,40 @@ function select( &$json_data, $query = null,  $row_count = 'all', $offset = null
     $order_by = (string) $order_by;
     $order    = (string) $order;
 
-    // Trie de la requête
+    // Création des variables
+    $records    = array ();
+    $one_record = false;
+
+    // Filtre des données json de la requête
     if ($query !== null) {
-
-        $query = parse_ini_string ( $query );
-        for( $i = 0 ; $i <= ( count( $json_data['json_object'] ) - 3 ) ; $i++ ) {
-            $tmp[$i] = array_intersect_assoc ( $query , $json_data['json_object'][$i] );
-            if ( $tmp[$i] == null  ) unset ($tmp[$i]);
+        $query      = parse_ini_string ( $query );
+        $n_records  = count( $json_data['json_object'] ) - 2;
+        for( $i = 0 ; $i < $n_records ; $i++ ) {
+            $tmp = array_intersect_assoc ( $query , $json_data['json_object'][$i] );
+            if ( $tmp != null  ) $records[] = $tmp;
         }
-
+        unset($tmp);
     } else {
-        for( $i = 1 ; $i <= ( count( $json_data['json_object'] ) -2 ) ; $i++ ) {
-            $tmp[$i] = $json_data['json_object'][$i];
+        $n_records = count( $json_data['json_object'] ) - 2;
+        for( $i = 0 ; $i < $n_records ; $i++ ) {
+            $records[$i] = $json_data['json_object'][$i];
         }
     }
 
-    var_dump($tmp);
 
-    // Trie du nombre de colonne à donner en résultat
-    $records = array ();
-
+    // Filtre pour une réponse unique
     if ( $row_count == null ) {
-        if (isset($tmp[0])) {
-            $records   = $tmp[0];
+        if ( isset( $records[0] ) ) {
+            $records    = $records[0];
             $one_record = true;
         }
-    } else {
-        $records = $tmp;
     }
 
-    //var_dump($records);
 
-
-    /*
     // If array of fields is exits then get records with this fields only
     if ( count($fields) > 0 ) {
 
-        if (count($_records) > 0) {
+        if ( count($_records) > 0 ) {
 
             $count = 0;
             foreach ($_records as $key => $record) {
@@ -474,14 +471,12 @@ function select( &$json_data, $query = null,  $row_count = 'all', $offset = null
 
     // Return records
     return $records;
-
-    */
 }
 
 db_create ( 'test');
 
 //table1
-T_Create( 'testing', array ( 'looser', 'encore', 'manger', 'hache', 'vert'), ABSPATH.'test' ) ;
+//T_Create( 'testing', array ( 'looser', 'encore', 'manger', 'hache', 'vert'), ABSPATH.'test' ) ;
 // Table 2
 //T_Create( 'esteban', array ( 'fabienne', 'manger'), ABSPATH.'test' ) ;
 
@@ -496,10 +491,10 @@ $mabase = json_connect( 'testing' , ABSPATH.'test' );
 //delete_field('jouer' , $mabase);
 
 //var_dump (json_info($mabase) );
-//insert ( array ('looser'=>'mangeoirà biche', 'encore'=>'fabiennene'), $mabase );
+//insert ( array ('looser'=>'mangeoirà conchon', 'encore'=>'stephen'), $mabase );
 //insert ( array ('merde'=>'login', 'manger'=>'esteban'), $mabase );
 
-select ( $mabase , 'looser=login' );
+select ( $mabase , 'looser=re' , 'all' );
 
 json_close( $mabase );
 
