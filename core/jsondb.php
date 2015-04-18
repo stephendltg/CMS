@@ -352,128 +352,74 @@ function insert( array $fields = null , &$json_data ) {
 * @param  string    $json_data Donnée d'une table json
 * @return boolean
 */
-function select( &$json_data, $query = null,  $row_count = 'all', $offset = null, array $fields = null, $order_by = 'id', $order = 'ASC' ) {
+function select( &$json_data , $query = null ,  $row_count = 'all' , array $fields = null , $order = 'ASC' ) {
 
     // On redefinit les variables
     $query    = ($query === null)  ? null : (string) $query;
-    $offset   = ($offset === null) ? null : (int) $offset;
-    $order_by = (string) $order_by;
     $order    = (string) $order;
 
-    // Création des variables
+    // Création de la variable de retour
     $records    = array ();
-    $one_record = false;
 
-    // Filtre des données json de la requête
+    // Filtre sur requête
     if ($query !== null) {
+
+        // On récupère uniquement les enregistrements si champ et valeur correspondent dans la DB
         $query      = parse_ini_string ( $query );
         $n_records  = count( $json_data['json_object'] ) - 2;
+
         for( $i = 0 ; $i < $n_records ; $i++ ) {
             $tmp = array_intersect_assoc ( $query , $json_data['json_object'][$i] );
-            if ( $tmp != null  ) $records[] = $tmp;
+            if ( $tmp != null  ) $records[] = $json_data['json_object'][$i];
         }
         unset($tmp);
+
     } else {
+
+        // On récupère uniquement les enregistrements
         $n_records = count( $json_data['json_object'] ) - 2;
         for( $i = 0 ; $i < $n_records ; $i++ ) {
-            $records[$i] = $json_data['json_object'][$i];
+            $records[] = $json_data['json_object'][$i];
         }
     }
 
 
-    // Filtre pour une réponse unique
-    if ( $row_count == null ) {
-        if ( isset( $records[0] ) ) {
-            $records    = $records[0];
-            $one_record = true;
-        }
+    // Filtre pour une réponse unique pour $query
+    if ( $row_count == null && $fields == null ) {
+        // S'il y a un enregistrement!
+        if ( isset( $records[0] ) ) $records = $records[0];
     }
 
 
-    // If array of fields is exits then get records with this fields only
-    if ( count($fields) > 0 ) {
+    // Filtre sur champs
+    if ( count( $fields ) > 0 ) {
 
-        if ( count($_records) > 0 ) {
+        // Seulement s'il y a des enregistrements!
+        $n_records = count($records);
+
+        if ( $n_records > 0 ) {
 
             $count = 0;
-            foreach ($_records as $key => $record) {
 
-                foreach ($fields as $field) {
-                    $record_array[$count][$field] = (string) $record->$field;
+            for ( $i = 0 ; $i < $n_records ; $i++ ) {
+                foreach( $fields as $field ){
+                    if ( array_key_exists( $field , $records[$i] ) )
+                        $tmp[] = array ( $field => $records[$i][$field] , 'id' => $records[$i]['id'] );
                 }
-
-                $record_array[$count]['id'] = (int) $record->id;
-
-                if ($order_by == 'id') {
-                    $record_array[$count]['sort'] = (int) $record->$order_by;
-                } else {
-                    $record_array[$count]['sort'] = (string) $record->$order_by;
-                }
-
                 $count++;
-
+                if ( ( is_int($row_count) && $count == $row_count ) || $row_count == null ) break;
             }
 
-            // Sort records
-            $records = Table::subvalSort($record_array, 'sort', $order);
-
-            // Slice records array
-            if ($offset === null && is_int($row_count)) {
-                $records = array_slice($records, -$row_count, $row_count);
-            } elseif ($offset !== null && is_int($row_count)) {
-                $records = array_slice($records, $offset, $row_count);
-            }
-
+            if ( isset ($tmp) ) $records = $tmp;
         }
 
-    } else {
-
-        // Convert from XML object to array
-
-        if (! $one_record) {
-            $count = 0;
-            foreach ($_records as $xml_objects) {
-
-                $vars = get_object_vars($xml_objects);
-
-                foreach ($vars as $key => $value) {
-                    $records[$count][$key] = (string) $value;
-
-                    if ($order_by == 'id') {
-                        $records[$count]['sort'] = (int) $vars['id'];
-                    } else {
-                        $records[$count]['sort'] = (string) $vars[$order_by];
-                    }
-                }
-
-                $count++;
-            }
-
-            // Sort records
-            $records = Table::subvalSort($records, 'sort', $order);
-
-            // Slice records array
-            if ($offset === null && is_int($row_count)) {
-                $records = array_slice($records, -$row_count, $row_count);
-            } elseif ($offset !== null && is_int($row_count)) {
-                $records = array_slice($records, $offset, $row_count);
-            }
-
-        } else {
-
-            // Single record
-            $vars = get_object_vars($_records[0]);
-            foreach ($vars as $key => $value) {
-                $records[$key] = (string) $value;
-            }
-        }
     }
 
     // Return records
     return $records;
 }
 
-db_create ( 'test');
+//db_create ( 'test');
 
 //table1
 //T_Create( 'testing', array ( 'looser', 'encore', 'manger', 'hache', 'vert'), ABSPATH.'test' ) ;
@@ -494,7 +440,7 @@ $mabase = json_connect( 'testing' , ABSPATH.'test' );
 //insert ( array ('looser'=>'mangeoirà conchon', 'encore'=>'stephen'), $mabase );
 //insert ( array ('merde'=>'login', 'manger'=>'esteban'), $mabase );
 
-select ( $mabase , 'looser=re' , 'all' );
+select ( $mabase , null , 'all' , array ('encore','looser') ) ;
 
 json_close( $mabase );
 
