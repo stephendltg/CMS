@@ -1,5 +1,5 @@
 # CMS
-CMS est un d'abord un exercice pour l'apprentissage de php. Il n'est pas conseillé de l'utilisé en production.
+mini POPS est un d'abord un exercice pour l'apprentissage de php. Il n'est pas conseillé de l'utilisé en production.
 
 ## Système requis
 OS: Unix, Linux, Windows, Mac OS   

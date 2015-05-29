@@ -53,7 +53,7 @@ function json_loadfile( $file , $force = false ) {
     $file  = (string) $file;
     $force = (bool) $force;
 
-    // For CMS API XML file force method
+    // For CMS API JSON file force method
     if ( $force ) {
         return json_decode( file_get_contents ( $file ), true );
     } else {
@@ -335,8 +335,13 @@ function insert( array $fields = null , &$json_data ) {
                 return false;
             $fields[$field] = esc_json ( $value );
         }
-        $fields['id'] = $json_data['json_object']['autoincremente']++;
-        $json_data['json_object'][ $fields['id'] ] = $fields;
+        foreach ( $json_data['json_object']['fields'] as $k ) {
+
+        }
+
+        $fields=  array_merge( array_flip ($json_data['json_object']['fields'] ) , $fields ) ;
+
+        $json_data['json_object'][ $json_data['json_object']['autoincremente']++ ] = $fields;
         $json_data['update']= true;
         return true;
     }
@@ -404,7 +409,7 @@ function select( &$json_data , $query = null ,  $row_count = 'all' , array $fiel
             for ( $i = 0 ; $i < $n_records ; $i++ ) {
                 foreach( $fields as $field ){
                     if ( array_key_exists( $field , $records[$i] ) )
-                        $tmp[] = array ( $field => $records[$i][$field] , 'id' => $records[$i]['id'] );
+                        $tmp[] = array ( $field => $records[$i][$field] );
                 }
                 $count++;
                 if ( ( is_int($row_count) && $count == $row_count ) || $row_count == null ) break;
@@ -436,11 +441,12 @@ $mabase = json_connect( 'testing' , ABSPATH.'test' );
 //add_field('jouer' , $mabase );
 //delete_field('jouer' , $mabase);
 
-//var_dump (json_info($mabase) );
+// var_dump (json_info($mabase) );
 //insert ( array ('looser'=>'mangeoirà conchon', 'encore'=>'stephen'), $mabase );
-//insert ( array ('merde'=>'login', 'manger'=>'esteban'), $mabase );
+insert ( array ('looser'=>'hache à nain', 'encore'=>'lame de fondcombe'), $mabase );
 
-select ( $mabase , null , 'all' , array ('encore','looser') ) ;
+//var_dump( select ( $mabase , null , 'all' , array ('encore','looser') ) );
+
 
 json_close( $mabase );
 

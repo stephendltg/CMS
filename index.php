@@ -1,7 +1,7 @@
 <?php
 /**
  *
- * @package CMS
+ * @package CMS mini POPS
  */
 
 /** On definit le repertoire racine  */

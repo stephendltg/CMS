@@ -3,7 +3,7 @@
 /**
  * La configuration de votre cms.
  *
- * @package CMS
+ * @package CMS mini POPS
  * @subpackage config
  * @version 1
  */

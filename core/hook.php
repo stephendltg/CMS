@@ -4,7 +4,7 @@
  * AJOUT DES HOOK DO_ACTION, ADD_ACTION, APPLY_FILTER ET ADD_FILTRE
  *
  *
- * @package cms
+ * @package cms mini POPS
  * @subpackage Hook
  * @version 1
  */

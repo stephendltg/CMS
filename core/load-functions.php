@@ -1,10 +1,10 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonction indispensable au chargement du cms.
+ * Fonction indispensable au chargement du cms mini POPS.
  *
  *
- * @package cms
+ * @package cms mini POPS
  * @subpackage load-functions
  * @version 1
  */

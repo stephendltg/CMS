@@ -1,11 +1,11 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * CHARGEMENT DES CONSTANTES DU CMS
+ * CHARGEMENT DES CONSTANTES DU CMS mini POPS
  *
  * Definitions des constantes sinon renseigné sur le fichier config.php
  *
- * @package cms
+ * @package cms mini POPS
  * @subpackage default-constant
  * @version 1
  */
@@ -29,12 +29,8 @@ function init_constants() {
         define('CHARSET', 'UTF-8');
 
     // Definit le stockage de la bd
-    if ( !defined('XMLDB') )
-		define ('XMLDB', ABSPATH . 'storage');
-
-    // Definit le stockage de la bd
     if ( !defined('JSONDB') )
-		define ('JSONDB', ABSPATH . 'storage');
+		define ('JSONDB', ABSPATH . 'test');
 
 	// Constantes de temps
 	define( 'MINUTE_IN_SECONDS', 60 );
@@ -87,7 +83,7 @@ function theme_directory_constants() {
  * On définit les constantes pour les cookies
  *
  */
-function wp_cookie_constants() {
+function MP_cookie_constants() {
 
 	if ( !defined( 'COOKIEHASH' ) ) {
         define( 'COOKIEHASH', md5( HOME ) );

@@ -1,9 +1,9 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Gestion des options du CMS
+ * Gestion des options du CMS mini POPS
  *
- * @package     cms
+ * @package     cms mini POPS
  * @subpackage  options
  * @version 1
  */

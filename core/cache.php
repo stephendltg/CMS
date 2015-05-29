@@ -3,7 +3,7 @@
 /**
  * Gestion du cache du CMS (limiter les requêtes xml donc l'accès disque)
  *
- * @package     cms
+ * @package     cms mini POPS
  * @subpackage  cache
  * @version 1
  */
