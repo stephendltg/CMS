@@ -31,6 +31,24 @@ function check_php_versions() {
 	}
 }
 
+/**
+ * On vérifie la connexion à la base si erreur on fait un die
+ */
+function check_connect_json_db() {
+
+    if ( !defined('JSONDB') ) {
+
+        // Appel page maintenance
+        cms_maintenance( 'error database', 'details error:', '<p>Vérifier votre fichier config.</p><p>Les informations d\'accès à votre base de donnée ne sont pas définis.</p>' );
+
+	} else {
+
+        if ( !is_dir( JSONDB ) ){
+            cms_maintenance( 'error database', 'details error:', '<p>Votre base de donnée n\'est pas accessible.</p>' );
+        }
+    }
+}
+
 
 /**
  * On met à l'heure le serveur selon la constante definit sinon on utilise l'heure du serveur par defaut
@@ -95,15 +113,16 @@ function debug_mode() {
  */
 function cms_not_installed() {
 
-    if ( !defined ('XMLDB') || option_exists('siteurl') == false ) {
+    if ( !mpdb( 'options' , 'PREPARE') OR !option_exists('siteurl') ) {
         if ( file_exists( ABSPATH . INC . '/setup-config.php' ) ) {
             $path = guess_url() . '/core/setup-config.php';
             header ('Location: '.$path );
             die();
         } else {
-            cms_maintenance( '503' , 'HTTP Error 503: Service indisponible' , 'Votre CMS est mal configuré et des fichiers importants sont manquants !' );
+            cms_maintenance( '503' , 'HTTP Error 503: Service indisponible' , '<p>Votre CMS est mal configuré et des fichiers importants sont manquants !</p>' );
         }
     }
+
 }
 
 

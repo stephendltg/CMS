@@ -1,7 +1,7 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * AJOUT DES HOOK DO_ACTION, ADD_ACTION, APPLY_FILTER ET ADD_FILTRE
+ * AJOUT DES HOOK DO_ACTION, ADD_ACTION, APPLY_FILTER ET ADD_FILTER
  *
  *
  * @package cms mini POPS

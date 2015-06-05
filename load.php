@@ -17,6 +17,9 @@ init_constants();
 // On vérifie la version de PHP.
 check_php_versions();
 
+// On vérifie la connexion à la base.
+check_connect_json_db();
+
 // Mise à l'heure
 setting_the_time();
 
@@ -26,17 +29,20 @@ timer_start();
 // On vérifie si mode debug est actif.
 debug_mode();
 
+// On créer les constantes de securite.
+secure_constants();
 
 //echo wp_guess_url();
 
-// On charge les fonctions primordiales ( Hook, cache et DataBase )
+
+
+// On charge les fonctions primordiales ( Hook et json )
 require( ABSPATH . INC . '/hook.php' );
-require( ABSPATH . INC . '/cache.php' );
-require( ABSPATH . INC . '/json.php' );
+require( ABSPATH . INC . '/mpdb.php' );
 require( ABSPATH . INC . '/options.php' );
 
-// Run the installer if WordPress is not installed.
-//cms_not_installed();
+// On vérifier que le cms est bien installer si oui on récupère la table 'option'.
+cms_not_installed();
 
 // Load most of WordPress.
 //require( ABSPATH . INC . '/post.php' );
@@ -54,7 +60,6 @@ foreach ( get_mu_plugins() as $mu_plugin ) {
 unset( $mu_plugin );
 
 do_action( 'muplugins_loaded' );
-
 
 // Define constants cookies
 //cookie_constants();

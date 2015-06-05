@@ -58,7 +58,4 @@ function get_cms_memory( $flag = false ) {
 }
 
 
-
-echo get_cms_memory();
-
-echo timer_stop(10);
+echo '<p>memoire: '. get_cms_memory() .' | Temps : '. timer_stop(3) . ' | hook filter : '.count($hook_filter).' | hook action : '.count($hook_actions).' </p>';

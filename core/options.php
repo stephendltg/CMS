@@ -9,35 +9,36 @@
  */
 
 
+// Appel d'un hook pour fermer la connection à la base de donnée
+add_action('muplugins_loaded', function() { mpdb( 'options' , 'EXECUTE' ); } );
+
+
 /**
  * Ajoute une option
  *
  *  <code>
  *      add_option('pages_limit', 10);
- *      add_option(array('pages_count' => 10, 'pages_default' => 'home'));
  *  </code>
  *
- * @return boolean
  */
 function add_option( $option , $value = null ) {
 
     if ( is_array( $option ) ) {
 
         foreach ( $option as $k => $v ) {
-            $_option = xmldb('options')->select( '[name="'.$k.'"]', null );
-            if ( count($_option) == 0 ) {
-                xmldb('options')->insert( array('name' => $k, 'value' => $v) );
+            if ( !option_exists( $k ) && !is_array( $v ) ) {
+                mpdb( 'options' , 'INSERT' , array ( $k => $v ) );
             }
         }
 
     } else {
 
-        $_option = xmldb('options')->select('[name="'.$option.'"]', null);
-        if (count($_option) == 0) {
-            return xmldb('options')->insert(array('name' => $option, 'value' => $value));
+        if ( !option_exists( $option ) && !is_array( $value ) ) {
+            mpdb( 'options' , 'INSERT' , array ( $option => $value ) );
         }
 
     }
+
 }
 
 /**
@@ -48,20 +49,21 @@ function add_option( $option , $value = null ) {
  *      option_update(array('pages_count' => 10, 'pages_default' => 'home'));
  *  </code>
  *
- * @return boolean
  */
-function update_option( $option, $value = null ) {
+function update_option( $option , $value = null ) {
 
     if ( is_array($option) ) {
 
         foreach ( $option as $k => $v ) {
-            remove_cache ( $k );
-            xmldb('options')->updateWhere( '[name="'.$k.'"]' , array('value' => $v) );
+            if ( !is_array( $v ) ) {
+                mpdb( 'options' , 'UPDATE' , array ( $k => $v) );
+            }
         }
 
     } else {
-        remove_cache( $option );
-        return xmldb('options')->updateWhere( '[name="'.$option.'"]' , array('value' => $value) );
+        if ( !is_array( $value ) ) {
+            mpdb( 'options' , 'UPDATE' , array ( $option => $value ) );
+        }
     }
 }
 
@@ -84,17 +86,8 @@ function get_option( $option ) {
     // On redefinit la variable $option
     $option = (string) $option;
 
-    if ( !get_cache( $option ) ) {
+    return implode ( '', mpdb( 'options' , $option ) );
 
-        $option_name = xmldb('options')->select( '[name="'.$option.'"]' , null );
-
-        if ( isset ( $option_name['value'] ) ){
-            return set_cache( $option , $option_name['value'] );
-        } else {
-            return '';
-        }
-    }
-    return get_cache( $option );
 }
 
 
@@ -107,15 +100,12 @@ function get_option( $option ) {
  *
  * @return boolean
  */
-function remove_option($option) {
+function remove_option( $option ) {
 
     // On redefinit la variable $option
     $option = (string) $option;
 
-    // On vide le cache de l'option en paramètre
-    remove_cache( $option );
-
-    return xmldb('options')->deleteWhere( '[name="'.$option.'"]' );
+    return mpdb( 'options' , $option );
 }
 
 
@@ -130,10 +120,15 @@ function remove_option($option) {
  *
  * @return boolean
  */
-function option_exists($option) {
+function option_exists( $option ) {
 
     // On redefinit la variable $option
     $option = (string) $option;
 
-    return ( count( xmldb('options')->select('[name="'.$option.'"]', null ) ) > 0) ? true : false;
+    if ( !mpdb( 'options' , 'FIND' , $option ) ) {
+        return false;
+    }
+    return true;
+
 }
+

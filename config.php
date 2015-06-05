@@ -9,7 +9,13 @@
  */
 
 define ('DEBUG' , true );
+
+
+
+
 // On definit les paramètres du site
+
+define ('JSONDB', 'storage');
 
 
 /** Definit l'url du site. */

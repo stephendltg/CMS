@@ -10,6 +10,16 @@
  * @version 1
  */
 
+/*
+strtolower(basename(__FILE__))!='index.php' && strtolower(basename(__FILE__))!='alicia.php'
+or wp_die('<p>You have to rename this file before continuing because its name is not secure:</p>'.
+'<p>'.trailingslashit(dirname(__FILE__)).'<b>'.basename(__FILE__).'</b></p>'.
+'<p>Try this one: <input value="'.uniqid('baw-keys-').'.php" size="30"/><p>');
+if(realpath(dirname(__FILE__))!=realpath(WPMU_PLUGIN_DIR))
+wp_die('<p>This is not a <i>plugin</i> but a <i>mu-plugins</i>, please drop it in :<br/>' .
+'<b>'.realpath(WPMU_PLUGIN_DIR).'</b><br />Thanks.</p>' );
+*/
+
 
 /**
  *
@@ -27,10 +37,6 @@ function init_constants() {
     // Definit l'encodage des documents.
     if ( !defined('CHARSET') )
         define('CHARSET', 'UTF-8');
-
-    // Definit le stockage de la bd
-    if ( !defined('JSONDB') )
-		define ('JSONDB', ABSPATH . 'test');
 
 	// Constantes de temps
 	define( 'MINUTE_IN_SECONDS', 60 );
@@ -66,6 +72,17 @@ function plugin_directory_constants() {
 
 /**
  *
+ * On definit les constantes de securites
+ *
+ */
+function secure_constants() {
+
+    $CP='QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p';$KP='(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo';$MK= JSONDB.date('Ym').guess_url();$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
+
+}
+
+/**
+ *
  * On definit les constantes pour le thème
  *
  */
@@ -83,11 +100,7 @@ function theme_directory_constants() {
  * On définit les constantes pour les cookies
  *
  */
-function MP_cookie_constants() {
-
-	if ( !defined( 'COOKIEHASH' ) ) {
-        define( 'COOKIEHASH', md5( HOME ) );
-	}
+function POPS_cookie_constants() {
 
 	if ( !defined('USER_COOKIE') )
 		define('USER_COOKIE', 'cmsuser_' . COOKIEHASH);
