@@ -19,7 +19,7 @@ define ('JSONDB', 'storage');
 
 
 /** Definit l'url du site. */
-define ('HOME', 'http://localhost/www/enote');
+//define ('HOME', 'http://localhost/www/miniPOPS');
 
 /** Definit la zone horaire. */
 define ('TIME_ZONE', 'Europe/Brussels');

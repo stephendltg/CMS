@@ -11,7 +11,17 @@
 
 
 // On cache les erreurs php
-//error_reporting(0);
+error_reporting(0);
+
+
+/**
+ * Variables globale
+ */
+// Serveur détection
+global $is_apache;
+
+$is_apache = (strpos($_SERVER['SERVER_SOFTWARE'], 'Apache') !== false || strpos($_SERVER['SERVER_SOFTWARE'], 'LiteSpeed') !== false);
+
 
 /**
  * On vérifie la version de php utilisé si non compatible on fait un die
@@ -19,6 +29,7 @@
 function check_php_versions() {
 
 	$php_version = phpversion();
+
 
     if ( version_compare( $php_version, "5.3.0", "<" ) ) {
 
@@ -30,6 +41,7 @@ function check_php_versions() {
         cms_maintenance( 'error PHP', 'details error:', $msg);
 	}
 }
+
 
 /**
  * On vérifie la connexion à la base si erreur on fait un die
@@ -43,7 +55,7 @@ function check_connect_json_db() {
 
 	} else {
 
-        if ( !is_dir( JSONDB ) ){
+        if ( !is_dir( ABSPATH . JSONDB ) ){
             cms_maintenance( 'error database', 'details error:', '<p>Votre base de donnée n\'est pas accessible.</p>' );
         }
     }
@@ -214,7 +226,6 @@ function cms_maintenance( $title = 'maintenance' , $subtitle='Site en maintenanc
             <h2><?php echo $subtitle ?></h2>
             <?php echo $message ?>
         </div>
-		<?php $message ?>
 	</body>
 	</html>
 <?php
@@ -287,7 +298,7 @@ function magic_quotes() {
 
 /**
  * Guess the URL for the site.
- *
+ * thanks wordpress
  *
  * @return string The guessed URL.
  */

@@ -86,7 +86,7 @@ function get_option( $option ) {
     // On redefinit la variable $option
     $option = (string) $option;
 
-    return implode ( '', mpdb( 'options' , $option ) );
+    return implode ( '', mpdb( 'options' , 'FIND' , $option ) );
 
 }
 
@@ -105,7 +105,7 @@ function remove_option( $option ) {
     // On redefinit la variable $option
     $option = (string) $option;
 
-    return mpdb( 'options' , $option );
+    return mpdb( 'options' , 'DELETE' , $option );
 }
 
 
@@ -131,4 +131,3 @@ function option_exists( $option ) {
     return true;
 
 }
-

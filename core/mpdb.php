@@ -99,6 +99,9 @@ function set_json( $filename , $data ) {
     if ( !file_put_contents( $filename , json_encode( $data ) , LOCK_EX ) ) {
         return false;
     }
+
+    @chmod( $filename , 0644 );
+
     return true;
 }
 
@@ -114,13 +117,22 @@ function set_json( $filename , $data ) {
  * @param  int       $chmod Mode d'accès du
  * @return boolean
  */
-function CREATE_DIR( $dirname , $chmod = 0775 ) {
+function CREATE_DIR( $dirname , $chmod = 0755 ) {
+
+    global $is_apache;
 
     // On redefinit la variable
     $dirname = (string) $dirname;
 
-    if ( is_dir( ABSPATH . $dirname ) ) return false;
-    return mkdir( ABSPATH . $dirname , $chmod );
+    if ( is_dir( ABSPATH . $dirname ) || !$is_apache ) return false;
+
+    $htaccess_file_content  = "Options - Indexes\n";
+    $htaccess_file_content .= "<Files *.php> Deny from all </Files>";
+
+    mkdir( ABSPATH . $dirname , $chmod );
+    file_put_contents( ABSPATH . $dirname . '/.htaccess', $htaccess_file_content );
+
+    return true;
 }
 
 
@@ -320,7 +332,7 @@ function mpdb( $query_name , $func , $params = null ){
         $query_prepare = get_json( ABSPATH . JSONDB . '/' . $query_name . '.table.json' );
 
         // Si erreur dans le chargement de la table on retourne false
-        if ( !$query_prepare) return false;
+        if ( $query_prepare === false ) return false;
 
         // On ajoute la clé de sécurité ainsi que l'autoincremente
         $query[$query_name] = array_merge ( $query_prepare , array ( SECRET_KEY => array( base64_encode( ABSPATH . JSONDB . '/' . $query_name . '.table.json' ) , 0 ) ) );
@@ -330,6 +342,7 @@ function mpdb( $query_name , $func , $params = null ){
     };
 
     // Fonctions private execute
+    // On execute les requetes sur la table seulement si elle a été modifié ( on limite l'écriture sur le serveur )
     $execute = function( $query ){
 
         if ( count( FIND( $query , SECRET_KEY ) ) > 0 ) {
@@ -347,15 +360,17 @@ function mpdb( $query_name , $func , $params = null ){
 
     };
 
-    // Fonctions private create
-    $create = function( $query_name ){
+    // Fonctions private create : créer une table
+    // mpdb ('post' , 'CREATE' , array ('titre'=>'test')); || mpdb ('post' , 'CREATE');
+    $create = function( $query_name , $params ){
 
         if ( ! file_exists( ABSPATH . JSONDB . '/' . $query_name . '.table.json' ) &&
             is_dir( dirname( ABSPATH . JSONDB ) ) &&
             is_writable( dirname( ABSPATH . JSONDB ) )
         ){
-            // On nettoie la table des caractères dangereux
-            array_walk ( $params , 'esc_json_array_recursive' );
+            // On nettoie la table des caractères dangereux sinon on créer une table vide
+            ( is_array($params) ) ? array_walk ( $params , 'esc_json_array_recursive' ) : $params = array();
+
             // Creation de la nouvelle table
             return set_json( ABSPATH . JSONDB . '/' . $query_name . '.table.json' , $params );
         }
@@ -393,6 +408,7 @@ function mpdb( $query_name , $func , $params = null ){
                 // On execute les requetes sur la table
                 $execute( $query[$query_name] );
                 unset($query[$query_name]);
+
                 // On retourne le resultat de l'action
                 return $result;
 
@@ -417,7 +433,7 @@ function mpdb( $query_name , $func , $params = null ){
         break;
 
         case 'CREATE';
-            return $create( $query_name );
+            return $create( $query_name , $params);
         break;
 
 

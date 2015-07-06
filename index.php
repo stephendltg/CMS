@@ -1,4 +1,4 @@
- <?php
+<?php
 /**
  *
  * @package CMS mini POPS
@@ -26,7 +26,7 @@ if ( file_exists( ABSPATH . 'config.php') ) {
     //On tente de reconstruire le fichier config
     if ( file_exists( ABSPATH . INC . '/setup-config.php' ) ) {
         $path = guess_url() . '/core/setup-config.php';
-        header ('Location: '.$path );
+        header('Location: '.$path);
         die();
     }
     else {

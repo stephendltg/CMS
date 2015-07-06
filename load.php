@@ -32,14 +32,11 @@ debug_mode();
 // On créer les constantes de securite.
 secure_constants();
 
-//echo wp_guess_url();
-
-
-
 // On charge les fonctions primordiales ( Hook et json )
 require( ABSPATH . INC . '/hook.php' );
 require( ABSPATH . INC . '/mpdb.php' );
 require( ABSPATH . INC . '/options.php' );
+
 
 // On vérifier que le cms est bien installer si oui on récupère la table 'option'.
 cms_not_installed();
@@ -60,6 +57,7 @@ foreach ( get_mu_plugins() as $mu_plugin ) {
 unset( $mu_plugin );
 
 do_action( 'muplugins_loaded' );
+
 
 // Define constants cookies
 //cookie_constants();
