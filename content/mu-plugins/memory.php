@@ -58,4 +58,35 @@ function get_cms_memory( $flag = false ) {
 }
 
 
-echo '<p>memoire: '. get_cms_memory() .' | Temps : '. timer_stop(3) . ' | hook filter : '.count($hook_filter).' | hook action : '.count($hook_actions).' </p>';
+echo '<div style="background : #000; color:#fff; padding: 5px; margin: 0">';
+
+// Données globales
+echo '<p>Memory: '. get_cms_memory() .' | Time (Exec) : '. timer_stop(3) . ' | Hook filters (nbr appel) : '.count($hook_filter).' | Hook actions (nbr appel) : '.count($hook_actions).' </p><hr>';
+
+// Listes hooks actions:
+echo '<div style="display: inline-block; width:49%; vertical-align: top;"><p>Hook actions (nbr actions) :</p><ol>';
+foreach( $hook_actions as $hook_name => $actions ){
+    echo '<li>'.$hook_name.' ( '.count($actions).' )</li>';
+}
+echo '</ol></div>';
+
+// Listes hooks filter:
+echo '<div style="display: inline-block; vertical-align: top;"><p>Hooks filters (nbr filters) :</p><ol>';
+foreach( $hook_filter as $hook_name => $filters ){
+    echo '<li>'.$hook_name.' ( '.count($filters).' )</li>';
+}
+echo '</ol></div><hr>';
+
+//Requetes query
+echo '<div style="display: inline-block; vertical-align: top;">';
+foreach( mpdb('*','STATISTIC') as $query_name => $funcs )  {
+    echo '<p>Table : ' . $query_name . '</p><ul>';
+    foreach( $funcs as $func => $request ){
+        ( is_array($request) ) ? $list_request = implode( ' | ', $request ) : $list_request = $request;
+        echo '<li>' . $func . ' : ' . count( $request ) . ' requetes ('. $list_request. ')</li>';
+    }
+    echo '</ul>';
+}
+echo '</div><hr>';
+
+echo '<p style="text-align: right">Author plugins: stephen deletang</p></div>';

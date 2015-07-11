@@ -320,6 +320,7 @@ function DELETE( &$query , $field ) {
 function mpdb( $query_name , $func , $params = null ){
 
     static $query = array();
+    static $query_statistic = array();
 
     // On redefini les variables
     $query_name = (string) $query_name;
@@ -390,7 +391,10 @@ function mpdb( $query_name , $func , $params = null ){
                 $result = $func( $query[$query_name] , $params );
 
                 // On incremente l'autoincrement sur requete d'écriture
-                if ($result == true ) $query[$query_name][SECRET_KEY][1]++;
+                if ($result == true ) {
+                    $query[$query_name][SECRET_KEY][1]++;
+                    INSERT ( $query_statistic , array ( $query_name => array( $func => json_encode($params) ) ) );
+                }
 
                 // On retourne le resultat de l'action
                 return $result;
@@ -403,7 +407,10 @@ function mpdb( $query_name , $func , $params = null ){
                 $result = $func( $query[$query_name] , $params );
 
                 // On incremente l'autoincrement sur requete d'écriture
-                if ($result == true ) $query[$query_name][SECRET_KEY][1]++;
+                if ($result == true ) {
+                    $query[$query_name][SECRET_KEY][1]++;
+                    INSERT ( $query_statistic , array ( $query_name => array( $func => json_encode($params) ) ) );
+                }
 
                 // On execute les requetes sur la table
                 $execute( $query[$query_name] );
@@ -411,8 +418,8 @@ function mpdb( $query_name , $func , $params = null ){
 
                 // On retourne le resultat de l'action
                 return $result;
-
             }
+
         break;
 
         case 'PREPARE';
@@ -440,6 +447,12 @@ function mpdb( $query_name , $func , $params = null ){
         case 'INFO';
             // if $query_name = '*' , on retourne info de toutes les tables
             return $func( ABSPATH.JSONDB , 'json' , $query_name.'.table'  );
+        break;
+
+        case 'STATISTIC';
+            if ( $query_name === '*' )
+                return $query_statistic;
+            return $query_statistic[$query_name];
         break;
 
         default:
