@@ -13,11 +13,9 @@
 // On initialise les filtres global
 global $hook_filter, $hook_actions ;
 
-if ( ! isset( $hook_filter ) )
-	$hook_filter = array();
+$hook_filter = array();
 
-if ( ! isset( $wp_actions ) )
-	$hook_actions = array();
+$hook_actions = array();
 
 
 
@@ -63,7 +61,6 @@ function add_action( $action_name , $added_function = null , $priority = 10 , $a
 
     global $hook_actions;
 
-    // On redefini les arguments
     $action_name     = (string) $action_name;
     $priority        = (int) $priority;
 
@@ -96,13 +93,10 @@ function do_action( $action_name , $args = null , $return = false ) {
 
     global $hook_actions;
 
-    // On redefini les arguments
     $action_name = (string) $action_name;
     $return      = (bool) $return;
 
-    if ( !array_key_exists( $action_name , $hook_actions ) ) {
-        return false;
-    }
+    if ( !array_key_exists( $action_name , $hook_actions ) ) return false;
 
     // On boucle pour ressortir les hooks à actionner
     foreach ( $hook_actions[$action_name] as $priority=>$actions ) {
@@ -116,7 +110,6 @@ function do_action( $action_name , $args = null , $return = false ) {
             }
         }
     }
-
     return true;
 }
 
@@ -138,14 +131,11 @@ function apply_filter( $filter_name, $value ) {
 
     global $hook_filter;
 
-    // On redefini les arguments
     $filter_name = (string) $filter_name;
 
     $args = array_slice(func_get_args(), 2);
 
-    if ( ! isset( $hook_filter[$filter_name] ) ) {
-        return $value;
-    }
+    if ( !isset( $hook_filter[$filter_name] ) ) return $value;
 
     foreach ( $hook_filter[$filter_name] as $priority => $functions ) {
 
@@ -165,7 +155,6 @@ function apply_filter( $filter_name, $value ) {
             }
         }
     }
-
     return $value;
 }
 
@@ -175,7 +164,7 @@ function apply_filter( $filter_name, $value ) {
  * add_filter
  *
  *  <code>
- *      add_filter('content', 'replacer', 2);
+ *      add_filter('content', 'replacer');
  *
  *      Function replacer($content, $arg) {
  *          return $content.$arg;
@@ -194,16 +183,14 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
 
     global $hook_filter;
 
-    // On redefini les arguments
     $filter_name     = (string) $filter_name;
-    //$function_to_add = $function_to_add;
     $priority        = (int) $priority;
     $accepted_args   = (int) $accepted_args;
 
     // On vérifie qu'il n'y a pas le même filtre avec la même priorité. Thanks to WP :)
     if ( isset ( $hook_filter[$filter_name]["$priority"] ) ) {
         foreach ( $hook_filter[$filter_name]["$priority"] as $filter ) {
-            if ( $filter['function'] == $function_to_add ) { return true; }
+            if ( $filter['function'] == $function_to_add ) return true;
         }
     }
     // On stocke le hook par nom d'action puis par priorité

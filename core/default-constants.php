@@ -10,16 +10,6 @@
  * @version 1
  */
 
-/*
-strtolower(basename(__FILE__))!='index.php' && strtolower(basename(__FILE__))!='alicia.php'
-or wp_die('<p>You have to rename this file before continuing because its name is not secure:</p>'.
-'<p>'.trailingslashit(dirname(__FILE__)).'<b>'.basename(__FILE__).'</b></p>'.
-'<p>Try this one: <input value="'.uniqid('baw-keys-').'.php" size="30"/><p>');
-if(realpath(dirname(__FILE__))!=realpath(WPMU_PLUGIN_DIR))
-wp_die('<p>This is not a <i>plugin</i> but a <i>mu-plugins</i>, please drop it in :<br/>' .
-'<b>'.realpath(WPMU_PLUGIN_DIR).'</b><br />Thanks.</p>' );
-*/
-
 
 /**
  *
@@ -28,15 +18,20 @@ wp_die('<p>This is not a <i>plugin</i> but a <i>mu-plugins</i>, please drop it i
  */
 function init_constants() {
 
+    // Definit les constantes pour les répertoires de stockage du site
 	if ( !defined('CONTENT_DIR') )
-        define('CONTENT_DIR', ABSPATH . 'content');
+        define( 'CONTENT_DIR', ABSPATH . 'content' );
 
+    define( 'DATABASE_DIR', CONTENT_DIR . '/database' );
+	define( 'CONTENT', CONTENT_DIR . '/home' );
+	define( 'THEMES_DIR', CONTENT_DIR . '/themes' );
+
+    // Definit la constante debug à false si pas déclarer dans fichier config.php
 	if ( !defined('DEBUG') )
 		define( 'DEBUG', false );
 
     // Definit l'encodage des documents.
-    if ( !defined('CHARSET') )
-        define('CHARSET', 'UTF-8');
+    define( 'CHARSET', 'UTF-8' );
 
 	// Constantes de temps
 	define( 'MINUTE_IN_SECONDS', 60 );
@@ -55,20 +50,16 @@ function init_constants() {
  */
 function plugin_directory_constants() {
 
+    // Definit la constante HOME : url du site de référence
     if ( !defined('HOME') )
-		define( 'HOME', get_option('siteurl') );
+		define( 'HOME', guess_url() );
 
-	if ( !defined('PLUGIN_DIR') )
-		define( 'PLUGIN_DIR', CONTENT_DIR . '/plugins' );
-
-	if ( !defined('PLUGIN_URL') )
-		define( 'PLUGIN_URL', HOME . '/plugins' );
-
-	if ( !defined('MU_PLUGIN_DIR') )
-		define( 'MU_PLUGIN_DIR', CONTENT_DIR . '/mu-plugins' );
-
-	if ( !defined('MU_PLUGIN_URL') )
-		define( 'MU_PLUGIN_URL', HOME . '/mu-plugins' );
+    // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
+	define( 'CONTENT_URL', HOME . '/' . str_replace( ABSPATH , '' , CONTENT ) );
+	define( 'PLUGIN_DIR', CONTENT_DIR . '/plugins' );
+	define( 'PLUGIN_URL', HOME . '/' . str_replace( ABSPATH , '' , PLUGIN_DIR ) );
+	define( 'MU_PLUGIN_DIR', CONTENT_DIR . '/mu-plugins' );
+	define( 'MU_PLUGIN_URL', HOME . '/' . str_replace( ABSPATH , '' , MU_PLUGIN_DIR ) );
 }
 
 /**
@@ -78,73 +69,6 @@ function plugin_directory_constants() {
  */
 function secure_constants() {
 
-    $CP='QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p';$KP='(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo';$MK= JSONDB.date('Ym').guess_url();$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
+    $CP='QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p';$KP='(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo';$MK= DATABASE_DIR.date('Ym').guess_url();$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
 
 }
-
-/**
- *
- * On definit les constantes pour le thème
- *
- */
-function theme_directory_constants() {
-
-    /** On Definit le repertoire des themes. */
-    if ( !defined('THEMES_DIR') )
-        define('THEMES_DIR', CONTENT_DIR . '/themes');
-
-}
-
-
-/**
- *
- * On définit les constantes pour les cookies
- *
- */
-function POPS_cookie_constants() {
-
-	if ( !defined('USER_COOKIE') )
-		define('USER_COOKIE', 'cmsuser_' . COOKIEHASH);
-
-	if ( !defined('PASS_COOKIE') )
-		define('PASS_COOKIE', 'cmsspass_' . COOKIEHASH);
-
-	if ( !defined('AUTH_COOKIE') )
-		define('AUTH_COOKIE', 'cms_' . COOKIEHASH);
-
-	if ( !defined('SECURE_AUTH_COOKIE') )
-		define('SECURE_AUTH_COOKIE', 'cms_sec_' . COOKIEHASH);
-
-	if ( !defined('LOGGED_IN_COOKIE') )
-		define('LOGGED_IN_COOKIE', 'cms_logged_in_' . COOKIEHASH);
-
-	if ( !defined('TEST_COOKIE') )
-		define('TEST_COOKIE', 'cms_test_cookie');
-
-	if ( !defined('SITECOOKIEPATH') )
-		define('SITECOOKIEPATH', preg_replace('|https?://[^/]+|i', '', HOME . '/' ) );
-
-	if ( !defined('ADMIN_COOKIE_PATH') )
-		define( 'ADMIN_COOKIE_PATH', SITECOOKIEPATH . 'wp-admin' );
-
-	if ( !defined('PLUGINS_COOKIE_PATH') )
-		define( 'PLUGINS_COOKIE_PATH', preg_replace('|https?://[^/]+|i', '', PLUGIN_URL)  );
-
-	if ( !defined('COOKIE_DOMAIN') )
-		define('COOKIE_DOMAIN', false);
-}
-
-
-
-/**
- *
- * On definit les constantes pour certaines fonctionnalité
- *
- */
-function functionality_constants() {
-
-
-
-}
-
-

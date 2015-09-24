@@ -1,0 +1,30 @@
+# Copyright: © 2015 - miniPops
+
+----
+
+title: minipops
+
+----
+
+subtitle: Un CMS SUPER
+
+----
+
+description: Un site sous miniPops
+
+----
+
+keywords: minipops, cms, minipopscms
+
+----
+
+lang: fr
+
+----
+
+author: stephen deletang
+
+----
+
+copyright:  (link : home | text : tartilne )
+
