@@ -36,9 +36,8 @@ function excerpt( $text , $length = 140 , $mode = 'chars' ) {
     }
 }
 
-
 /***********************************************/
-/*          Hook de nettoyage des champs       */
+/* Hook de nettoyage des champs pré_définit    */
 /***********************************************/
 
 add_filter('page_title' , function($title){
@@ -65,92 +64,118 @@ add_filter('page_tags' , function($tags){
 	return str_replace(' ',', ',sanitize_words($tags));
 } );
 
+add_filter('page_excerpt' , function($excerpt){
+	return excerpt($excerpt,140,'words');
+} );
+
 add_filter('page_template' , function($template){
-	return ( is_filename($template) && file_exists(TEMPLATEPATH.'/'.$template.'.php') ) ? $template : '';
+    return ( is_filename($template) ) ? $template : '';
 } );
 
-add_filter('excerpt' , function($excerpt){
-	return (!empty($excerpt)) ? $excerpt : '';
+add_filter('page_markdown' , function( $markdown ){
+
+    # commentaires
+    $markdown = str_replace(array('&#039;&#039;', "``"),
+                           array('&#8220;', '&#8221;'), $markdown);
+
+    // On parse markdown
+    $Extra = new Parsedown();
+    $markdown = $Extra->text( $markdown );
+
+    // On nettoie toutes les urls lie à href
+    $clean_all_url = function($array){
+        return 'href="'.esc_url_raw($array[2]).'"';
+    };
+
+    $markdown = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $markdown );
+
+    // On remet les chevrons pour la balise code
+    $markdown = str_replace( '&amp;', '&' , $markdown );
+
+    # Traits de séparation
+    $markdown = str_replace(array('---', '--'),
+                           array('&#8212;', '&#8211;'), $markdown);
+
+    # trois petits points et puis lalala
+    $markdown = str_replace('...', '&#8230;', $markdown);
+
+    return $markdown;
 } );
 
+add_filter('page_text' , function( $text ){
+
+    // On nettoie toutes les urls lie à href
+    $clean_all_url = function($array){
+        return 'href="'.esc_url_raw($array[2]).'"';
+    };
+
+    $text = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $text );
+
+    return $text;
+} );
 
 /***********************************************/
 /*          Functions pages 			       */
 /***********************************************/
 
 /**
- * Charge une page et parser les données ( mot clé réservé: markdown )
- * @param  $dir_page		$dir_page nom du repertoire de la page type blog ou blog/post ( identique à get_url_queries )
- * @param  $markdown    $markdown: champs actif ou non
+ * Charge une page et parser les données ( cahce de 7 jours )
+ * @param  $dir_page	$dir_page nom du repertoire de la page type blog ou blog/post ( identique au résultat de  get_url_queries )
  * @return array    	Données contenu dans le fichier
  */
-function file_get_page( $dir_page , $markdown = true ) {
+function file_get_page( $dir_page ) {
 
 	$dir_page  = (string) $dir_page;
-	$markdown = (bool) $markdown;
-	$page	  = array();
+	$page	   = array();
 
-    $page['slug']   = $dir_page;
-    $page['url']    = esc_url_raw( get_permalink( $dir_page ) );
+    $cache = CONTENT_DIR .'/cache/'. $dir_page .'/'. basename($dir_page) .'.gz';
+
+    // Gestion du cache
+    if( file_exists($cache) ) {
+        $last_write_cache = filemtime( $cache );
+        $last_write_page  = filemtime( CONTENT .'/'. $dir_page .'/'. basename($dir_page) .'.txt' );
+        // Si le cache est plus récent que la page on affiche le cache
+        if( CACHE && $last_write_cache && ($last_write_cache > $last_write_page) )
+            return $page = unserialize( gzdecode(file_get_contents($cache)) );
+        else @unlink( $cache );
+    }
+
+    // On ouvre le fichier de la page
+    $file = encode_utf8( file_get_contents( CONTENT .'/'. $dir_page .'/'. basename($dir_page) .'.txt') );
+
+    // On affecte la valeurs title au cas ou non renseigné
     $page['title']  = basename($dir_page) ;
 
-    $fields = array('title','description','keywords','author','date','robots','tags','template','excerpt');
-    $fields = apply_filter('page_fields_custom' , $fields );
-
-    $file = encode_utf8( file_get_contents(CONTENT .'/'. $dir_page .'/'. basename($dir_page) .'.txt') );
-
-    foreach( $fields as $field ) {
-        if( preg_match('/^[ \t]*' . $field . '[ \t]*:(.*)$/mi', $file , $match ) && $match[1] ) {
-            $page[$field] = esc_attr( strip_all_tags( trim( $match[1] ) ) );
-            $page[$field] = apply_filter( 'page_'.$field , $page[$field] );
-            if ( empty($page[$field]) ) $page[$field] = null;
-        }
-	   else $page[$field] = null;
+    // On récupère les champs et leur valeurs du fichier
+    preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match );
+    // Si la recherche est vide on retourne les valeurs mini
+    if( empty($match) ) return $page;
+    // On créer le tableau combiné des champs et valeurs
+    $file = array_combine($match[1],$match[2]);
+    // On purge les variables
+    unset($match);
+    // On nettoie la table et on applique le fitre correspondant
+    foreach( $file as $field => $value ){
+        $field = strtolower($field);
+        $value = esc_attr(strip_all_tags($value));
+        $fields_page_play_pops = apply_filter( 'fields_page_play_pops' , array('markdown','text') );
+        if( is_in( $field, $fields_page_play_pops ) )
+            $value = pops( $value, $dir_page );
+        $page[$field] = apply_filter( 'page_'.strtolower($field) , $value );
     }
+    // On purge les variables
+    unset($file);
 
-    if ( $markdown ) {
+    // On affecte les données importante!
+    $page['slug']   = $dir_page;
+    $page['url']    = get_permalink( $dir_page );
 
-        // On cherche le champ markdown si non present on retourn false
-        $text = explode( 'markdown:' , $file );
-        if( !isset( $text[1]) ) return false;
-
-        // On nettoie le contenu de markdown et si vide on retourne flase
-        $content = esc_attr( trim( $text[1]) );
-        unset($text);
-
-        $content = pops( $content , CONTENT_URL.'/'.$dir_page );
-
-        # commentaires
-        $content = str_replace(array('&#039;&#039;', "``"),
-                                array('&#8220;', '&#8221;'), $content);
-
-        // On parse markdown
-        $Extra = new Parsedown();
-        $content = $Extra->text( $content );
-
-        // On nettoie toutes les urls lie à href
-        $clean_all_url = function($array){
-			 return 'href="'.esc_url_raw($array[2]).'"';
-        };
-
-        $content = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $content );
-
-        // On remet les chevrons pour la balise code
-        $content = str_replace( '&amp;', '&' , $content );
-
-        # Traits de séparation
-        $content = str_replace(array('---', '--'),
-                               array('&#8212;', '&#8211;'), $content);
-
-        # trois petits points et puis lalala
-        $content = str_replace('...', '&#8230;', $content);
-
-        $page['content'] = apply_filter( 'after_parse_page' , $content );
-        unset($content);
+    // On créer un cache de la page si CACHE activé
+    if( CACHE ){
+        @mkdir( CONTENT_DIR .'/cache/'.$dir_page.'/', 0755, true );
+        file_put_contents( $cache , gzencode( serialize($page) ) , LOCK_EX );
+        @chmod( $cache , 0644 );
     }
-
-    if ( $markdown && empty($page['excerpt']) && !empty($page['content']) )
-        $page['excerpt'] = strip_all_tags(excerpt(strip_tags($page['content'],'<p><a><em><strong>'),55,'words'));
 
     return $page ;
 }
@@ -169,8 +194,7 @@ function file_put_page( $filename , $array = array() , $header = 'generate by mi
         $text = '# '. $header . PHP_EOL;
         $end_text = '';
         foreach( $array as $field => $value ){
-            if ( strtolower($field) === 'markdown' ) { $end_text = PHP_EOL .'----' . PHP_EOL . PHP_EOL . 'markdown: ' . PHP_EOL . PHP_EOL . $value; }
-            else { $text .= PHP_EOL .'----' . PHP_EOL . PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL; }
+            $text .= PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
         }
         $text .= $end_text;
 

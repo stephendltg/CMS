@@ -8,7 +8,7 @@
  * @version 1
  */
 
-add_action ( 'loading' , 'dashboard' , 9999 );
+add_action ( 'mpops_footer' , 'dashboard' , 9999 );
 
 
 function dashboard(){

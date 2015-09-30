@@ -40,6 +40,10 @@ function init_constants() {
 	define( 'WEEK_IN_SECONDS',    7 * DAY_IN_SECONDS    );
 	define( 'YEAR_IN_SECONDS',  365 * DAY_IN_SECONDS    );
 
+	// On active le cache
+	if ( !defined('CACHE') )
+		define( 'CACHE', false );
+
 }
 
 

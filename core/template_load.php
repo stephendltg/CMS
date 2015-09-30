@@ -40,6 +40,5 @@ endif;
 if ( $template = apply_filter( 'template_include', $template ) ){
     include( $template );
 }
-do_action( 'loading' );
 
 return;

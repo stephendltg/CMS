@@ -45,6 +45,7 @@ function check_php_versions() {
  * On met à l'heure le serveur selon la constante definit sinon on utilise l'heure du serveur par defaut
  */
 function setting_the_time() {
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
     if ( defined ( 'TIME_ZONE' ) ){ date_default_timezone_set( TIME_ZONE ); }
     else { date_default_timezone_set( 'UTC' ); }
 }
@@ -93,6 +94,7 @@ function debug_mode() {
  * On créé les repertoires si cms non installé et on verifie les droits en ecriture.
  */
 function cms_not_installed() {
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
     if ( !is_writable( realpath( ABSPATH ) ) )
         cms_maintenance( 'Error directory permissions !' );
 
@@ -144,7 +146,7 @@ function mod_rewrite_rules(){
             $rules .= "# if you homepage is ". HOME ."\n\t";
             $rules .= "# RewriteBase $root\n\n\t";
             $rules .= "# block specify files in the content folder from being accessed directly\n\t";
-            $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|html|htm|xml|txt|md|mdown)$ error [R=301,L]\n\n\t";
+            $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|html|htm|xml|txt|md|mdown|gz)$ error [R=301,L]\n\n\t";
             $rules .= "# block all files core folder from being accessed directly\n\t";
             $rules .= "RewriteRule ^core/(.*) error [R=301,L]\n\n\t";
             //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -178,8 +180,10 @@ function mod_rewrite_rules(){
 function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Service Unavailable' , $http_response_code = 503 ) {
 
     header( 'Content-Type: text/html; charset=utf-8' );
-    http_response_code( $http_response_code );
-	header( 'Retry-After: 600' );
+    if( function_exists('http_response_code'))
+        http_response_code($http_response_code);
+    else header( $_SERVER['SERVER_PROTOCOL']." 503 Service Unavailable", true, 503 );
+ 	header( 'Retry-After: 600' );
 ?>
 	<!DOCTYPE html>
 	<html>
@@ -249,6 +253,7 @@ function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Servic
  * On vérifier l'encodage de la config ( voir default-constant.php )
  */
 function set_internal_encoding() {
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
     header_remove( 'x-powered-by' );
     if ( function_exists( 'mb_language' ) ) mb_language( 'uni' );
     if ( function_exists( 'mb_regex_encoding' ) ) mb_regex_encoding( CHARSET );
@@ -282,6 +287,7 @@ function get_http_header() {
  */
 
 function magic_quotes() {
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 	if ( get_magic_quotes_gpc() ) {
         function stripslashesGPC(&$value) { $value = stripslashes( $value ); }
         array_walk_recursive($_GET, 'stripslashesGPC');
@@ -352,18 +358,20 @@ function guess_url() {
 function get_template_directory(){
 
     // On récupère le thème actif dans la base options
-    $active_theme = get_option( 'active_theme' );
+    $active_theme = get_option('active_theme') ? get_option( 'active_theme' ) : 'default';
 
     // On créer le répertoire des thèmes si n'existe pas
     @mkdir( THEMES_DIR , 0755 , true );
 
-    if( !empty( $active_theme ) // On vérifie qu'un theme est defini
-        && is_dir( THEMES_DIR . '/' . $active_theme ) // On verifie que le repertoire du thème existe
-        && file_exists( THEMES_DIR . $active_theme . '/readme.txt' ) // On verifie l'existence de readme.txt comportant les informations sur le thème
-    )
-        return THEMES_DIR . '/' . $active_theme;
+    // On liste les thèmes présents dans le repertoire
+    $themes = glob( THEMES_DIR .'/', GLOB_MARK|GLOB_ONLYDIR );
 
-    else return ABSPATH . INC . '/asset';
+    foreach( $themes as $theme ){
+        if( is_same($theme, $active_theme ) )
+            return THEMES_DIR . '/' . $active_theme;
+    }
+
+    return ABSPATH . INC . '/theme';
 }
 
 /**
@@ -371,7 +379,7 @@ function get_template_directory(){
  * @return configuration sauvegarder dans base option
  */
 function file_get_config() {
-
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
     // table des champs utilisé dans le fichier site.txt avec leur valeur par défaut
     $fields = array('title'=>'minipops','subtitle'=>'Un CMS SUPER','description'=>'Un site sous miniPops', 'keywords'=>'minipops, cms, minipopscms', 'lang'=>lang() ,'author'=>'stephen deletang','copyright'=>'@2015 - Stephen DELETANG');
 
@@ -380,6 +388,7 @@ function file_get_config() {
 
         // On vérifie si le fichier site.txt a été modifier
         $last_config = filemtime ( CONTENT .'/site.txt' );
+
         if ( is_different($last_config , (int) get_option('last-config-modified')) ){
 
             // On vérifie que l'on peut lire le fichier de configuration
@@ -401,18 +410,14 @@ function file_get_config() {
             add_filter('site_homepage' , function($homepage){
                 return sanitize_file_name($homepage); } );
 
-            //add_filter('site_copyright' , function($copyright){  return pops( $copyright , CONTENT_URL ); } );
-
             // On récupère le fichier site.txt et on l'encode en utf-8
             $text = encode_utf8( file_get_contents(CONTENT .'/site.txt') );
 
             // On récupère les champs du fichier site.txt
             foreach( $fields as $field => $value ) {
-                if( preg_match('/^[ \t]*' . $field . '[ \t]*:(.*)$/mi', $text , $match ) && $match[1] ) {
-                    // On nettoie les champs
-                    $tmp = esc_attr( strip_all_tags( trim( $match[1] ) ) );
+                if( preg_match('/^[ \t]*' . $field . '[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $text , $match ) && $match[1] ) {
                     // On applique le filtre au champ associé
-                    $tmp = apply_filter( 'site_'.$field , $tmp );
+                    $tmp = apply_filter( 'site_'.$field , esc_attr(strip_all_tags($match[1])) );
                     // Si le champ n'est pas vide on va le stocker dans la base option
                     if ( !empty($tmp) ) $fields[$field] = $tmp;
                 }
@@ -432,7 +437,7 @@ function file_get_config() {
         foreach( $fields as $field => $value ){
             // si la valeur n'est pas vide on l'insère dans le fichier site.txt
             if( !empty($value) )
-                $text .= PHP_EOL .'----' . PHP_EOL . PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL;
+                $text .= PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
         }
 
         // On stock le fichier site.txt

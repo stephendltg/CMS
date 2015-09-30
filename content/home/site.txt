@@ -1,12 +1,10 @@
 # Copyright: © 2015 - miniPops
 
-----
-
 title: minipops
 
 ----
 
-subtitle: Un CMS SUPER
+subtitle: Un CMS SUPER POUR FAIRE LA TEUF
 
 ----
 
@@ -18,7 +16,7 @@ keywords: minipops, cms, minipopscms
 
 ----
 
-lang: fr
+lang: en
 
 ----
 
@@ -26,5 +24,6 @@ author: stephen deletang
 
 ----
 
-copyright:  (link : home | text : tartilne )
+copyright: @2015 - Stephen DELETANG
 
+----

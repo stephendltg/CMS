@@ -8,10 +8,81 @@
  * @version 1
  */
 
+/***********************************************/
+/*        Fonctions snippets                   */
+/***********************************************/
+
+function snippet( $snippet ){
+    $snippets = glob( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
+
+    if( !empty($snippets) )
+        include( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
+    return;
+}
+
+
+/***********************************************/
+/*        Fonctions for the head               */
+/***********************************************/
+
+function html_attributes(){
+    echo apply_filter('html_attributes','lang="'.get_option('site-lang').'"');
+    return;
+}
+
+function charset(){
+    echo apply_filter('charset', strtolower(CHARSET) );
+    return;
+}
+
+function title(){
+    echo apply_filter('title', get_option('site-title') );
+    return;
+}
+
+function copyright(){
+    $copyright = pops( get_option('site-copyright') );
+    echo apply_filter('copyright', $copyright );
+    return;
+}
+
+function blog( $field ){
+    $field = (string) $field;
+    if( is_in( $field , array('title','subtitle') ) )
+        echo get_option('site-'.$field);
+    if( is_same($field, 'url') )
+        echo get_permalink();
+    return;
+}
+
 
 /***********************************************/
 /*        Fonctions link meta                  */
 /***********************************************/
+
+function description(){
+    $description = apply_filter('description', get_option('site-description') );
+    echo '<meta name="description" content="'.$description.'">'."\n";
+    return;
+}
+
+function keywords(){
+    $keywords = apply_filter('keywords', get_option('site-keywords') );
+    echo '<meta name="keywords" content="'.$keywords.'">'."\n";
+    return;
+}
+
+function author(){
+    $author = apply_filter('author', get_option('site-author') );
+    echo '<meta name="author" content="'.$author.'">'."\n";
+    return;
+}
+
+function robots(){
+    $robots = apply_filter('robots', '' );
+    echo '<meta name="robots" content="'.$robots.'">'."\n";
+    return;
+}
 
 function feed_link(){
     //<a type="application/rss+xml" href="http://www.xul.fr/rss.xml">Flux RSS de cette page</a>
@@ -41,6 +112,9 @@ function canonical_link(){
 /*        hook mpops_head                      */
 /***********************************************/
 
+add_action('mpops_head','description', 1);
+add_action('mpops_head','keywords', 1);
+add_action('mpops_head','author', 1);
 add_action('mpops_head','feed_link', 1);
 add_action('mpops_head','sitemap_link', 2);
 add_action('mpops_head','canonical_link', 3);
@@ -55,6 +129,14 @@ function mpops_head(){
     return do_action('mpops_head');
 }
 
+
+/***********************************************/
+/*        Fonctions mpops_footer               */
+/***********************************************/
+
+function mpops_footer(){
+    return do_action('mpops_footer');
+}
 
 
 /***********************************************/
@@ -100,8 +182,8 @@ function get_page_template() {
 
     $page = file_get_page($query);
 
-    if( !empty($page['template']) )
-        return get_template( $page['template'] );
+    if( !empty($page['Template']) )
+        return get_template( $page['Template'] );
     else
         return get_template( 'page' );
 }

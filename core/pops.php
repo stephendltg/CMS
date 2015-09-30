@@ -9,12 +9,10 @@
 
 
 
-function pops( $content , $page_content_url ){
+function pops( $content , $slug = '' ){
 
-    $content           = (string) $content;
-    $page_content_url  = (string) $page_content_url;
-
-    if( !is_url($page_content_url) ) $content;
+    $content   = (string) $content;
+    $slug      = (string) $slug;
 
     // Liste pops à remplacer
     $pops = array('link','email','tel','image','file','twitter','youtube','audio', 'map');
@@ -23,10 +21,11 @@ function pops( $content , $page_content_url ){
     // On boucle sur la recherche des champs et on affecte à la fonction associé si elle existe en lui passant les paramètres
     foreach ( $pops as $name ) {
         // Callback pops inserer dans une chaine de caractère
-        $call_function_pops = function( $array ) use ( $page_content_url , $name ) {
+        $call_function_pops = function( $array ) use ( $slug , $name ) {
             $pops_params = trim(rtrim(ltrim($array[0] , '(') , ')'));
             $pops_params = explode( '|' , $pops_params );
-            $params['content_url'] = $page_content_url;
+            $params['url'] = CONTENT_URL.'/'.$slug;
+            $params['path'] = CONTENT.'/'.$slug;
             foreach( $pops_params as $pops_param ){
                 $pops_param_name = strtolower( trim( substr( $pops_param , 0 , strpos($pops_param,':') ) ) );
                 $pops_param_value = trim( substr( $pops_param , strpos($pops_param,':')+1 , size($pops_param) ) );
@@ -48,8 +47,8 @@ function pops( $content , $page_content_url ){
 function pops_audio( $array ){
     $audio = explode( ',' , $array['audio'] );
     if( is_match( $audio[0] , '([^\s]+(\.(?i)(mp3))$)' ) ) $mp3 = $audio[0]; else return;
-    $ogg        = ( !empty($audio[1]) && is_match($audio[1] , '([^\s]+(\.(?i)(ogg))$)') ) ? '<source src="'. $array['content_url'] . '/' . $audio[1] .'" type="audio/ogg">' : '' ;
-    $link_mp3   = $array['content_url'] . '/' . $mp3;
+    $ogg        = ( !empty($audio[1]) && is_match($audio[1] , '([^\s]+(\.(?i)(ogg))$)') ) ? '<source src="'. $array['url'] . '/' . $audio[1] .'" type="audio/ogg">' : '' ;
+    $link_mp3   = $array['url'] . '/' . $mp3;
     $text       = ( !empty($array['text']) ) ? '<figcaption>'. $array['text'] .'</figcaption>' : '';
     $class      = ( !empty($array['class']) ) ? ' class="'. $array['class'] .'"' : '';
     $pops_audio  = "<figure$class><audio controls='controls'><source src='$link_mp3' type='audio/mp3'>$ogg<a href='$link_mp3' download='$mp3'>$mp3</a></audio>$text</figure>";
@@ -69,7 +68,7 @@ function pops_email( $array ){
 function pops_file( $array ){
     if( !is_match($array['file'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp|pdf|zip|mp4|webm|ogv|txt))$)') ) return;
     $file       = $array['file'];
-    $link_file  = $array['content_url'] . '/' . $array['file'];
+    $link_file  = $array['url'] . '/' . $array['file'];
     $text       = ( !empty($array['text']) ) ? $array['text'] : $file;
     $class      = ( !empty($array['class']) ) ? ' class="'. $array['class'] .'"' : '';
     $pops_file   = "<a href='$link_file' download='$file'$class>$text</a>";
@@ -78,10 +77,11 @@ function pops_file( $array ){
 
 function pops_image( $array ){
     if( !is_match( $array['image'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp))$)' ) ) return;
-    $image      = $array['content_url'] . '/' . $array['image'];
+    $image      = $array['url'] . '/' . $array['image'];
+    $path       = $array['path'] . '/' . $array['image'];
     $alt        = ( !empty( $array['alt'] ) ) ? $array['alt'] : ' ';
     $text       = ( !empty( $array['text'] ) ) ? '<figcaption>'. $array['text'] .'</figcaption>' : '';
-    list( $width, $height ) = getimagesize($image);
+    list( $width, $height ) = getimagesize($path);
     $ratio      = ( !empty($array['ratio']) && is_intgr($array['ratio']) && is_between($array['ratio'] , 0 , 100) ) ? $array['ratio'] : 100;
     $height     = ' height='. $height*($ratio/100);
     $width      = ' width='. $width*($ratio/100);
@@ -91,10 +91,12 @@ function pops_image( $array ){
 }
 
 function pops_link( $array ){
-    global $is_mod_rewrite;
     if( is_page( strtolower($array['link']) ) ) $link = get_permalink($array['link']);
-    if( is_same( strtolower($array['link']) , 'home' ) ) $link = HOME;
-    if( empty($link) ) { if( !is_url($array['link']) ) return; else $link = $array['link']; }
+    if( is_same( strtolower($array['link']) , 'home' ) ) $link = get_permalink();
+    if( empty($link) ) {
+        if( !is_url($array['link']) ) return;
+        else $link = esc_url_raw($array['link']);
+    }
     $title      = ( !empty($array['title']) ) ? ' title="'. $array['title'] .'"' : '';
     $text       = ( !empty($array['text']) ) ? $array['text'] : esc_html($link);
     $class      = ( !empty($array['class']) ) ? ' class="'. $array['class'] .'"' : '';

@@ -84,7 +84,7 @@ function get_permalink( $slug ='' , $type ='page' ){
         if( is_same($type , 'tag') &&  is_tag($slug) )
             $link = HOME .'/index.php?tag='.$slug;
     }
-    if(!empty($link) ) return esc_url_raw($link);
+    if(!empty($link) ) return $link;
     else return false;
 }
 
