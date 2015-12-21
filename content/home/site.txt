@@ -1,10 +1,10 @@
-# Copyright: © 2015 - miniPops
+# generate by mini-pops
 
-title: minipops
+title: miniPopse
 
 ----
 
-subtitle: Un CMS SUPER POUR FAIRE LA TEUF
+subtitle: Un site sous miniPops
 
 ----
 
@@ -16,14 +16,26 @@ keywords: minipops, cms, minipopscms
 
 ----
 
-lang: en
-
-----
-
 author: stephen deletang
 
 ----
 
-copyright: @2015 - Stephen DELETANG
+copyright: @2015 -  Propulsé par miniPops
+
+----
+
+lang: fr
+
+----
+
+url: http://minipops.local
+
+----
+
+url_rewrite: disable
+
+----
+
+robots: noindex
 
 ----

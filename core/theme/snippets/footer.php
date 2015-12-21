@@ -1,16 +1,8 @@
-  <footer class="footer" role="contentinfo">
-
-    <p class="copyright">
-      <?php copyright(); ?>
+<footer class="footer txtcenter mtm mbm" role="contentinfo">
+    <p class="copyright inbl">
+      <?php the_blog('copyright'); ?>
     </p>
-
-    <aside role="complementary">
-      Made with mini-Pops and <b>♥</b>
-    </aside>
-
-  </footer>
-
-<?php mpops_footer(); ?>
-
-</body>
-</html>
+    <aside role="complementary" class="inbl">
+      - Made with mini-Pops and <b>♥</b>
+   </aside>
+</footer>

@@ -1,352 +1,298 @@
 <?php
-$i18n = array(
-    'PHPVER_ERROR' => "<b>L'installation ne peut pas se poursuivre :</b> une version de PHP égale ou supérieure &#224; 5.2 est requise - version actuellement installée : "
-  , 'SIMPLEXML_ERROR' => "<b>L'installation ne peut pas se poursuivre :</b> <em>SimpleXML</em> n'est pas installé"
-  , 'CURL_WARNING' => "<b>Avertissement :</b> <em>cURL</em> n'est pas installé"
-  , 'TZ_WARNING' => "<b>Avertissement :</b> le paramètre <em>date_default_timezone_set</em> n'est pas renseigné"
-  , 'WEBSITENAME_ERROR' => "<b>Erreur :</b> le nom du site saisi n'est pas correct"
-  , 'WEBSITEURL_ERROR' => "<b>Erreur :</b> l'URL fournie n'est pas correcte"
-  , 'USERNAME_ERROR' => "<b>Erreur :</b> le nom d'utilisateur n'est pas renseigné"
-  , 'EMAIL_ERROR' => "<b>Erreur :</b> l'adresse e-mail fournie n'est pas valide"
-  , 'CHMOD_ERROR' => "<b>L'installation ne peut pas se poursuivre :</b> l'écriture du fichier de configuration est impossible. Faites un <em>CHMOD 777</em> sur les dossiers <strong>/data/</strong> <em>et</em> <strong>/backups/</strong> puis réessayez d'installer GetSimple"
-  , 'EMAIL_COMPLETE' => "L'installation s'est déroulée avec succès"
-  , 'EMAIL_USERNAME' => "Votre nom d'utilisateur est"
-  , 'EMAIL_PASSWORD' => "Votre nouveau mot de passe est"
-  , 'EMAIL_LOGIN' => "Connectez-vous ici"
-  , 'EMAIL_THANKYOU' => "Merci d'utiliser"
-  , 'NOTE_REGISTRATION' => "Les informations relatives &#224; votre inscription vous ont été envoyées &#224; l'adresse"
-  , 'NOTE_REGERROR' => "<b>Erreur :</b> L'envoi par e-mail des informations liées &#224; votre inscription est impossible. Prenez bien note du mot de passe inscrit ci-dessous"
-  , 'NOTE_USERNAME' => "Votre nom d'utilisateur est"
-  , 'NOTE_PASSWORD' => "et votre mot de passe est"
-  , 'INSTALLATION' => "Installation"
-  , 'LABEL_WEBSITE' => "Nom du site"
-  , 'LABEL_BASEURL' => "URL du site"
-  , 'LABEL_SUGGESTION' => "Suggestion"
-  , 'LABEL_USERNAME' => "Nom d'utilisateur"
-  , 'LABEL_DISPNAME' => "Nom affich&eacute;"
-  , 'LABEL_EMAIL' => "Adresse e-mail"
-  , 'LABEL_INSTALL' => "Installer !"
-  , 'SELECT_LANGUAGE' => "Sélectionnez votre langue"
-  , 'CONTINUE_SETUP' => "Continuer l'installation"
-  , 'DOWNLOAD_LANG' => "T&eacute;l&eacute;charger d'autres langues"
-  , 'MENUITEM_SUBTITLE' => "élément du menu"
-  , 'HOMEPAGE_SUBTITLE' => "page d'accueil"
-  , 'PRIVATE_SUBTITLE' => "privée"
-  , 'EDITPAGE_TITLE' => "Modifier la page"
-  , 'VIEWPAGE_TITLE' => "Voir la page"
-  , 'DELETEPAGE_TITLE' => "Supprimer la page"
-  , 'PAGE_MANAGEMENT' => "Gestion des pages"
-  , 'TOGGLE_STATUS' => "Afficher les marquages"
-  , 'TOTAL_PAGES' => "pages au total"
-  , 'ALL_PAGES' => "Toutes les pages"
-  , 'PAGE_NOTEXIST' => "La page demandée n'existe pas"
-  , 'BTN_SAVEPAGE' => "Enregistrer la page"
-  , 'PAGE_UNSAVED' => "Page pas encore sauvegardée"
-  , 'BTN_SAVEUPDATES' => "Enregistrer les modifications"
-  , 'DEFAULT_TEMPLATE' => "Thème par défaut"
-  , 'NONE' => "Aucun"
-  , 'PAGE' => "Page"
-  , 'NEW_PAGE' => "Nouvelle Page"
-  , 'PAGE_EDIT_MODE' => "&#201;dition de la page"
-  , 'CREATE_NEW_PAGE' => "Créer une nouvelle page"
-  , 'VIEW' => "<em>A</em>fficher"
-  , 'PAGE_OPTIONS' => "<em>O</em>ptions"
-  , 'SLUG_URL' => "Identifiant / URL"
-  , 'TAG_KEYWORDS' => "Marquages &amp; Mots-clés"
-  , 'PARENT_PAGE' => "Page parente"
-  , 'TEMPLATE' => "Thème"
-  , 'KEEP_PRIVATE' => "Garder privée ?"
-  , 'ADD_TO_MENU' => "Ajouter au menu"
-  , 'PRIORITY' => "Priorité"
-  , 'MENU_TEXT' => "Texte du menu"
-  , 'LABEL_PAGEBODY' => "Corps de la page"
-  , 'CANCEL' => "Annuler"
-  , 'BACKUP_AVAILABLE' => "Sauvegardes disponibles"
-  , 'MAX_FILE_SIZE' => "Taille maximale du fichier"
-  , 'LAST_SAVED' => "Dernier enregistrement le"
-  , 'FILE_UPLOAD' => "Mettre en ligne un fichier"
-  , 'OR' => "ou"
-  , 'SAVE_AND_CLOSE' => "Sauvegarder &amp; Fermer"
-  , 'ERROR_UPLOAD' => "Une erreur est survenue lors de l'envoi du fichier"
-  , 'FILE_SUCCESS_MSG' => "Adresse du fichier"
-  , 'FILE_MANAGEMENT' => "Gestion des fichiers"
-  , 'UPLOADED_FILES' => "Fichiers mis en ligne"
-  , 'SHOW_ALL' => "Voir tous les fichiers"
-  , 'VIEW_FILE' => "Voir le fichier"
-  , 'DELETE_FILE' => "Supprimer le fichier"
-  , 'TOTAL_FILES' => "fichiers au total"
-  , 'MSG_LOGGEDOUT' => "Vous êtes désormais déconnecté"
-  , 'LOGIN' => "Connexion"
-  , 'USERNAME' => "Nom d'utilisateur"
-  , 'PASSWORD' => "Mot de passe"
-  , 'FORGOT_PWD' => "Mot de passe oublié ?"
-  , 'CONTROL_PANEL' => "Console d'administration"
-  , 'CURRENT_MENU' => "Menu actuel"
-  , 'NO_MENU_PAGES' => "Il n'y a pas de page &#224; afficher dans le menu"
-  , 'TEMPLATE_FILE' => "Le fichier du thème <b>%s</b> a été mis à jour avec succès !"
-  , 'THEME_MANAGEMENT' => "Gestion des thèmes"
-  , 'EDIT_THEME' => "Modifier le thème"
-  , 'EDITING_FILE' => "Modification du fichier"
-  , 'BTN_SAVECHANGES' => "Enregistrer"
-  , 'EDIT' => "Modifier"
-  , 'SETTINGS_UPDATED' => "Vos paramètres ont été mis &#224; jour"
-  , 'SITE_UPDATED'      =>  "Votre site a été mis à jour"
-  , 'SERVICE_UNAVAILABLE'  =>  "Cette page est temporairement non disponible"
-  , 'UNDO' => "Annuler cette opération?"
-  , 'SUPPORT' => "Support"
-  , 'SETTINGS' => "Paramètres de configuration"
-  , 'ERROR' => "Erreur"
-  , 'BTN_SAVESETTINGS' => "Enregistrer les modifications"
-  , 'VIEW_FAILED_LOGIN' => "Voir le journal des erreurs de connexion"
-  , 'MSG_HAS_BEEN_CLR' => "a été effacé"
-  , 'LOGS' => "Logs"
-  , 'VIEWING' => "Affichage"
-  , 'LOG_FILE' => "Fichier de log"
-  , 'CLEAR_ALL_DATA' => "Purger toutes les données de"
-  , 'CLEAR_THIS_LOG' => "Effa<em>c</em>er ces Logs"
-  , 'LOG_FILE_ENTRY' => "Entrée de Log"
-  , 'THIS_COMPUTER' => "Cet ordinateur"
-  , 'BAK_MANAGEMENT' => "Gestion des sauvegardes"
-  , 'ASK_CANCEL' => "<em>A</em>nnuler"
-  , 'ASK_RESTORE' => "<em>R</em>estaurer"
-  , 'ASK_DELETE' => "<em>S</em>upprimer"
-  , 'BACKUP_OF' => "Sauvegarde de"
-  , 'PAGE_TITLE' => "Titre de la page"
-  , 'YES' => "Oui"
-  , 'NO' => "Non"
-  , 'DATE' => "Date"
-  , 'PERMS' => "Perms"
-  , 'COMPONENTS' => "Composants"
-  , 'DELETE_COMPONENT' => "Supprimer le composant"
-  , 'ADD_COMPONENT' => "<em>A</em>jouter un composant"
-  , 'SAVE_COMPONENTS' => "Enregistrer les composants"
-  , 'SITEMAP_CREATED' => "Sitemap créé ! 4 moteurs de recherche en ont été par ailleurs informés"
-  , 'SITEMAP_ERRORPING' => "Sitemap créé, mais il y a eu une erreur lors de sa soumission &#224; un (ou plusieurs) des moteur(s) de recherche "
-  , 'SITEMAP_ERROR' => "Votre sitemap n'a pas pu être généré"
-  , 'SITEMAP_WAIT' => "<b>Veuillez patienter svp</b>: votre sitemap est en train d'être généré..."
-  , 'THEME_CHANGED' => "Le thème a été activé avec succès. Il est visible sur le site!"
-  , 'CHOOSE_THEME' => "Choix du thème"
-  , 'ACTIVATE_THEME' => "Activer le thème"
-  , 'THEME_SCREENSHOT' => "Aper&#231;u du thème"
-  , 'THEME_PATH' => "Chemin du thème sélectionné"
-  , 'RESET_PASSWORD' => "Régénérer un nouveau mot de passe"
-  , 'YOUR_NEW' => "Votre nouveau"
-  , 'PASSWORD_IS' => "mot de passe est"
-  , 'ATTEMPT' => "Tentative"
-  , 'MSG_PLEASE_EMAIL' => "Saisissez, svp, l'adresse e-mail avec laquelle vous vous êtes enregistré, et un nouveau mot de passe vous sera envoyé"
-  , 'SEND_NEW_PWD' => "Envoyer le nouveau mot de passe"
-  , 'GENERAL_SETTINGS' => "Paramètres généraux"
-  , 'WEBSITE_SETTINGS' => "Configuration du site"
-  , 'LOCAL_TIMEZONE' => "Fuseau horaire"
-  , 'LANGUAGE' => "Langue"
-  , 'USE_FANCY_URLS' => "<b>Utiliser les URL simplifiées</b> - Nécessite le module mod_rewrite disponible sur ce serveur"
-  , 'ENABLE_HTML_ED' => "<b>Activer l'éditeur HTML</b>"
-  , 'WARN_EMAILINVALID' => "Attention: Cette adresse ne semble pas valide!"
-  , 'ONLY_NEW_PASSWORD' => "Ne renseignez ce champ que si vous désirez changer de mot de passe"
-  , 'NEW_PASSWORD' => "Nouveau mot de passe"
-  , 'CONFIRM_PASSWORD' => "Ressaisissez le mot de passe"
-  , 'PASSWORD_NO_MATCH' => "Les mots de passe saisis ne correspondent pas"
-  , 'PERMALINK' => "Structure personnalis&eacute;e des Permaliens"
-  , 'MORE' => "En apprendre plus...(anglais)"
-  , 'HELP' => "aide"
-  , 'FLUSHCACHE' => "Nettoyer tout le cache"
-  , 'FLUSHCACHE-SUCCESS' => "Cache nettoy&eacute; avec succ&egrave;s"
-  , 'DISPLAY_NAME' => "Nom affiché publiquement (ce n'est pas le login/nom d'utilisateur)"
-  , 'WEB_HEALTH_CHECK' => "Vérifier l'état de santé du site"
-  , 'VERSION' => " - Version actuelle"
-  , 'FOLDER_PERMISSIONS' => "Droits d'accès du répertoire"
-  , 'UPG_NEEDED' => "Mise &#224; jour requise vers la version"
-  , 'CANNOT_CHECK' => "Vérification impossible. Votre version :"
-  , 'LATEST_VERSION' => "Dernière version disponible installée"
-  , 'SERVER_SETUP' => "Configuration du serveur"
-  , 'OR_GREATER_REQ' => "ou supérieur est requis"
-  , 'OK' => "OK"
-  , 'INSTALLED' => "Installé"
-  , 'NOT_INSTALLED' => "Pas installé"
-  , 'WARNING' => "Avertissement"
-  , 'DATA_FILE_CHECK' => "Vérification de l'intégrité des fichiers"
-  , 'DIR_PERMISSIONS' => "Droits des répertoires"
-  , 'EXISTANCE' => "Existence des fichiers %s"
-  , 'MISSING_FILE' => "Fichier manquant"
-  , 'BAD_FILE' => "Mauvais fichier"
-  , 'NO_FILE' => "Pas de fichier"
-  , 'GOOD_D_FILE' => "'Deny' (blocage) fichier -> OK"
-  , 'GOOD_A_FILE' => "'Allow' (accès) fichier -> OK"
-  , 'CANNOT_DEL_FILE' => "Suppression du fichier impossible"
-  , 'DOWNLOAD' => "Télécharger"
-  , 'WRITABLE' => "Inscriptible"
-  , 'NOT_WRITABLE' => "Non inscriptible"
-  , 'POWERED_BY' => "Propulsé par"
-  , 'PAGE_BACKUPS' => "Sauvegardes"
-  , 'ASK_DELETE_ALL' => "Tout <em>S</em>upprimer"
-  , 'DELETE_ALL_BAK' => "Supprimer toutes les sauvegardes ?"
-  , 'TOTAL_BACKUPS' => "sauvegardes au total"
-  , 'SUCC_WEB_ARCHIVE' => "Site archivé avec succès !"
-  , 'SUCC_WEB_ARC_DEL' => "Archive du site supprimée avec succès"
-  , 'WEBSITE_ARCHIVES' => "Archives du site"
-  , 'ARCHIVE_DELETED' => "Archive supprimée avec succès"
-  , 'CREATE_NEW_ARC' => "Créer une nouvelle archive"
-  , 'ASK_CREATE_ARC' => "<em>C</em>réer une nouvelle archive"
-  , 'CREATE_ARC_WAIT' => "<b>Un instant s'il vous plaît :</b> Création de l'archive en cours..."
-  , 'DOWNLOAD_ARCHIVES' => "Télécharger l'archive"
-  , 'DELETE_ARCHIVE' => "Supprimer l'archive du"
-  , 'TOTAL_ARCHIVES' => "archives au total"
-  , 'WELCOME' => "Bienvenue"
-  , 'TAB_PAGES' => "<em>P</em>ages"
-  , 'TAB_FILES' => "<em>F</em>ichiers"
-  , 'TAB_THEME' => "Thèmes"
-  , 'TAB_BACKUPS' => "<em>S</em>auvegardes"
-  , 'PLUGINS_NAV' => "Plu<em>g</em>ins"
-  , 'TAB_SETTINGS' => "<em>C</em>onfiguration"
-  , 'TAB_SUPPORT' => "Supp<em>o</em>rt"
-  , 'TAB_LOGOUT' => "<em>D</em>éconnexion"
-  , 'BROWSE_COMPUTER' => "Parcourir..."
-  , 'UPLOAD' => "Uploader"
-  , 'SIDE_SUPPORT_LOG' => "Supp<em>o</em>rt - Paramètres &amp; Logs"
-  , 'SIDE_HEALTH_CHK' => "Contr&ocirc;les de Santé du site"
-  , 'SIDE_DOCUMENTATION' => "- <em>D</em>ocumentation"
-  , 'SIDE_VIEW_LOG' => "Voir les Log"
-  , 'SIDE_VIEW_SITEMAP' => "<em>V</em>oir le Sitemap"
-  , 'SIDE_GEN_SITEMAP' => "<em>G</em>énérer le Sitemap"
-  , 'SIDE_COMPONENTS' => "<em>M</em>odifier les composants"
-  , 'SIDE_EDIT_THEME' => "Modifier le <em>t</em>hème"
-  , 'SIDE_CHOOSE_THEME' => "<em>C</em>hoisissez un thème"
-  , 'SIDE_CREATE_NEW' => "<em>C</em>réer une nouvelle page"
-  , 'SIDE_VIEW_PAGES' => "Voir toutes les <em>p</em>ages"
-  , 'SIDE_GEN_SETTINGS' => "<em>P</em>aramètres généraux"
-  , 'SIDE_USER_PROFILE' => "Profil de l'<em>U</em>tilisateur"
-  , 'SIDE_VIEW_BAK' => "Voir les sauvegardes de la page"
-  , 'SIDE_WEB_ARCHIVES' => "<em>A</em>rchives du site"
-  , 'SIDE_PAGE_BAK' => "<em>S</em>auvegardes de la page"
-  , '' => "Page pas encore enregistrée"
-  , 'ER_PWD_CHANGE' => "N'oubliez pas de <a href=\"settings.php#profile\">changer votre mot de passe</a>. Il sera plus facile &#224; mémoriser que celui généré aléatoirement..."
-  , 'ER_BAKUP_DELETED' => "La sauvegarde de %s a été supprimée"
-  , 'ER_REQ_PROC_FAIL' => "Erreur dans le traitement de la requête"
-  , 'ER_YOUR_CHANGES' => "Les modifications du fichier %s ont été enregistrées"
-  , 'ER_HASBEEN_REST' => "%s a été restaurée"
-  , 'ER_HASBEEN_DEL' => "%s a été supprimée"
-  , 'ER_CANNOT_INDEX' => "Vous ne pouvez pas modifier l'URL de la page d'accueil"
-  , 'ER_SETTINGS_UPD' => "Vos paramètres ont été enregistrés"
-  , 'ER_OLD_RESTORED' => "Vos anciens paramètres ont été restaurés"
-  , 'ER_NEW_PWD_SENT' => "Un nouveau mot de passe a été envoyé &#224; l'adresse fournie"
-  , 'ER_SENDMAIL_ERR' => "Il y a eu un problème lors de l'envoi du message, réessayez plus tard s'il vous plaît"
-  , 'ER_FILE_DEL_SUC' => "Fichier supprimé avec succès"
-  , 'ER_PROBLEM_DEL' => "Une erreur est survenue lors de la suppression du fichier"
-  , 'ER_COMPONENT_SAVE' => "Vos composants ont été enregistrés"
-  , 'ER_COMPONENT_REST' => "Vos composants ont été restaurés"
-  , 'ER_CANCELLED_FAIL' => "<b>Annulée:</b> La mise &#224; jour du fichier a été annulée"
-  , 'CANNOT_SAVE_EMPTY' => "Vous ne pouvez pas enregistrer une page vide"
-  , 'META_DESC' => "Méta Description"
-  , 'FTYPE_COMPRESSED' => "Compressé"
-  , 'FTYPE_VECTOR' => "Vectoriel"
-  , 'FTYPE_FLASH' => "Flash"
-  , 'FTYPE_VIDEO' => "Vidéo"
-  , 'FTYPE_AUDIO' => "Audio"
-  , 'FTYPE_WEB' => "Web"
-  , 'FTYPE_DOCUMENTS' => "Documents"
-  , 'FTYPE_SYSTEM' => "Système"
-  , 'FTYPE_MISC' => "Divers"
-  , 'IMAGES' => "Images"
-  , 'FILL_IN_REQ_FIELD' => "Remplissez, s'il vous plaît, tous les champs obligatoires"
-  , 'LOGIN_FAILED' => "&#201;chec de la connexion. Vérifiez, s'il vous plaît, votre nom d'utilisateur et votre mot de passe"
-  , 'DATE_FORMAT' => "d/m/Y"
-  , 'DATE_AND_TIME_FORMAT' => "j M Y - H:i "
-  , 'WELCOME_MSG' => "Félicitations d'avoir choisi GetSimple pour votre CMS!"
-  , 'WELCOME_P' => "Vous allez voir, GetSimple rend la gestion de votre site Web aussi simple que possible grâce à son interface utilisateur haut de gamme, des thèmes gratuits, et de très nombreuses extensions (plugins) pour enrichir votre site."
-  , 'GETTING_STARTED' => "Commencez"
-  , 'CURRENT_THUMBNAIL' => "Miniature actuelle"
-  , 'RECREATE' => "recr&eacute;er"
-  , 'CREATE_ONE' => "cr&eacute;er"
-  , 'IMG_CONTROl_PANEL' => "Panneau de gestion des Images"
-  , 'ORIGINAL_IMG' => "Image originale"
-  , 'CLIPBOARD_INSTR' => "S&eacute;lectionnez tout et faites <em>Ctrl+C</em> ou <em>Commande+C</em>"
-  , 'CREATE_THUMBNAIL' => "Cr&eacute;er la miniature"
-  , 'CROP_INSTR_NEW' => "<em>Ctrl-Q</em> ou <em>Commande-Q</em> pour mettre en carr&eacute;"
-  , 'SELECT_DIMENTIONS' => "Saisissez les dimensions"
-  , 'HTML_ORIG_IMG' => "Code HTML de l'image originale"
-  , 'LINK_ORIG_IMG' => "Lien vers l'image originale"
-  , 'HTML_THUMBNAIL' => "Code HTML de la miniature"
-  , 'LINK_THUMBNAIL' => "Lien vers la miniature"
-  , 'HTML_THUMB_ORIG' => "Code HTML de la miniature avec lien vers l'image originale"
-  , 'PLUGINS_MANAGEMENT' => "Gestion des Plugins (Extensions)"
-  , 'PLUGINS_INSTALLED' => "Plugins install&eacute;s"
-  , 'PLUGIN_DISABLED' => "Plugin désactivé"
-  , 'SHOW_PLUGINS' => "Plugi<em>n</em>s Install&eacute;s"
-  , 'PLUGIN_NAME' => "Nom"
-  , 'PLUGIN_DESC' => "Description"
-  , 'PLUGIN_VER' => "Version"
-  , 'ROOT_HTACCESS_ERROR' => "Impossible de cr&eacute;er .htaccess &agrave; la racine ! SVP copiez <b>%s</b> dans <b>.htaccess</b> et changez <code>%s</code> par <code>%s</code>"
-  , 'REMOVE_TEMPCONFIG_ERROR' => "Impossible de supprimer <b>%s</b>! SVP, faites le manuellement."
-  , 'MOVE_TEMPCONFIG_ERROR' => "Impossible de renommer <b>%s</b> par <b>%s</b>! SVP, faites le manuellement.."
-  , 'KILL_CANT_CONTINUE' => "Impossible de continuer. SVP, corrigez les erreurs et essayez &agrave; nouveau."
-  , 'REFRESH' => "Rafra&icirc;chir"
-  , 'BETA' => "Beta / Bleeding Edge (Avant garde)"
-  , 'HOMEPAGE_DELETE_ERROR' => "Vous ne pouvez pas supprimer votre page d'accueil (homepage)"
-  , 'NO_ZIPARCHIVE' => "L'extension ZipArchive n'est pas install&eacute;e. Impossible de continuer"
-  , 'REDIRECT_MSG' => "Si votre navigateur ne vous redirige pas, cliquez <a href=\"%s\">ici</a>"
-  , 'REDIRECT' => "Redirection"
-  , 'DENIED' => "Refus&eacute;"
-  , 'DEBUG_MODE' => "Mode DEBUG"
-  , 'DOUBLE_CLICK_EDIT' => "Double-cliquez pour éditer"
-  , 'THUMB_SAVED' => "Miniature Sauvegard&eacute;e"
-  , 'EDIT_COMPONENTS' => "Modifier ou Ajouter des composants"
-  , 'REQS_MORE_INFO' => "Pour plus d'informations sur les modules requis, visitez la <a href=\"%s\" target=\"_blank\" >page des pr&eacute;requis</a>."
-  , 'SYSTEM_UPDATE' => "Système mis &agrave; jour"
-  , 'AUTHOR' => "Auteur"
-  , 'ENABLE' => "Activer"
-  , 'DISABLE' => "D&eacute;sactiver"
-  , 'NO_THEME_SCREENSHOT' => "Pas d'aper&ccedil;u du th&egrave;me disponible"
-  , 'UNSAVED_INFORMATION' => "Vous &ecirc;tes sur le point de quitter cette page et de perdre toutes les informations non sauvegard&eacute;s."
-  , 'BACK_TO_WEBSITE' => "Retour au site"
-  , 'SUPPORT_FORUM' => "Forum du Support"
-  , 'FILTER' => "Filtre"
-  , 'UPLOADIFY_BUTTON' => "Mettre en ligne des fichiers et/ou des images"
-  , 'FILE_BROWSER' => "Explorateur de fichiers"
-  , 'SELECT_FILE' => "Sélectionner un fichier"
-  , 'CREATE_FOLDER' => "Cr&eacute;er un dossier"
-  , 'THUMBNAIL' => "Miniature"
-  , 'ERROR_FOLDER_EXISTS' => "Le dossier que vous essayez de cr&eacute;er existe d&eacute;j&agrave;"
-  , 'FOLDER_CREATED' => "Le nouveau dossier a bien &eacute;t&eacute; cr&eacute;er: <strong>%s</strong>"
-  , 'ERROR_CREATING_FOLDER' => "Il y a eu une erreur lors de la cr&eacute;ation du nouveau dossier"
-  , 'DELETE_FOLDER' => "Supprimer le dossier"
-  , 'FILE_NAME' => "Nom de fichier"
-  , 'FILE_SIZE' => "Taille"
-  , 'ARCHIVE_DATE' => "Date de l'Archive"
-  , 'CKEDITOR_LANG' => "fr"
-  , 'XML_INVALID' => "XML Invalide"
-  , 'XML_VALID' => "XML Valide"
-  , 'UPDATE_AVAILABLE' => "Mise &agrave; jour disponible"
-  , 'STATUS' => "Etat"
-  , 'CLONE' => "Cloner"
-  , 'CLONE_SUCCESS' => "Clonage r&eacute;ussi: %s"
-  , 'COPY' => "Copier"
-  , 'CLONE_ERROR' => "Il y a un probl&egrave;me dans la tentative de clonage <b>%s</b>"
-  , 'AUTOSAVE_NOTIFY' => "Page sauvegard&eacute; automatiquement &agrave;"
-  , 'MENU_MANAGER' => "Gestionnaire de <em>M</em>enu"
-  , 'GET_PLUGINS_LINK' => "T&eacute;l&eacute;charger <em>P</em>lus de Plugins"
-  , 'SITEMAP_REFRESHED' => "Votre sitemap a &eacute;t&eacute; rafra&icirc;chi"
-  , 'LOG_FILE_EMPTY' => "Ce fichier de log est vide"
-  , 'SHARE' => "Partager"
-  , 'NO_PARENT' => "Pas de Parent"
-  , 'REMAINING' => "caractères restants&nbsp;"
-  , 'NORMAL' => "Normal"
-  , 'ERR_CANNOT_DELETE' => "Impossible de supprimer %s. SVP faites le manuellement."
-  , 'ADDITIONAL_ACTIONS' => "Autres Actions"
-  , 'ITEMS' => "éléments"
-  , 'SAVE_MENU_ORDER' => "Enregistrer l'ordre du menu"
-  , 'MENU_MANAGER_DESC' => "Organisez les éléments du menu par Glisser-d&eacute;poser, puis cliquez sur le bouton <strong>'Enregistrer l'Ordre du menu'</strong>."
-  , 'MENU_MANAGER_SUCCESS' => "Le nouvel ordre du menu a &eacute;t&eacute; sauvegard&eacute;"
-  , 'API_ERR_MISSINGPARAM' => "Param&egrave;tre de l'API inexistant ou erroné"
-  , 'API_ERR_BADMETHOD' => "M&eacute;thode %s de l'API inexistante"
-  , 'API_ERR_AUTHFAILED' => "L'authentification avec l'API a &egrave;chou&egrave;"
-  , 'API_ERR_AUTHDISABLED' => "L'authentification avec l'API est d&egrave;sactiv&egrave;e"
-  , 'API_ERR_NOPAGE' => "La page demand&eacute;e %s n'existe pas"
-  , 'API_CONFIGURATION' => "Configuration de l'API"
-  , 'API_ENABLE' => "Activer l'API"
-  , 'API_REGENKEY' => "R&eacute;g&eacute;n&eacute;rer la clef"
-  , 'API_DISCLAIMER' => "En activant cette API, vous permettez à une application externe qui a une copie de votre cl&eacute; d'avoir acc&egrave;s aux donn&eacute;es de votre site. <b>Ne partagez cette cl&eacute; qu'avec des applications en qui vous avez confiance.</b>"
-  , 'API_REGEN_DISCLAIMER' => "Quand vous g&eacute;n&eacute;rez la clef API, vous devez renseigner cette nouvelle clef dans l'application externe qui utilise l'API afin qu'elle puisse se connecter &agrave; votre site web."
-  , 'API_CONFIRM' => "ETES-VOUS SUR ?"
-  , 'X' => "non traduit"
-  , 'DEBUG_CONSOLE' => "Console de Debuggage"
+
+return array(
+  'title' => 'Français',
+  'direction' => 'ltr',
+  'author' => 'Philippe Gervaise & Aris Papathéodorou',
+  'version' => '1.0.0',
+  'data' => array(
+
+    // global
+    'cancel' => 'Annuler',
+    'add' => 'Ajouter',
+    'save' => 'Enregistrer',
+    'saved' => 'Enregistré !',
+    'change' => 'Modifier',
+    'delete' => 'Supprimer',
+    'insert' => 'Insérer',
+    'ok' => 'Ok',
+
+    // options (sidebar)
+    'options.show' => 'Afficher les options',
+    'options.hide' => 'Masquer les options',
+
+    // installation
+    'installation' => 'Installation',
+    'installation.check.headline' => 'Installation de Kirby Panel',
+    'installation.check.text' => 'Durant l’installation, Kirby a rencontré les problèmes suivants…',
+    'installation.check.retry' => 'Essayer de nouveau',
+    'installation.check.error' => 'Des problèmes on été rencontrés !',
+    'installation.check.error.accounts' => 'Le répertoire “/site/accounts” n’est pas accessible en écriture',
+    'installation.check.error.avatars' => 'Le répertoire “/assets/avatars” n’est pas accessible en écriture',
+    'installation.check.error.blueprints' => 'Veuillez ajouter un répertoire “/site/blueprints”',
+    'installation.check.error.content' => 'Le répertoire “/content”, les sous-répertoires et les fichiers qu’il contient doivent être accessibles en écriture.',
+    'installation.check.error.thumbs' => 'Le répertoire “thumbs/” doit être accessible en écriture.',
+    'installation.signup.username.label' => 'Créer votre premier compte utilisateur',
+    'installation.signup.username.placeholder' => 'Nom d’utilisateur',
+    'installation.signup.email.label' => 'Email',
+    'installation.signup.email.placeholder' => 'mail@example.com',
+    'installation.signup.password.label' => 'Mot de passe',
+    'installation.signup.language.label' => 'Langue',
+    'installation.signup.button' => 'Créer votre compte',
+
+    // login
+    'login' => 'Connexion',
+    'login.welcome' => 'Veuillez vous authentifier avec votre nouveau compte',
+    'login.username.label' => 'Identifiant',
+    'login.password.label' => 'Mot de passe',
+    'login.error' => 'Identifiant ou mot de passe invalide',
+    'login.button' => 'Connexion',
+
+    // logout
+    'logout' => 'Déconnexion',
+
+    // dashboard
+    'dashboard' => 'Tableau de bord',
+    'dashboard.index.pages.title' => 'Pages',
+    'dashboard.index.pages.edit' => 'Modifier',
+    'dashboard.index.pages.add' => 'Ajouter',
+    'dashboard.index.site.title' => 'URL du site',
+    'dashboard.index.account.title' => 'Votre profil',
+    'dashboard.index.account.edit' => 'Modifier',
+    'dashboard.index.metatags.title' => 'Paramètres du site',
+    'dashboard.index.metatags.edit' => 'Modifier',
+    'dashboard.index.history.title' => 'Modifications récentes',
+    'dashboard.index.history.text' => 'Vos modifications les plus récentes seront affichées ici afin de les retrouver plus aisément.',
+    'dashboard.index.license.title' => 'License de Kirby',
+
+    // metatags
+    'metatags' => 'Paramètres du site',
+    'metatags.info' => 'Informations de Kirby',
+    'metatags.license' => 'License de Kirby',
+    'metatags.version.toolkit' => 'Version du Toolkit ',
+    'metatags.version.kirby' => 'Version de Kirby ',
+    'metatags.version.panel' => 'Version du Panel ',
+    'metatags.back' => 'Retour au tableau de bord',
+    'metatags.files' => 'Fichiers du site',
+
+    // pages
+    'pages.show.settings' => 'Options de la page',
+    'pages.show.preview' => 'Prévisualiser',
+    'pages.show.changeurl' => 'Modifier l’URL',
+    'pages.show.invisible' => 'Statut: invisible',
+    'pages.show.visible' => 'Statut: visible',
+    'pages.show.changes.text' => 'Vous avez des modifications non enregistrées !',
+    'pages.show.changes.button' => 'Les supprimer',
+    'pages.show.delete' => 'Supprimer cette page',
+    'pages.show.subpages.title' => 'Pages',
+    'pages.show.subpages.edit' => 'Modifier',
+    'pages.show.subpages.add' => 'Ajouter',
+    'pages.show.subpages.empty' => 'Cette page n’a aucune page secondaire',
+    'pages.show.files.title' => 'Fichiers',
+    'pages.show.files.edit' => 'Modifier',
+    'pages.show.files.add' => 'Ajouter',
+    'pages.show.files.empty' => 'Cette page n’a aucun fichier attaché',
+    'pages.show.error.permissions.title' => 'La page n’est pas accessible en écriture',
+    'pages.show.error.permissions.text'  => 'Merci de vérifier les permissions pour le répertoire "/content" et ses fichiers.',
+    'pages.show.error.permissions.retry'  => 'Essayer de nouveau',
+    'pages.show.error.notitle.title' => 'Ce blueprint n’a pas de champs « titre »',
+    'pages.show.error.notitle.text' => 'Veuillez ajouter un champs « titre » et essayer de nouveau',
+    'pages.show.error.notitle.retry' => 'Essayer de nouveau',
+    'pages.show.error.form'  => 'Merci de remplir correctement l’ensemble des champs',
+
+    'pages.add.title.label' => 'Ajouter une nouvelle page',
+    'pages.add.title.placeholder' => 'Titre',
+    'pages.add.url.label' => 'Identifiant pour l’URL de la page',
+    'pages.add.url.enter' => '(saisir votre titre)',
+    'pages.add.url.close' => 'Fermer',
+    'pages.add.url.help' => 'Format : minuscules a-z, chiffres 0-9 et tiret simple',
+    'pages.add.template.label' => 'Modèle de page',
+    'pages.add.error.title' => 'Il n’y a pas de titre',
+    'pages.add.error.template' => 'Vous n’avez pas choisi de modèle',
+    'pages.add.error.max.headline' => 'La création de nouvelles pages secondaires n’est pas autorisé pour cette page',
+    'pages.add.error.max.text' => 'Le nombre maximum de pages secondaires a été atteint pour cette page.',
+    'pages.url.uid.label' => 'Identifiant de l’URL',
+    'pages.url.uid.label.option' => 'Créer à partir du titre',
+    'pages.url.error.exists' => 'Une page du même nom existe déjà',
+    'pages.url.error.move' => 'L’identifiant de l’URL n’a pu être changé',
+    'pages.toggle.publish' => 'Voulez-vous vraiment modifier le statut de cette page en **visible**?',
+    'pages.toggle.hide' => 'Voulez-vous vraiment modifier le statut de cette page en **invisible**?',
+    'pages.delete.headline' => 'Voulez-vous vraiment supprimer définitivement cette page ?',
+    'pages.delete.error.home.headline' => 'La page d’accueil ne peut être supprimée',
+    'pages.delete.error.home.text' => 'Vous essayez de supprimer la page d’accueil. Ce n’est pas possible et cela aurait des conséquences fâcheuses.',
+    'pages.delete.error.error.headline' => 'La page d’erreur ne peut être supprimée',
+    'pages.delete.error.error.text' => 'Vous essayez de supprimer la page d’erreur. Ce n’est pas possible et cela aurait des conséquences fâcheuses.',
+    'pages.delete.error.children.headline' => 'La page ne peut être supprimée',
+    'pages.delete.error.children.text' => 'Cette page à des pages secondaires. Veuillez supprimer les pages associée au préalable.',
+    'pages.delete.error.blocked.headline' => 'La page ne peut être supprimée',
+    'pages.delete.error.blocked.text' => 'Cette page est verrouillée et ne peut être supprimée.',
+    'pages.search.help' => 'Rechercher des pages par URL. Naviguer entre les résultats avec les flèches “haut” et “bas” du clavier, puis appuyer sur la touche “Entrée” pour aller à la page sélectionnée.',
+    'pages.search.noresults' => 'Il n’y a pas de résultat à votre recherche. Veuillez essayer de nouveau avec une URL différente.',
+    'pages.error.missing' => 'Cette page n’a pu être trouvée',
+
+    // subpages
+    'subpages' => 'Pages',
+    'subpages.index.headline' => 'Pages dans :',
+    'subpages.index.back' => 'Retour',
+    'subpages.index.add' => 'Ajouter',
+    'subpages.index.add.first.text' => 'Cette page n’a pas encore de page secondaire',
+    'subpages.index.add.first.button' => 'Ajouter une première page',
+    'subpages.index.visible' => 'Pages visibles',
+    'subpages.index.visible.help' => 'Glisser ici une page invisible pour la classer et la rendre visible.',
+    'subpages.index.invisible' => 'Pages invisibles',
+    'subpages.index.invisible.help' => 'Glisser ici une page pour la rendre invisible.',
+    'subpages.error.missing' => 'La page n’a pu être trouvée',
+
+    // files
+    'files' => 'Fichiers',
+    'files.index.headline' => 'Fichiers pour la page :',
+    'files.index.back' => 'Retour',
+    'files.index.upload' => 'Ajouter un fichier',
+    'files.index.upload.first.text' => 'Cette page n’a pas encore de fichier attaché',
+    'files.index.upload.first.button' => 'Ajouter un premier fichier',
+    'files.index.edit' => 'Modifier',
+    'files.index.delete' => 'Supprimer',
+    'files.show.name.label' => 'Nom du fichier',
+    'files.show.info.label' => 'Type / Taille / Dimensions',
+    'files.show.link.label' => 'Lien public',
+    'files.show.open' => 'Afficher/télécharger le fichier',
+    'files.show.back' => 'Retour',
+    'files.show.replace' => 'Remplacer',
+    'files.show.delete' => 'Supprimer',
+    'files.show.error.rename' => 'Le fichier n’a pu être renommé',
+    'files.show.error.form' => 'Merci de remplir correctement chaque champ du formulaire',
+    'files.upload.drop' => 'Glisser ici un fichier…',
+    'files.upload.click' => '… ou cliquer pour le transférer depuis votre ordinateur',
+    'files.replace.drop' => 'Glisser ici un fichier…',
+    'files.replace.click' => '… ou cliquer pour le remplacer',
+    'files.replace.error.type' => 'Le fichier transféré doit être du même type',
+    'files.delete.headline' => 'Voulez-vous vraiment supprimer ce fichier ?',
+    'files.error.missing.page' => 'La page n’a pu être trouvée',
+    'files.error.missing.file' => 'Le fichier n’a pu être trouvé',
+
+    // users
+    'users' => 'Utilisateurs',
+    'users.index.headline' => 'Tous les utilisateurs',
+    'users.index.add' => 'Ajouter un utilisateur',
+    'users.index.edit' => 'Modifier',
+    'users.index.delete' => 'Supprimer',
+    'users.form.username.label' => 'Nom d’utilisateur',
+    'users.form.username.placeholder' => 'Votre nom d’utilisateur',
+    'users.form.username.help' => 'Format : minuscules a-z, chiffres 0-9 et tiret simple',
+    'users.form.username.readonly' => 'Le nom d’utilisateur ne peut être modifié',
+    'users.form.firstname.label' => 'Prénom',
+    'users.form.lastname.label' => 'Nom',
+    'users.form.email.label' => 'Email',
+    'users.form.email.placeholder' => 'mail@example.com',
+    'users.form.password.label' => 'Mot de passe',
+    'users.form.password.confirm.label' => 'Confirmer votre mot de passe',
+    'users.form.password.new.label' => 'Nouveau mot de passe',
+    'users.form.password.new.confirm.label' => 'Confirmer le nouveau mot de passe',
+    'users.form.password.new.help' => 'Laisser vide pour conserver votre mot de passe actuel',
+    'users.form.language.label' => 'Langue',
+    'users.form.role.label' => 'Role',
+    'users.form.options.headline' => 'Options du compte',
+    'users.form.options.message' => 'Envoyer un email',
+    'users.form.options.delete' => 'Supprimer le compte',
+    'users.form.avatar.headline' => 'Image du profil',
+    'users.form.avatar.upload' => 'Ajouter une image de profil',
+    'users.form.avatar.replace' => 'Remplacer l’image du profil',
+    'users.form.avatar.delete' => 'Supprimer l’image du profil',
+    'users.form.back' => 'Retour au compte',
+    'users.form.error.password.confirm' => 'Veuillez confirmer le mot de passe',
+    'users.form.error.update' => 'Le compte utilisateur ne peut être mis à jour',
+    'users.form.error.create' => 'Le compte utilisateur n’a pu être créé',
+    'users.form.error.permissions.title' => 'Le répertoir des comptes n’est pas accessible en écriture',
+    'users.form.error.permissions.text' => 'Vérifiez que le répertoire “/site/accounts” existe et est accessible en écriture.',
+    'users.delete.headline' => 'Voulez-vous vraiment supprimer ce compte ?',
+    'users.delete.error' => 'Le compte utilisateur n’a pu être supprimé',
+    'users.avatar.drop' => 'Glisser ici un fichier image…',
+    'users.avatar.click' => '…ou cliquer pour le transférer depuis votre ordinateur',
+    'users.avatar.error.type' => 'Vous pouvez uniquement transférer des fichiers JPG, PNG et GIF',
+    'users.avatar.error.folder.headline' => 'Le répertoire “avatar” n’est pas accessible en écriture',
+    'users.avatar.error.folder.text' => 'Veuillez créer le répertoire <strong>/assets/avatars/<strong> et l’ouvrir en écriture pour pouvoir charger une vignette pour le compte.',
+    'users.avatar.delete.error' => 'L’image du profil n’a pu être supprimée',
+    'users.avatar.delete.success' => 'L’image du profil a été suprimée',
+    'users.error.missing' => 'Aucun compte utilisateur à ce nom n’a été trouvé',
+
+    // form fields
+    'fields.required' => 'Requis',
+    'fields.date.label' => 'Date',
+    'fields.date.months' => array(
+      'Janvier',
+      'Février',
+      'Mars',
+      'Avril',
+      'Mai',
+      'Juin',
+      'Juillet',
+      'Août',
+      'Septembre',
+      'Octobre',
+      'Novembre',
+      'Décembre'
+    ),
+    'fields.date.weekdays' => array(
+      'Dimanche',
+      'Lundi',
+      'Mardi',
+      'Mercredi',
+      'Jeudi',
+      'Vendredi',
+      'Samedi'
+    ),
+    'fields.date.weekdays.short' => array(
+      'Dim',
+      'Lun',
+      'Mar',
+      'Mer',
+      'Jeu',
+      'Ven',
+      'Sam'
+    ),
+    'fields.email.label' => 'Email',
+    'fields.email.placeholder' => 'mail@example.com',
+    'fields.number.label' => 'Numéro',
+    'fields.number.placeholder' => 'N°',
+    'fields.page.label' => 'Page',
+    'fields.page.placeholder' => 'chemin/vers/la/page',
+    'fields.password.label' => 'Mot de passe',
+    'fields.structure.add' => 'Ajouter',
+    'fields.structure.add.first' => 'Créer la première entrée',
+    'fields.structure.empty' => 'Aucune entrée pour le moment.',
+    'fields.structure.cancel' => 'Annuler',
+    'fields.structure.save' => 'Valider',
+    'fields.structure.edit' => 'Modifier',
+    'fields.structure.delete' => 'Supprimer',
+    'fields.tags.label' => 'Tags',
+    'fields.tel.label' => 'Téléphone',
+    'fields.textarea.buttons.bold.label' => 'Gras',
+    'fields.textarea.buttons.bold.text' => 'Texte en gras',
+    'fields.textarea.buttons.italic.label' => 'Italique',
+    'fields.textarea.buttons.italic.text' => 'Texte en italique',
+    'fields.textarea.buttons.link.label' => 'Lien',
+    'fields.textarea.buttons.email.label' => 'Email',
+    'fields.textarea.buttons.image.label' => 'Image',
+    'fields.textarea.buttons.file.label' => 'Fichier',
+    'fields.toggle.yes' => 'Oui',
+    'fields.toggle.no' => 'Non',
+    'fields.toggle.on' => 'Activé',
+    'fields.toggle.off' => 'Désactivé',
+
+    // textarea overlays
+    'editor.link.url.label' => 'Insérer une URL',
+    'editor.link.text.label' => 'Texte du lien',
+    'editor.link.text.help' => 'Le texte du lien est optionnel',
+    'editor.email.address.label' => 'Insérer une adresse email',
+    'editor.email.address.placeholder' => 'mail@example.com',
+    'editor.email.text.label' => 'Texte du lien',
+    'editor.email.text.help' => 'Le texte du lien est optionnel',
+    'editor.file.empty' => 'Cette page n’a aucun fichier attaché',
+    'editor.image.empty' => 'Cette page n’a aucun fichier image attaché',
+
+    // error page
+    'error' => 'Erreur',
+    'error.headline' => 'Erreur',
+
+  )
 );

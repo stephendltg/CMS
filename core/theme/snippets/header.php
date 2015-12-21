@@ -1,26 +1,61 @@
+<?php
+?>
 <!doctype html>
-<html <?php html_attributes(); ?> class="no-js">
+<html <?php the_blog('lang', 'lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
 <head>
-    <meta charset="<?php charset(); ?>">
-    <title><?php title(); ?></title>
-    <?php mpops_head(); ?>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no">
-    <link rel="stylesheet" href="assets/css/knacss.css" media="all">
+    <?php mp_head(); ?>
 
+    <style>
+
+        .box-label,.box-content{
+            display: block;
+            margin:0;
+            padding: 20px;
+            background-color: #eee;
+        }
+
+        /* Box */
+        .box-toggle:checked ~ .box-content{
+            transform: none;
+         }
+        .box-content{
+            transform: perspective(500px) rotateX(-.25turn) scaleY(2);
+            transform-origin: 50% 0;
+            transition: .4s;
+         }
+        /* End box */
+
+
+    </style>
 </head>
+
 <body role="document">
 
-    <header class="header" role="banner">
-        <a class="logo" href="<?php blog('url'); ?>">
-          <img src="assets/images/minipops.svg" alt="<?php blog('title'); ?>" />
-        </a>
-        <hgroup class="title">
-            <h1 class="site-title"><?php blog('title'); ?></h1>
-            <h2 class="site-subtitle"><?php blog('subtitle'); ?></h2>
+    <header class="header ptl pbl txtcenter mtl mbl" role="banner">
+        <hgroup class="title mtl">
+            <h1 class="site-title h3-like mbn"><a href="<?php get_home_url(); ?>"><?php the_blog('title') ?></a></h1>
+            <h2 class="site-subtitle h6-like mtn"><?php the_blog('subtitle') ?></h2>
         </hgroup>
-
     </header>
 
-    <?php snippet('menu') ?>
+
+
+    <!-- box -->
+    <div class="box">
+        <label class="box-label">Open this box
+            <input type="checkbox" class="box-toggle visually-hidden" />
+            <span class="box-content">my message !</span>
+        </label>
+    </div>
+
+    <!-- box -->
+    <div class="box mtm">
+        <input type="checkbox" id="box-toggle" class="box-toggle visually-hidden" />
+        <label for="box-toggle" class="box-label" onclick>Open this box</label>
+        <span class="box-content">
+            <p> my message !</p>
+        </span>
+    </div>
+
+
+    https://evertpot.com/223/
