@@ -1,0 +1,13 @@
+# generate by mini-pops
+
+lang :
+
+	en :
+		item : do you like the senegal ?
+		item1 : do you like the france ?
+	fr :
+		item: aimes-tu le senegal ?
+		item1: aimes-tu la france ?
+
+
+----

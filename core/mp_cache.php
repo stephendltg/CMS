@@ -12,12 +12,22 @@
 /*       Gestion du cache des pages            */
 /***********************************************/
 
-// On gérer le cache si page ou home ( seulement si DEBUG is OFF et que nous sommes sur un serveur apache )
-if( is_page() ) add_action('get_header', function(){ ob_start('mp_cache_pages'); } );
-if( is_home() ) add_action('get_header', function(){ ob_start('mp_cache_pages'); } );
+// On gérer le cache si page ou home
+if( is_page() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+if( is_home() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+
 
 // On supprime le cache si une page est renommé
-add_action('mp_page_rename', 'mp_clear_cache_page');
+add_action('do_before_rename_the_page', 'mp_clear_cache_page');
+
+// On supprime le cache si une page est caché
+add_action('do_before_hide_the_page', 'mp_clear_cache_page');
+
+// On supprime le cache si une page a été modifiée
+add_action('do_before_edit_the_page', 'mp_clear_cache_page');
+
+// On supprime le cache si une page a été suprrimée
+add_action('do_before_delete_the_page', 'mp_clear_cache_page');
 
 
 /***********************************************/
@@ -29,6 +39,7 @@ function mp_cache_pages( $html ){
     global $query, $is_mod_rewrite;
 
     if( !DEBUG
+    && apply_filter('do_cache', true)
     && $is_mod_rewrite
     && $_SERVER['REQUEST_METHOD'] == 'GET'
     && is_notin( $query, apply_filter('nocache_pages', array() ) )

@@ -150,22 +150,97 @@ function get_the_images( $name ='', $where = array(), $max = 10 ){
     $max    = (integer) $max;
     $name   = (string) $name;
 
+    do_action('do_before_get_the_images', $name, $where );
+
     $types  = apply_filter('the_images_type' , 'jpg,jpeg,png,gif,svg' );
+
     $images = get_attached_media( array('where'=>$where, 'name'=>$name, 'type'=>$types, 'max'=>$max) );
     $images = array_map( function($image){ return CONTENT_URL.'/'.$image;} , $images );
+
+    do_action('do_after_get_the_images', $name, $where );
 
     return $images;
 }
 
 /**
  * Recherche une image attachés
- * @param  $where           array() : Listes des slugs de pages où chercher les images sous forme de tableau
  * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_the_image( $name ='' ){
+function get_the_image( $name = '' ){
 
     $name   = (string) $name;
 
-    return implode( get_attached_media( array('name'=>$name, 'type'=>'jpg,jpeg,png,gif,svg', 'max'=> 1) ) );
+    do_action('do_before_get_the_image', $name );
+
+    $types  = apply_filter('the_image_type' , 'jpg,jpeg,png,gif,svg' );
+
+    $image = implode( get_attached_media( array('name' => $name, 'type' => $types, 'max'=> 1) ) );
+
+    do_action('do_after_get_the_image', $name );
+
+    return $image;
+}
+
+
+
+
+/***********************************************/
+/*          Compress image                     */
+/***********************************************/
+/**
+ * Compression d'image
+ * @param  $src      Source image
+ * @param  $quality  normal, hard, ultra
+ * @return boolean
+ */
+
+function mp_image_compress( $src, $mode = 'normal' ) {
+
+    if( function_exists('imagecreatefrompng') // On vérifie que GD est présent
+    && file_exists($src)                      // On vérifie l'existence du fichier
+    && is_writable($src)                      // On vérifie les permissions
+    && is_in( exif_imagetype($src), array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG) )  // C'est bien une image !
+    ){
+
+        $image_size = getimagesize($src);
+        $file_mime  = end( @explode('/', $image_size['mime']) );
+
+        // Gestion mémoire
+        $m_img     = round(($image_size[0] * $image_size[1] * $image_size['bits'] * $image_size['channels'] / 8 + pow(2, 16)) * 1.65);
+        $m_need    = $m_img + memory_get_usage();
+        $m_need    = round($m_need / pow(1024,2),2);
+        $m_limit   = (int) get_limit_memory();
+        $m_alloc   = $m_need - $m_limit;
+        // Si pas assez de mémoire on stop
+        if( is_min($m_alloc, 0) ) return false;
+
+        /* On créer la ressource mémoire pour l'image */
+        switch ($file_mime) {
+            case 'jpeg':
+                $image   = imagecreatefromjpeg($src);
+                $quality = apply_filter('mode_jpeg_compress', array('normal'=>85, 'hard'=>80, 'ultra'=>75) );
+                $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 85;
+                $created = imagejpeg( $image, $src , $quality );
+                break;
+            case 'png':
+                $image   = imagecreatefrompng($src);
+                $quality = apply_filter('mode_png_compress', array('normal'=>1, 'hard'=>2, 'ultra'=>3) );
+                $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 1;
+                $created = imagepng($image, $src , $quality );
+                break;
+            case 'gif':
+                $image   = imagecreatefromgif($src);
+                $created = imagegif($image, $src );
+                break;
+            default:
+                return false;
+                break;
+        }
+        imagedestroy($image);
+        return $created;
+
+    } else {
+        return false;
+    }
 }

@@ -38,6 +38,7 @@ else :
 endif;
 
 if ( $template = apply_filter( 'template_include', $template ) ){
+	do_action('TEMPLATE_REDIRECT');
     include( $template );
 }
 

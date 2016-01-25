@@ -46,6 +46,20 @@ function redirect( $location , $status = 302 ){
 }
 
 
+function arrayToObject($array){
+  if( is_array($array) ){
+
+    foreach($array as &$item)
+        $item = arrayToObject($item);
+
+    return (object) $array;
+  }
+
+  return $array;
+}
+
+
+
 /**
  * Convertir relative path en absolute url
  *
@@ -210,22 +224,51 @@ function rmdir_recursive( $dir ) {
 * @param  string    $path     Chemin absolu du fichier
 * @return array
 */
-function file_get_yaml( $path ){
+function file_get_yaml( $path , $recursive = false ){
 
-    $path= (string) $path;
+    $path = (string) $path;
+    $recursive = (bool) $recursive;
 
     $yaml = array();
 
     // On ouvre le fichier de la page, on l'encode en utf8 et on nettoie
     $file = esc_attr( encode_utf8( file_get_contents( $path ) ) );
 
-    // On récupère les champs et leurs valeurs
-    preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match );
+    if( preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match ) ){
 
-    if( !empty($match) ) {
         $match[1] = array_map( 'strtolower', $match[1] );
-        $yaml = array_combine($match[1], $match[2]);
+        $yaml = array_combine($match[1], array_map('FILTER_BY_TYPE', $match[2]) );
         unset($match);
+
+        if( $recursive ){
+
+            foreach ($yaml as $field => $value) {
+
+                $key_parent = '';
+
+                if( preg_match_all('/^([ \t]*\w+)[ \t]*:[ \t]*(.*)/mi', $value , $match ) ){
+
+                    foreach ($match[1] as $k => $v ) {
+                        // Si 4 espace alors c'est une tabulation
+                        $v = str_replace('    ', "\t" , $v);
+                        // On determine le nombre de tabulation
+                        $c = strripos($v, "\t") - stripos($v, "\t");
+                        $y = stripos($v,'-');
+
+                        if( $c === 0 && !$match[2][$k] ) $key_parent = trim($v);
+
+                        if( $c === 1 && $key_parent ) $table[$key_parent][trim($v)] =  FILTER_BY_TYPE( $match[2][$k] );
+
+                        if( $c === 0 ) $table[trim($v)] = FILTER_BY_TYPE( $match[2][$k] );
+                    }
+
+                } else $table = FILTER_BY_TYPE( $value );
+
+            $yaml[$field] = $table;
+            unset($table);
+
+            }
+        }
     }
     return $yaml;
 }
@@ -235,16 +278,55 @@ function file_get_yaml( $path ){
 * @param  string    $path     Chemin absolu du fichier
 * @return array
 */
-function file_put_yaml( $path , $array ){
+function file_put_yaml( $path , $array , $recursive = false ){
 
-    $path= (string) $path;
+    $path      = (string) $path;
+    $recursive = (bool) $recursive;
 
     $text = '# generate by mini-pops'. PHP_EOL;
-    foreach( $array as $field => $value )
-        if( !empty($value) )
-            $text .= PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
 
-    if( !is_writable($path)) return false;
+    if( !$recursive ){
+
+        foreach( $array as $field => $value )
+            if( !empty($value) )
+                $text .= PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
+
+    } else {
+
+        foreach ( $array as $field => $value) {
+
+            if( !is_array($value) ){
+
+                $text .= PHP_EOL . strtolower($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
+
+            } else {
+
+                $text .= PHP_EOL . strtolower($field) . ':'. PHP_EOL;
+
+                foreach ( $value as $k => $v ) {
+
+                    if(is_array($v)){
+
+                        $text .= PHP_EOL .'    '. strtolower($k) . ':'. PHP_EOL;
+
+                        foreach ($v as $i => $j) {
+
+                            if( is_array($j) ) $j = null;
+                            $text .= PHP_EOL .'        '. strtolower($i) . ': ' . $j . PHP_EOL;
+
+                        }
+
+                    } else {
+                        $text .= PHP_EOL .'    '. strtolower($k) . ': ' . $v . PHP_EOL;
+                    }
+                }
+
+                $text .= PHP_EOL .'----' . PHP_EOL;
+            }
+        }
+    }
+
+    if( file_exists($path) && !is_writable($path) ) return false;
     file_put_contents( $path , $text , LOCK_EX );
     @chmod( $path , 0644 );
     return true;
@@ -372,6 +454,7 @@ function parse_text( $text ){
  * @return boolean
  */
 function email( $params = null , $mode = 'plain' ){
+
     if( is_array( $params ) and !empty( $params ) ) {
         if( isset( $params['to'] ) )                                        $to      = $params['to'];
         if( isset( $params['from'] )    && is_email( $params['from'] ) )    $from    = $params['from'];
@@ -540,6 +623,14 @@ function size( $value ) {
   if( file_exists($value) ) return filesize($value) / 1024;
 }
 
+function is( $value ){
+    return !empty($value);
+}
+
+function isnot( $value ){
+    return !isset( $value );
+}
+
 function is_match( $value , $regex ) {
     return preg_match( $regex , $value ) == true;
 }
@@ -633,6 +724,22 @@ function is_url( $value ){
 /***********************************************/
 
 /**
+ * Filtre variable par type
+ */
+function FILTER_BY_TYPE( $value ){
+
+    $value = trim( $value );
+    if( is_same($value, 'false') )      return false;
+    elseif( is_same($value, 'true') )   return true;
+    elseif( is_same($value, 'null') )   return null;
+    elseif( is_intgr($value) )          return (int) $value;
+    elseif( is_numeric($value) )        return (float) $value;
+    elseif( is_date($value) )           return strtotime($value);
+    return $value;
+
+};
+
+/**
  * Supprime toutes les balises ( style et script y comprit ).
  */
 function strip_all_tags( $string ) {
@@ -701,158 +808,4 @@ function sanitize_words( $words ) {
     $words = str_replace( array( '%20', '+' ), ' ', $words );
     $words = preg_replace( '/[\r\n\t ]+/', ' ', $words );
     return $words;
-}
-
-
-/***********************************************/
-/*                fonctions timezone           */
-/***********************************************/
-
-/*
- * Liste des timezone valid
- */
-function timezones(){
-
-return array(
-        'Pacific/Midway'        => "(GMT-11:00) Midway Island",
-        'US/Samoa'              => "(GMT-11:00) Samoa",
-        'US/Hawaii'             => "(GMT-10:00) Hawaii",
-        'US/Alaska'             => "(GMT-09:00) Alaska",
-        'US/Pacific'            => "(GMT-08:00) Pacific Time (US &amp; Canada)",
-        'America/Tijuana'       => "(GMT-08:00) Tijuana",
-        'US/Arizona'            => "(GMT-07:00) Arizona",
-        'US/Mountain'           => "(GMT-07:00) Mountain Time (US &amp; Canada)",
-        'America/Chihuahua'     => "(GMT-07:00) Chihuahua",
-        'America/Mazatlan'      => "(GMT-07:00) Mazatlan",
-        'America/Mexico_City'   => "(GMT-06:00) Mexico City",
-        'America/Monterrey'     => "(GMT-06:00) Monterrey",
-        'Canada/Saskatchewan'   => "(GMT-06:00) Saskatchewan",
-        'US/Central'            => "(GMT-06:00) Central Time (US &amp; Canada)",
-        'US/Eastern'            => "(GMT-05:00) Eastern Time (US &amp; Canada)",
-        'US/East-Indiana'       => "(GMT-05:00) Indiana (East)",
-        'America/Bogota'        => "(GMT-05:00) Bogota",
-        'America/Lima'          => "(GMT-05:00) Lima",
-        'America/Caracas'       => "(GMT-04:30) Caracas",
-        'Canada/Atlantic'       => "(GMT-04:00) Atlantic Time (Canada)",
-        'America/La_Paz'        => "(GMT-04:00) La Paz",
-        'America/Santiago'      => "(GMT-04:00) Santiago",
-        'Canada/Newfoundland'   => "(GMT-03:30) Newfoundland",
-        'America/Buenos_Aires'  => "(GMT-03:00) Buenos Aires",
-        'Greenland'             => "(GMT-03:00) Greenland",
-        'Atlantic/Stanley'      => "(GMT-02:00) Stanley",
-        'Atlantic/Azores'       => "(GMT-01:00) Azores",
-        'Atlantic/Cape_Verde'   => "(GMT-01:00) Cape Verde Is.",
-        'Africa/Casablanca'     => "(GMT) Casablanca",
-        'Europe/Dublin'         => "(GMT) Dublin",
-        'Europe/Lisbon'         => "(GMT) Lisbon",
-        'Europe/London'         => "(GMT) London",
-        'Africa/Monrovia'       => "(GMT) Monrovia",
-        'Europe/Amsterdam'      => "(GMT+01:00) Amsterdam",
-        'Europe/Belgrade'       => "(GMT+01:00) Belgrade",
-        'Europe/Berlin'         => "(GMT+01:00) Berlin",
-        'Europe/Bratislava'     => "(GMT+01:00) Bratislava",
-        'Europe/Brussels'       => "(GMT+01:00) Brussels",
-        'Europe/Budapest'       => "(GMT+01:00) Budapest",
-        'Europe/Copenhagen'     => "(GMT+01:00) Copenhagen",
-        'Europe/Ljubljana'      => "(GMT+01:00) Ljubljana",
-        'Europe/Madrid'         => "(GMT+01:00) Madrid",
-        'Europe/Paris'          => "(GMT+01:00) Paris",
-        'Europe/Prague'         => "(GMT+01:00) Prague",
-        'Europe/Rome'           => "(GMT+01:00) Rome",
-        'Europe/Sarajevo'       => "(GMT+01:00) Sarajevo",
-        'Europe/Skopje'         => "(GMT+01:00) Skopje",
-        'Europe/Stockholm'      => "(GMT+01:00) Stockholm",
-        'Europe/Vienna'         => "(GMT+01:00) Vienna",
-        'Europe/Warsaw'         => "(GMT+01:00) Warsaw",
-        'Europe/Zagreb'         => "(GMT+01:00) Zagreb",
-        'Europe/Athens'         => "(GMT+02:00) Athens",
-        'Europe/Bucharest'      => "(GMT+02:00) Bucharest",
-        'Africa/Cairo'          => "(GMT+02:00) Cairo",
-        'Africa/Harare'         => "(GMT+02:00) Harare",
-        'Europe/Helsinki'       => "(GMT+02:00) Helsinki",
-        'Europe/Istanbul'       => "(GMT+02:00) Istanbul",
-        'Asia/Jerusalem'        => "(GMT+02:00) Jerusalem",
-        'Europe/Kiev'           => "(GMT+02:00) Kyiv",
-        'Europe/Minsk'          => "(GMT+02:00) Minsk",
-        'Europe/Riga'           => "(GMT+02:00) Riga",
-        'Europe/Sofia'          => "(GMT+02:00) Sofia",
-        'Europe/Tallinn'        => "(GMT+02:00) Tallinn",
-        'Europe/Vilnius'        => "(GMT+02:00) Vilnius",
-        'Asia/Baghdad'          => "(GMT+03:00) Baghdad",
-        'Asia/Kuwait'           => "(GMT+03:00) Kuwait",
-        'Europe/Moscow'         => "(GMT+03:00) Moscow",
-        'Africa/Nairobi'        => "(GMT+03:00) Nairobi",
-        'Asia/Riyadh'           => "(GMT+03:00) Riyadh",
-        'Europe/Volgograd'      => "(GMT+03:00) Volgograd",
-        'Asia/Tehran'           => "(GMT+03:30) Tehran",
-        'Asia/Baku'             => "(GMT+04:00) Baku",
-        'Asia/Muscat'           => "(GMT+04:00) Muscat",
-        'Asia/Tbilisi'          => "(GMT+04:00) Tbilisi",
-        'Asia/Yerevan'          => "(GMT+04:00) Yerevan",
-        'Asia/Kabul'            => "(GMT+04:30) Kabul",
-        'Asia/Yekaterinburg'    => "(GMT+05:00) Ekaterinburg",
-        'Asia/Karachi'          => "(GMT+05:00) Karachi",
-        'Asia/Tashkent'         => "(GMT+05:00) Tashkent",
-        'Asia/Kolkata'          => "(GMT+05:30) Kolkata",
-        'Asia/Kathmandu'        => "(GMT+05:45) Kathmandu",
-        'Asia/Almaty'           => "(GMT+06:00) Almaty",
-        'Asia/Dhaka'            => "(GMT+06:00) Dhaka",
-        'Asia/Novosibirsk'      => "(GMT+06:00) Novosibirsk",
-        'Asia/Bangkok'          => "(GMT+07:00) Bangkok",
-        'Asia/Jakarta'          => "(GMT+07:00) Jakarta",
-        'Asia/Krasnoyarsk'      => "(GMT+07:00) Krasnoyarsk",
-        'Asia/Chongqing'        => "(GMT+08:00) Chongqing",
-        'Asia/Hong_Kong'        => "(GMT+08:00) Hong Kong",
-        'Asia/Irkutsk'          => "(GMT+08:00) Irkutsk",
-        'Asia/Kuala_Lumpur'     => "(GMT+08:00) Kuala Lumpur",
-        'Australia/Perth'       => "(GMT+08:00) Perth",
-        'Asia/Singapore'        => "(GMT+08:00) Singapore",
-        'Asia/Taipei'           => "(GMT+08:00) Taipei",
-        'Asia/Ulaanbaatar'      => "(GMT+08:00) Ulaan Bataar",
-        'Asia/Urumqi'           => "(GMT+08:00) Urumqi",
-        'Asia/Seoul'            => "(GMT+09:00) Seoul",
-        'Asia/Tokyo'            => "(GMT+09:00) Tokyo",
-        'Asia/Yakutsk'          => "(GMT+09:00) Yakutsk",
-        'Australia/Adelaide'    => "(GMT+09:30) Adelaide",
-        'Australia/Darwin'      => "(GMT+09:30) Darwin",
-        'Australia/Brisbane'    => "(GMT+10:00) Brisbane",
-        'Australia/Canberra'    => "(GMT+10:00) Canberra",
-        'Pacific/Guam'          => "(GMT+10:00) Guam",
-        'Australia/Hobart'      => "(GMT+10:00) Hobart",
-        'Australia/Melbourne'   => "(GMT+10:00) Melbourne",
-        'Pacific/Port_Moresby'  => "(GMT+10:00) Port Moresby",
-        'Australia/Sydney'      => "(GMT+10:00) Sydney",
-        'Asia/Vladivostok'      => "(GMT+10:00) Vladivostok",
-        'Asia/Magadan'          => "(GMT+11:00) Magadan",
-        'Pacific/Auckland'      => "(GMT+12:00) Auckland",
-        'Pacific/Fiji'          => "(GMT+12:00) Fiji",
-        'Asia/Kamchatka'        => "(GMT+12:00) Kamchatka"
-    );
-}
-
-
-
-/***********************************************/
-/*                fonctions robots             */
-/***********************************************/
-
-/*
- * Liste des contenu robots valid
- */
-function robots_authorized(){
-
-    return array(
-        'noindex',
-        'nofollow',
-        'noindex,nofollow',
-        'noarchive',
-        'nosnippet',
-        'noodp',
-        'noydir',
-        'noodp,noydir',
-        'noarchive,nosnippet',
-        'noarchive,noodp,noydir',
-        'noarchive,noodp',
-        'noarchive,noydir'
-    );
 }

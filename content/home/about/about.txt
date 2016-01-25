@@ -1,7 +1,7 @@
 #generate by minpos
 
 
-title: ma première page de
+title: test
 
 ----
 
@@ -13,7 +13,7 @@ keywords: manger du <p> test</p>
 
 ----
 
-Robots: noindex nofollow 
+Robots: noindex nofollow
 
 ----
 
@@ -21,12 +21,12 @@ Template: default
 
 ----
 
-Date: 27.10.2015
+Date: 20-10-2009
 
 
 ----
 
-content: 
+content:
 
 <p>test</p>
 
@@ -38,12 +38,14 @@ cecei est un lien
 
 ( link : http://www.google.com ) mais attention à ne pas suivre celui ci ( link : about | text : about ) c'est tres chud, ecrivez moi à cette adresse (link:about) et encore une adresse mail ( link : about | text : about )
 
+(image: large.jpeg  )
+
+
+
 
 
     mon code:
     <p>test</p>
-
-
 
 test
 

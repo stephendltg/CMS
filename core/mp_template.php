@@ -8,16 +8,88 @@
  * @version 1
  */
 
+
 /***********************************************/
 /*        Fonctions snippets                   */
 /***********************************************/
 
+/**
+ * Gestion de lecture d'un argument snippet
+ * @return string || array
+ */
+function get_the_args( $field ) {
+
+    $field = (string) $field;
+
+    //var_dump($field);
+
+    global $__args;
+
+    $params = explode('->', $field);
+    $size = size($params);
+
+    $args = '';
+
+    if( !empty( $__args[ $params[0] ] ) ){
+
+        if( is_same( $size, 1 ) )
+            $args = $__args[ $params[0] ];
+
+        elseif( is_same( $size, 2 ) ){
+            if( !empty( $__args[ $params[0] ][ $params[1] ] ) )
+                $args = $__args[ $params[0] ][ $params[1] ];
+        }
+
+        elseif( is_same( $size, 3 ) ){
+            if( !empty( $__args[ $params[0] ][ $params[1] ] ) && !empty( $__args[ $params[0] ][ $params[1] ][ $params[2] ] ) )
+                $args = $__args[ $params[0] ][ $params[1] ][ $params[2] ];
+        }
+
+    }
+    /*
+    /\([ \t]*'. $name .'[ \t]*:(.*?)\)/i
+    /&(\w+)/i
+    */
+    if( is_string($args) )
+        $args = preg_replace_callback('/&([\w->]+)/i', function($matches){
+            $matches = get_the_args($matches[1]);
+            return is_array( $matches ) ? '' : $matches ;
+        } , $args);
+
+    return $args;
+}
+
+
+
+/**
+ * Gestion affichage d'un argument snippet
+ * @return echo
+ */
+function the_args( $field, $before = '', $after = '' ) {
+
+    $field  = (string) $field;
+    $before = (string) $before;
+    $after  = (string) $after;
+
+    $value = apply_filter( 'the_args_'.$field, get_the_args( $field ) );
+    if ( is_array($value) || strlen($value) == 0 )  return;
+    echo $before . $value . $after;
+}
+
+
+/**
+ * Chargement d'un snippet
+ * @return echo
+ */
 function snippet( $snippet ){
     $snippet = (string) $snippet;
     $snippets = glob( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
-    if( !empty($snippets) )
-        do_action( 'get_'.$snippet );
+    if( !empty($snippets) ){
+        if( glob( TEMPLATEPATH . '/snippets/' . $snippet .'.yaml' ) )
+            $GLOBALS['__args'] = file_get_yaml( TEMPLATEPATH . '/snippets/' . $snippet .'.yaml', true );
         include( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
+        unset($GLOBALS['__args']);
+    }
     return;
 }
 
@@ -70,58 +142,58 @@ function get_home_url(){
 /*        Fonctions link meta                  */
 /***********************************************/
 
-function meta_charset(){
+function mp_meta_charset(){
     echo '<meta charset="'.strtolower(CHARSET).'">'."\n";
 }
 
-function meta_title(){
+function mp_meta_title(){
     $title = apply_filter('meta_title', get_the_blog('title') );
     if ( strlen($title) == 0 )  return;
     echo '<title>'.$title.'</title>'."\n";
 }
 
-function meta_description(){
+function mp_meta_description(){
     $description = excerpt( apply_filter('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
     echo '<meta name="description" content="'.$description.'">'."\n";
 }
 
-function meta_keywords(){
+function mp_meta_keywords(){
     $keywords = sanitize_words( apply_filter('meta_keywords', get_the_blog('keywords') ) );
     $keywords = str_replace(' ', ', ', $keywords);
     if ( strlen($keywords) == 0 )  return;
     echo '<meta name="keywords" content="'.$keywords.'">'."\n";
 }
 
-function meta_author(){
+function mp_meta_author(){
     $author = sanitize_words( apply_filter('meta_author', get_the_blog('author') ) );
     if ( strlen($author) == 0 )  return;
     echo '<meta name="author" content="'.$author.'">'."\n";
 }
 
-function meta_robots(){
+function mp_meta_robots(){
     $robots = sanitize_words( apply_filter('meta_robots', get_the_blog('robots') ) );
     $robots = str_replace(' ', ',' , $robots);
     if( is_in( $robots, robots_authorized() ) ) echo '<meta name="robots" content="'.$robots.'">'."\n";
     return;
 }
 
-function meta_feed_link(){
+function mp_meta_feed_link(){
     //<a type="application/rss+xml" href="http://www.xul.fr/rss.xml">Flux RSS de cette page</a>
     echo '<link rel="alternate" type="application/rss+xml" href="'.get_permalink('rss','feed').'" title="'. get_the_blog('title').'">'."\n";
 }
 
-function meta_sitemap_link(){
+function mp_meta_sitemap_link(){
     echo  '<link rel="sitemap" type="application/xml"  href="'.get_permalink('sitemap').'" title="'. get_the_blog('title').'" />'."\n";
 }
 
-function meta_canonical_link(){
+function mp_meta_canonical_link(){
     global $query;
     if( !get_permalink($query) ) return;
     echo '<link rel="canonical" href="'. get_permalink($query) .'" />'."\n";
 }
 
-function meta_favicon(){
+function mp_meta_favicon(){
     echo '<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">'."\n";
 }
 
@@ -130,26 +202,26 @@ function meta_favicon(){
 /*        hook mpops_head                      */
 /***********************************************/
 
-add_action('mp_head','meta_charset', 1);
-add_action('mp_head','meta_title', 2);
-add_action('mp_head','meta_description', 3);
-add_action('mp_head','meta_keywords', 4);
-add_action('mp_head','meta_author', 5);
-add_action('mp_head','meta_robots', 6);
-add_action('mp_head','meta_feed_link', 7);
-add_action('mp_head','meta_sitemap_link', 8);
-add_action('mp_head','meta_canonical_link', 9);
-add_action('mp_head','enqueue_styles', 10 );
-add_action('mp_head','enqueue_scripts', 11 );
-add_action('mp_head','meta_favicon', 11 );
+add_action('mp_head','mp_meta_charset', 1);
+add_action('mp_head','mp_meta_title', 2);
+add_action('mp_head','mp_meta_description', 3);
+add_action('mp_head','mp_meta_keywords', 4);
+add_action('mp_head','mp_meta_author', 5);
+add_action('mp_head','mp_meta_robots', 6);
+add_action('mp_head','mp_meta_feed_link', 7);
+add_action('mp_head','mp_meta_sitemap_link', 8);
+add_action('mp_head','mp_meta_canonical_link', 9);
+add_action('mp_head','mp_enqueue_styles', 10 );
+add_action('mp_head','mp_enqueue_scripts', 11 );
+add_action('mp_head','mp_meta_favicon', 12 );
 
 
 /***********************************************/
 /*        hook mpops_footer                      */
 /***********************************************/
 
-add_action('mp_footer','enqueue_styles', 1, array(true) );
-add_action('mp_footer','enqueue_scripts', 2, array(true) );
+add_action('mp_footer','mp_enqueue_styles', 1, array(true) );
+add_action('mp_footer','mp_enqueue_scripts', 2, array(true) );
 
 
 /***********************************************/

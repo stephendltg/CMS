@@ -147,10 +147,10 @@ function mp_rewrite_rules(){
     }
 
     if( !$is_apache || !$is_mod_rewrite )
-        $rewrite = "disable";
+        $rewrite = false;
 
     // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
-    if ( is_same($rewrite, 'true') ) {
+    if ( is_same($rewrite, true) ) {
 
         $rewrite = 'enable';
 
@@ -193,8 +193,6 @@ function mp_rewrite_rules(){
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
         $rules .= "# block specify files in the cache folder from being accessed directly\n\t";
         $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|txt|md|mdown|gz)$ error [R=301,L]\n\n\t";
-        $rules .= "# block specify files in the content folder from being accessed directly\n\t";
-        $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|html|htm|xml|txt|md|mdown|gz|js|css)$ error [R=301,L]\n\n\t";
         $rules .= "# block all files core folder from being accessed directly\n\t";
         $rules .= "RewriteRule ^core/(.*) error [R=301,L]\n\n\t";
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -209,8 +207,8 @@ function mp_rewrite_rules(){
         $rules .= "# END miniPops";
     }
 
-    if ( is_same($rewrite, 'false') ){
-        $rewrite = "disable";
+    if ( is_same($rewrite, false) ){
+        $rewrite = 'disable';
         $is_mod_rewrite = false;
         $rules = "# BEGIN miniPops\n# END miniPops";
     }
@@ -224,11 +222,7 @@ function mp_rewrite_rules(){
 
     if ( !file_put_contents( ABSPATH . '.htaccess', $rules ) ) cms_maintenance( 'Error file permissions !' );
 
-    // On écrit dans le fichier site.txt
-    if( file_exists(CONTENT .'/site.txt') && is_file(CONTENT .'/site.txt') && is_readable(CONTENT .'/site.txt') )
-        $configuration = file_get_yaml(CONTENT .'/site.txt');
-    $configuration['url_rewrite'] = $rewrite;
-    if( !file_put_yaml( CONTENT .'/site.txt', $configuration ) ) cms_maintenance( 'Error file permissions !' );
+    if( !set_the_blog( 'url_rewrite', $rewrite) ) cms_maintenance( 'Error file permissions !' );
 
 }
 
@@ -237,7 +231,7 @@ function mp_rewrite_rules(){
  *
  */
 function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Service Unavailable' , $http_response_code = 503 ) {
-
+    //ini_set( 'display_errors', 0 );
     header( 'Content-Type: text/html; charset=utf-8' );
     if( function_exists('http_response_code'))
         http_response_code($http_response_code);
@@ -348,6 +342,10 @@ function get_http_header() {
     if( is_sitemap() )
         header( 'Content-Type: text/xml; charset='.CHARSET );
 
+    // Empêcher le crawl des mauvais robots du sitempa.xml
+    if( is_sitemap() || is_robots() )
+        header("X-Robots-Tag: noindex", true);
+
     if( is_404() )
         http_response_code(404);
 }
@@ -429,6 +427,8 @@ function guess_url() {
  */
 function get_template_directory(){
 
+    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
+
     if( get_the_blog('theme') ){
         // On liste les thèmes présents dans le repertoire
         $themes = glob( THEMES_DIR .'/', GLOB_MARK|GLOB_ONLYDIR );
@@ -442,40 +442,55 @@ function get_template_directory(){
     return ABSPATH . INC . '/theme';
 }
 
+
 /**
- * Récuperer la configuration du site
- * @return configuration sauvegarder dans base option
+ * Récuperer un champs de configuration du site
+ * @return string valeur du champ
  */
 function get_the_blog( $field ){
 
-    static $site = array();
+    static $blog = array();
 
     $field = (string) $field;
 
-    if( empty($site) ){
+    if( empty($blog) ){
 
-        $fields = array(
-                    'title'=>'miniPops',
-                    'subtitle'=>'Un site sous miniPops',
-                    'description'=>'Un site sous miniPops',
-                    'keywords'=>'minipops, cms, minipopscms',
-                    'author'=>'stephen deletang',
-                    'copyright'=>'@2015 -  Propulsé par miniPops',
-                    'lang'=>strtolower(lang()) ,
-                    'url_rewrite'=>'disable',
-                    'theme'=>'default');
-
-        if( file_exists( CONTENT .'/site.txt' ) && is_file( CONTENT .'/site.txt' ) ) {
-            // On informe que le fichier de configuation n'est pas lisible si mode debug
+        if( file_exists( CONTENT .'/site.txt' ) ) {
+            // On informe que le fichier de configuation n'est pas lisible
             if( !is_readable(CONTENT .'/site.txt') ) cms_maintenance('Error file read permissions : site configuration !');
             // On récupère le fichier site.txt
-            $site = file_get_yaml(CONTENT .'/site.txt');
+            $blog = file_get_yaml(CONTENT .'/site.txt');
             // On mélange les champs obligatoire avec la configuration
-            $site = array_merge($fields, $site);
+            $blog = array_merge(get_the_blog_fields_by_default(), $blog);
 
-        } else $site = $fields;
+        } else
+            $blog = get_the_blog_fields_by_default();
 
     }
 
-    return !empty($site[$field]) ? apply_filter( 'get_the_blog_'.$field, $site[$field] ) : false;
+    if ( !array_key_exists( $field, get_the_blog_fields_by_default() ) ) return;
+
+    return !empty($blog[$field]) ? apply_filter( 'get_the_blog_'.$field, $blog[$field] ) : false;
+}
+
+/**
+ * Sauvegarde la configuration du site
+ * @return boolean
+ */
+function set_the_blog( $field, $value ){
+
+    $field = (string) $field;
+
+    // On vérifie que le champs est valide et que le valeur associés a bien changé.
+    $get_the_blog_field = get_the_blog($field);
+    if( !$get_the_blog_field || is_same($get_the_blog_field, $value) ) return false;
+
+    if( file_exists(CONTENT .'/site.txt') )
+        $blog = file_get_yaml(CONTENT .'/site.txt');
+    else
+        $blog = get_the_blog_fields_by_default();
+
+    $blog[$field] = $value;
+
+    return file_put_yaml( CONTENT .'/site.txt', $blog );
 }

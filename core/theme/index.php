@@ -1,9 +1,9 @@
-<?php
+<?php defined('ABSPATH') or die('No direct script access.');
 /**
  * template: index.php
  *
  * @package miniPops
- * @subpackage Theme : Rhythmicon
+ * @subpackage Rhythmicon
  * @version 1
  */
 ?>
@@ -23,7 +23,7 @@
                     <article class="article mtl" >
 
                         <header class="header" >
-                            <h1><?php the_page('title') ?></h1>
+                            <?php the_page('title', '<h1>', '</h1>') ?>
                         </header>
 
                         <section class="content">
@@ -48,6 +48,7 @@
         <tr>
             <td class="aside small-visible">
                 <?php snippet('aside'); ?>
+                <?php snippet('widget-rss'); ?>
             </td>
         </tr>
     </table>

@@ -35,8 +35,20 @@ $mp_script = array();
             // & 'AND"'
             // exemple: <!-- [if (lt IE 6)|(IE 8)] --> <!-- [endif] -->
 
+// Un handled doit être unique selon son placement ( dans le header ou le footer ) qu'il soit inline ou enqueue
 
-function enqueue_style( $handled, $src , $array = array(), $media = null , $ver = null, $footer = false, $type ='style' ){
+/**
+ * On ajouter une feuille de style en file d'attente
+ * @param  $handled  : nom de la feuille de style
+ * @param  $src      : url de la feuille de style
+ * @param  $array    : Paramètre  tel que "conditionnal" et "cache"
+ * @param  $media    : Type de media css "all", "screen", etc ...
+ * @param  $ver      : version feuille de style
+ * @param  $footer   : boolean, true pour placer la feuille de style dans le footer de la page sinon dans le header
+ * @param  $type     : "style" ou "script"
+ * @return array    retourne les résultats sous forme de tableau
+ */
+function mp_enqueue_style( $handled, $src , $array = array(), $media = null , $ver = null, $footer = false, $type ='style' ){
 
     if( $footer )   $where = 'footer';
     else            $where = 'header';
@@ -79,8 +91,18 @@ function enqueue_style( $handled, $src , $array = array(), $media = null , $ver 
 
 }
 
-function enqueue_script( $handled, $src , $ver, $footer = false ){
-    enqueue_style( $handled, $src , null , null , $ver, $footer, $type ='script' );
+
+/**
+ * On ajouter un fichier script en file d'attente
+ * @param  $handled  : nom de la feuille de style
+ * @param  $src      : url de la feuille de style
+ * @param  $media    : Type de media css "all", "screen", etc ...
+ * @param  $ver      : version feuille de style
+ * @param  $footer   : boolean, true pour placer la feuille de style dans le footer de la page sinon dans le header
+ * @return array    retourne les résultats sous forme de tableau
+ */
+function mp_enqueue_script( $handled, $src , $ver, $footer = false ){
+    mp_enqueue_style( $handled, $src , null , null , $ver, $footer, $type ='script' );
 }
 
 
@@ -88,14 +110,19 @@ function enqueue_script( $handled, $src , $ver, $footer = false ){
 /*       enqueue inline script or style        */
 /***********************************************/
 
-
-function add_inline_style( $handled, $data, $footer = false, $type = 'style' ){
+/**
+ * On ajouter un style en file d'attente
+ * @param  $handled  : nom du style
+ * @param  $data     : Donnée Style
+ * @param  $footer   : boolean, true pour placer la feuille de style dans le footer de la page sinon dans le header
+ */
+function mp_add_inline_style( $handled, $data, $footer = false, $type = 'style' ){
 
     if( $footer )   $where = 'footer';
     else            $where = 'header';
 
     $handled  = apply_filter('mp_inline_'.$type.'_handled', sanitize_file_name($handled) );
-    $data     = apply_filter('mp_inline_'.$type.'_data', strip_all_tags($data) );
+    $data     = apply_filter('mp_inline_'.$type.'_data', $data );
 
     if( is_sup($data,0)
         && is_sup($handled,0)
@@ -105,11 +132,17 @@ function add_inline_style( $handled, $data, $footer = false, $type = 'style' ){
         $GLOBALS['mp_'.$type][$where]['inline'][$handled] = $data;
         ksort( $GLOBALS['mp_'.$type][$where]['inline'] );
     }
+
 }
 
-
-function add_inline_script( $handled, $data, $footer = false ){
-    inline_style( $handled, $data, $footer, 'script' );
+/**
+ * On ajouter un script en file d'attente
+ * @param  $handled  : nom du script
+ * @param  $data     : Donnée script
+ * @param  $footer   : boolean, true pour placer la feuille de style dans le footer de la page sinon dans le header
+ */
+function mp_add_inline_script( $handled, $data, $footer = false ){
+    mp_add_inline_style( $handled, $data, $footer, 'script' );
 }
 
 
@@ -117,7 +150,13 @@ function add_inline_script( $handled, $data, $footer = false ){
 /*       dequeue handled script or style       */
 /***********************************************/
 
-function dequeue_style( $handled , $footer = false , $type = 'style' ){
+/**
+ * On supprime une feuille de style ou un style en ligne
+ * @param  $handled  : nom de la feuille de style ou du style en ligne
+ * @param  $footer   : boolean, true pour supprimer une feuille de style dans le footer ou sinon dans le header
+ * @param  $type     : "style" ou "script"
+ */
+function mp_dequeue_style( $handled , $footer = false , $type = 'style' ){
 
     if( $footer )   $where = 'footer';
     else            $where = 'header';
@@ -129,9 +168,13 @@ function dequeue_style( $handled , $footer = false , $type = 'style' ){
 
 }
 
-
-function dequeue_script( $handled , $footer = false ){
-    dequeue_style( $handled , $footer , 'script' );
+/**
+ * On supprime une feuille de style ou un style en ligne
+ * @param  $handled  : nom de la feuille de style ou du style en ligne
+ * @param  $footer   : boolean, true pour supprimer une feuille de style dans le footer ou sinon dans le header
+ */
+function mp_dequeue_script( $handled , $footer = false ){
+    mp_dequeue_style( $handled , $footer , 'script' );
 }
 
 
@@ -139,7 +182,13 @@ function dequeue_script( $handled , $footer = false ){
 /*       echo enqueue styles or scripts         */
 /***********************************************/
 
-function enqueue_styles( $footer = false, $type ='style' ){
+/**
+ * On liste les fichiers style en file d'attente
+ * @param  $footer   : boolean, true pour supprimer une feuille de style dans le footer ou sinon dans le header
+ * @param  $type     : "style" ou "script"
+ * @return string    retourne les liens ou le contenu
+ */
+function mp_enqueue_styles( $footer = false, $type ='style' ){
 
     $enqueue = array();
     $inline  = array();
@@ -188,17 +237,29 @@ function enqueue_styles( $footer = false, $type ='style' ){
             else
                 $inline[$handled] = '<script type="text/javascript">'. $inline_enqueue .'</script>'. "\n";
         }
+
     }
 
     $inline = apply_filter('mp_inline_'.$type.'s', $inline, $footer );
 
-    $mp_enqueue = array_merge($enqueue, $inline);
+    if( !empty($enqueue) )
+        $mp_enqueue = array_merge($enqueue, $inline);
+    else
+        $mp_enqueue = $inline;
 
     if ( is_size($mp_enqueue,0) ) return;
+
+    unset($GLOBALS['mp_'.$type][$where]); // on libère la variable global
 
     echo implode($mp_enqueue);
 }
 
-function enqueue_scripts( $footer = false ){
-    return enqueue_styles( $footer, $type ='script');
+
+/**
+ * On liste les fichiers script en file d'attente
+ * @param  $footer   : boolean, true pour supprimer une feuille de style dans le footer ou sinon dans le header
+ * @return string    retourne les liens ou le contenu
+ */
+function mp_enqueue_scripts( $footer = false ){
+    return mp_enqueue_styles( $footer, $type ='script');
 }

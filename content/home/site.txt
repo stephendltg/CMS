@@ -1,6 +1,6 @@
 # generate by mini-pops
 
-title: miniPopse
+title: miniPops
 
 ----
 
@@ -28,14 +28,14 @@ lang: fr
 
 ----
 
-url: http://minipops.local
+url_rewrite: enable
 
 ----
 
-url_rewrite: disable
+optimize: 1
 
 ----
 
-robots: noindex
+theme: default
 
 ----

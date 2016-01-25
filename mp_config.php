@@ -14,8 +14,6 @@ define ('DEBUG' , true );
 
 //define( 'DEBUG_LOG', false );
 
-define ('CACHE' , false );
-
 
 /** Definit l'url du site. */
 //define ('HOME', 'http://localhost/www/miniPOPS');

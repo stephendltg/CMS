@@ -1,12 +1,18 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
-/**
- * Affichage de la mémoire du CMS et optimisation de celle-ci
- *
- * @package     cms
- * @subpackage  memory
- * @version 1
- */
+/*
+Plugin Name: MiniPops Website Monitoring
+Plugin URI:
+Description: Tools for developper
+Version: 1.0
+Author: Stephen Deletang
+Author URI:
+*/
+
+define( 'MEMORY_VERSION'    , '1' );
+define( 'MEMORY_NAME'       , 'Website Monitoring' );
+define( 'MEMORY_AUTHOR'     , 'Stephen Deletang' );
+
 
 if( DEBUG ) add_action ( 'mp_footer' , 'dashboard' , PHP_INT_MAX );
 
@@ -17,16 +23,31 @@ function dashboard(){
 
     echo '<div style="background : #000; color:#fff; padding: 5px; margin: 0">';
 
+    echo '<p><big>'.MEMORY_NAME.' ( v'.MEMORY_VERSION.' ) | Author: '.MEMORY_AUTHOR.'</big></p>';
+
+    echo '<p>----</p>';
+
     // Données globales
-    echo '<p>url: '. HOME .' | chemin: '. ABSPATH .'</p>';
+    echo '<p>Url: '. HOME .' | Path: '. ABSPATH .'</p>';
+
+    echo '<p>----</p>';
 
     echo '<p>Requetes passer par l\'url : '. get_url_queries() .'</p>';
 
+    echo '<p>----</p>';
+
     echo '<p>Memory limit: '. get_limit_memory() .' | Memory upload : '. get_upload_memory() . ' | Memory Post: '.get_upload_memory().' | Time limit execution : '.get_max_time_execution().'s </p>';
 
-    echo '<p>Memory: '. get_cms_memory() .' | Time (Exec) : '. timer_stop(3) . ' | Hook filters (nbr appel) : '.count($mp_hook_filter).' | Hook actions (nbr appel) : '.count($mp_hook_actions).' </p><hr>';
+    echo '<p>----</p>';
+
+    echo '<p>Memory: '. get_cms_memory() .' | Time (Exec) : '. timer_stop(3) . '</p>';
+
+    echo '<p>----</p>';
 
     echo '<p>HOOKS:</p>';
+
+    echo '<p> Hook filters (nbr appel) : '.count($mp_hook_filter).' | Hook actions (nbr appel) : '.count($mp_hook_actions).' </p><br>';
+
     // Listes hooks actions:
     echo '<div style="display: inline-block; width:49%; vertical-align: top;"><p>Hook actions (nbr actions) :</p><ol>';
     foreach( $mp_hook_actions as $hook_name => $actions ){
@@ -39,8 +60,8 @@ function dashboard(){
     foreach( $mp_hook_filter as $hook_name => $filters ){
         echo '<li>'.$hook_name.' ( '.count($filters).' )</li>';
     }
-    echo '</ol></div><hr>';
+    echo '</ol></div>';
 
-    echo '<p style="text-align: right">Author plugins: stephen deletang</p></div>';
+    echo '<p>----</p></div>';
 
 }

@@ -63,20 +63,15 @@ add_filter('get_the_blog_plugins', function( $plugins ){
 
 
 /***********************************************/
-/*        Filter for the meta                  */
+/*        Filter for the page                  */
 /***********************************************/
 
 
 // On ajoute les filtres par defaut
-add_action('muplugins_loaded','mp_load_default_filter');
+add_action('muplugins_loaded','mp_load_page_filter');
 
 // Chargement des filtres meta
-function mp_load_default_filter(){
-
-
-    /***********************************************/
-    /*        Filter for the page                  */
-    /***********************************************/
+function mp_load_page_filter(){
 
     // filtre pour title
     add_filter('get_the_title', 'sanitize_allspecialschars' );
@@ -85,30 +80,42 @@ function mp_load_default_filter(){
     add_filter('get_the_author', 'sanitize_allspecialschars' );
 
     // filtre pour date
-    add_filter('get_the_date', function($date){ return (is_date($date)) ? $date : ''; } );
+    add_filter('get_the_date', function($date){ return (is_date($date)) ? date('d-m-Y', $date) : ''; } );
 
     // filtre pour template
     add_filter('get_the_template' , function($template){ return sanitize_file_name($template); } );
 
     // filtre pour extrait - excerpt
-    add_filter('get_the_excerpt', function($value, $page){
+    add_filter('get_the_excerpt', function($value, $slug){
 
         $value = excerpt( $value, 140, 'words' );
         if ( !empty($value) )
             return $value;
         else
-            return excerpt( get_the_page('content'), 140, 'words' );
+            return excerpt( get_the_page('content', $slug ), 140, 'words' );
     } , 10 , 2 );
 
     // filtre pour content
     add_filter('get_the_content', function( $content, $slug ){
 
         if( !empty($content) )
-            return parse_markdown( pops(esc_html($content), $slug ) );
+            return parse_markdown( mp_pops(esc_html($content), $slug ) );
         else
             return;
     }, 10, 2 );
 
+}
+
+
+/***********************************************/
+/*        Filter for the meta                  */
+/***********************************************/
+
+
+// On ajoute les filtres par defaut
+add_action('TEMPLATE_REDIRECT','mp_load_meta_filter');
+
+function mp_load_meta_filter(){
 
     /***********************************************/
     /*        meta for the page                    */
@@ -154,6 +161,8 @@ function mp_load_default_filter(){
         add_filter('meta_canonical_link', function(){ return null; } );
     }
 }
+
+
 
 /***********************************************/
 /*        Filter for the robot                 */
@@ -221,6 +230,7 @@ function mp_doing_sitemap(){
 
 // On génére le flux rss
 function mp_doing_feed(){
+
     $feed    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $feed   .= '<rss version="2.0"
     xmlns:content="http://purl.org/rss/1.0/modules/content/"

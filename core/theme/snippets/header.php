@@ -1,4 +1,11 @@
-<?php
+<?php defined('ABSPATH') or die('No direct script access.');
+/**
+ * snippet: header.php
+ *
+ * @package miniPops
+ * @subpackage Rhythmicon
+ * @version 1
+ */
 ?>
 <!doctype html>
 <html <?php the_blog('lang', 'lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
@@ -38,8 +45,6 @@
         </hgroup>
     </header>
 
-
-
     <!-- box -->
     <div class="box">
         <label class="box-label">Open this box
@@ -56,6 +61,3 @@
             <p> my message !</p>
         </span>
     </div>
-
-
-    https://evertpot.com/223/
