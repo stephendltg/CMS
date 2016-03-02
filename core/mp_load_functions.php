@@ -12,7 +12,7 @@
 
 // On cache les erreurs php
 error_reporting(0);
-//ini_set( 'display_errors', 0 ); // A voir selon la philosophie
+@ini_set( 'display_errors', 0 ); // A voir selon la philosophie
 
 /***********************************************/
 /*              Variables globales             */
@@ -34,7 +34,7 @@ $is_mod_rewrite = function_exists('apache_get_modules') ? in_array( 'mod_rewrite
  * On vérifie la version de php utilisé si non compatible on fait un die
  */
 function mp_check_php_versions() {
-    if ( version_compare( phpversion() , "5.3.0", "<" ) ) { // passer à 5.4 pour http_response_code() ligne 256
+    if ( version_compare( phpversion() , "5.2.0", "<" ) ) { // passer à 5.4 pour http_response_code() ligne 337
         $msg =  '<p>Server PHP version ' . phpversion() .
                 ' .</p><p>this cms need PHP version 5.4 .</p>';
         cms_maintenance( $msg );
@@ -46,8 +46,12 @@ function mp_check_php_versions() {
  */
 function mp_setting_the_time() {
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
-    if( get_the_blog('timezone') && array_key_exists( get_the_blog('timezone') , timezones() ) )
+    if( array_key_exists( get_the_blog('timezone', null ) , timezones() ) ){
         date_default_timezone_set( get_the_blog('timezone') );
+        define('GMT-OFFSET', date('Z'));
+    }elseif( is_intgr( get_the_blog('timezone') ) && is_between( get_the_blog('timezone'), -12, 12 ) ){
+        define( 'GMT-OFFSET', get_the_blog('timezone') * HOUR_IN_SECONDS );
+    }
 }
 
 /**
@@ -86,22 +90,22 @@ function mp_debug_mode() {
         error_reporting( E_ALL );
 
         if ( DEBUG_DISPLAY ){
-            ini_set( 'display_errors', 1 );
-            ini_set('error_prepend_string','<div style="background-color:#eee;padding:10px">');
-            ini_set('error_append_string','<br/></div>');
+            @ini_set( 'display_errors', 1 );
+            @ini_set('error_prepend_string','<div style="background-color:#eee;padding:10px">');
+            @ini_set('error_append_string','<br/></div>');
         }
         elseif ( null !== DEBUG_DISPLAY )
-            ini_set( 'display_errors', 0 );
+            @ini_set( 'display_errors', 0 );
 
         if ( DEBUG_LOG ) {
-            ini_set( 'log_errors', 1 );
-            ini_set( 'error_log', CONTENT_DIR . '/debug.log' );
+            @ini_set( 'log_errors', 1 );
+            @ini_set( 'error_log', CONTENT_DIR . '/debug.log' );
         }
     } else {
         error_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );
     }
     if ( defined( 'API_REST' ) )
-        ini_set( 'display_errors', 0 );
+        @ini_set( 'display_errors', 0 );
 }
 
 
@@ -136,7 +140,7 @@ function mp_rewrite_rules(){
 
     $configuration = array();
 
-    $rewrite = get_the_blog('url_rewrite');
+    $rewrite = get_the_blog('url_rewrite', true );
 
     if ( is_same($rewrite, 'enable') )
         return;
@@ -192,7 +196,7 @@ function mp_rewrite_rules(){
         $rules .= "RewriteCond %{DOCUMENT_ROOT}/cache/%{HTTP_HOST}%{REQUEST_URI}/index.html -f\n\t";
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
         $rules .= "# block specify files in the cache folder from being accessed directly\n\t";
-        $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|txt|md|mdown|gz)$ error [R=301,L]\n\n\t";
+        $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|lang|md|mdown|gz)$ error [R=301,L]\n\n\t";
         $rules .= "# block all files core folder from being accessed directly\n\t";
         $rules .= "RewriteRule ^core/(.*) error [R=301,L]\n\n\t";
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -447,31 +451,27 @@ function get_template_directory(){
  * Récuperer un champs de configuration du site
  * @return string valeur du champ
  */
-function get_the_blog( $field ){
+function get_the_blog( $field, $default = false ){
 
     static $blog = array();
 
     $field = (string) $field;
 
-    if( empty($blog) ){
+    if( empty($blog) && glob(CONTENT .'/site.yml') )
+        $blog = file_get_yaml(CONTENT .'/site.yml');
 
-        if( file_exists( CONTENT .'/site.txt' ) ) {
-            // On informe que le fichier de configuation n'est pas lisible
-            if( !is_readable(CONTENT .'/site.txt') ) cms_maintenance('Error file read permissions : site configuration !');
-            // On récupère le fichier site.txt
-            $blog = file_get_yaml(CONTENT .'/site.txt');
-            // On mélange les champs obligatoire avec la configuration
-            $blog = array_merge(get_the_blog_fields_by_default(), $blog);
+    if( !empty($blog[$field]) ){
 
-        } else
-            $blog = get_the_blog_fields_by_default();
+        // On applique un filter par défaut sur le champ
+        if( empty( $GLOBALS['mp_hook_filter']['get_the_blog_'.$field] ) )
+            return sanitize_allspecialschars($blog[$field]);
 
+        return apply_filter( 'get_the_blog_'.$field, $blog[$field] );
     }
-
-    if ( !array_key_exists( $field, get_the_blog_fields_by_default() ) ) return;
-
-    return !empty($blog[$field]) ? apply_filter( 'get_the_blog_'.$field, $blog[$field] ) : false;
+    else
+        return apply_filter( 'default_blog_'. $field, $default, $field );
 }
+
 
 /**
  * Sauvegarde la configuration du site
@@ -482,15 +482,27 @@ function set_the_blog( $field, $value ){
     $field = (string) $field;
 
     // On vérifie que le champs est valide et que le valeur associés a bien changé.
-    $get_the_blog_field = get_the_blog($field);
-    if( !$get_the_blog_field || is_same($get_the_blog_field, $value) ) return false;
+    if( is_same( get_the_blog($field), $value ) ) return false;
 
-    if( file_exists(CONTENT .'/site.txt') )
-        $blog = file_get_yaml(CONTENT .'/site.txt');
+    if( glob(CONTENT .'/site.yml') )
+        $blog = file_get_yaml(CONTENT .'/site.yml');
     else
-        $blog = get_the_blog_fields_by_default();
+        $blog = array(
+            'title'=>'miniPops',
+            'subtitle'=>'Un site sous miniPops',
+            'description'=>'Un site sous miniPops',
+            'keywords'=>'minipops, cms, minipopscms',
+            'author'=>'stephen deletang',
+            'copyright'=>'@2015 -  Propulsé par miniPops',
+            'lang'=> '// Language usage : en ( default )' ,
+            'url_rewrite'=> true,
+            'plugins' => '// List of the plugins separator comma: mp_cache, mp_google',
+            'theme'=>'default',
+            'timezone'=>'// ex: Europe/Paris or GMT +1',
+            'api-key'=>random_salt(32),
+            'api-keysalt'=>random_salt(32) );
 
     $blog[$field] = $value;
 
-    return file_put_yaml( CONTENT .'/site.txt', $blog );
+    return file_put_yaml( CONTENT .'/site.yml', $blog );
 }

@@ -21,7 +21,7 @@ lang:
 setting:
 
     item1:
-    	label: &lang->en->items
+    	label: &lang->en->item
     	section: traduction
     	type: string
 
@@ -36,14 +36,13 @@ setting:
     	type: select
     	choice: choice1, choice2, choice3
 
-
 ----
 
 message: j'aime le chocolat au  &test sdsd
 
 ----
 
-test: message mais pas le gateau
+test_1: /false
 
 ----
 

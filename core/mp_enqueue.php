@@ -204,6 +204,7 @@ function mp_enqueue_styles( $footer = false, $type ='style' ){
     if ( array_key_exists( 'enqueue' , $GLOBALS['mp_'.$type][$where] ) ){
 
         foreach ($GLOBALS['mp_'.$type][$where]['enqueue'] as $handled => $data) {
+
             extract($data);
             if(is_same($type,'style')){
                 $scheme    = '<link rel="stylesheet" type="text/css" id="%1$s" href="%2$s" media="%3$s">'."\n";
@@ -228,19 +229,18 @@ function mp_enqueue_styles( $footer = false, $type ='style' ){
         $inline_enqueue = '';
         // On concate les éléments en ligne
         foreach ($GLOBALS['mp_'.$type][$where]['inline'] as $handled => $data )
-            $inline_enqueue = $data;
+            $inline_enqueue .= $data;
 
-        $inline_enqueue = apply_filter('mp_inline_'.$type.'s', $inline_enqueue );
+        $inline_enqueue = apply_filter('mp_inline_'.$type.'s', $inline_enqueue, $footer );
+
         if( strlen($inline_enqueue) > 0 ){
             if(is_same($type,'style'))
-                $inline[$handled] = '<style type="text/css">'. $inline_enqueue .'</style>'. "\n";
+                $inline[] = '<style type="text/css">'. $inline_enqueue .'</style>'. "\n";
             else
-                $inline[$handled] = '<script type="text/javascript">'. $inline_enqueue .'</script>'. "\n";
+                $inline[] = '<script type="text/javascript">'. $inline_enqueue .'</script>'. "\n";
         }
 
     }
-
-    $inline = apply_filter('mp_inline_'.$type.'s', $inline, $footer );
 
     if( !empty($enqueue) )
         $mp_enqueue = array_merge($enqueue, $inline);

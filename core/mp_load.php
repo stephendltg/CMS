@@ -32,6 +32,11 @@ mp_set_internal_encoding();
 // On charge les fonctions primordiales ( Hook, helper )
 require( ABSPATH . INC . '/mp_hook.php' );
 require( ABSPATH . INC . '/mp_helper.php' );
+require( ABSPATH . INC . '/mp_validator.php' );
+require( ABSPATH . INC . '/mp_sanitize.php' );
+require( ABSPATH . INC . '/mp_escape.php' );
+require( ABSPATH . INC . '/mp_yaml.php' );
+require( ABSPATH . INC . '/mp_network.php' );
 require( ABSPATH . INC . '/mp_constants.php' );
 
 // On vérifier que le cms est bien installer et les droits d'écriture sur les repertoires.
@@ -75,6 +80,7 @@ require( ABSPATH . INC . '/mp_api.php' );
 
 // Fonction pour gérer les pages
 //require( ABSPATH . INC . '/cron.php' );
+require( ABSPATH . INC . '/mp_parser.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
 require( ABSPATH . INC . '/mp_attachment.php' );
 require( ABSPATH . INC . '/mp_pops.php' );
@@ -96,11 +102,13 @@ do_action( 'muplugins_loaded' );
 require( ABSPATH . INC . '/mp_enqueue.php' );
 // On charge les fonctions gérant la traduction
 require( ABSPATH . INC . '/mp_lang.php' );
+// On charge les fonctions gérant les options des plugins et du thème
+require( ABSPATH . INC . '/mp_options.php' );
 
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = test, memory, ...
 @mkdir( PLUGIN_DIR , 0755 , true );
 if( get_the_blog('plugins') ){
-	foreach ( glob( PLUGIN_DIR .'/{'.get_the_blog('plugins').'}' , GLOB_BRACE | GLOB_ONLYDIR ) as $plugin ){
+	foreach ( glob( PLUGIN_DIR .'/{'.get_the_blog('plugins', null ).'}' , GLOB_BRACE | GLOB_ONLYDIR ) as $plugin ){
 		if( glob( $plugin.'/'. basename($plugin).'.php' ) )
 			include_once( $plugin.'/'. basename($plugin).'.php' );
 	}
@@ -124,7 +132,7 @@ if ( glob( TEMPLATEPATH . '/functions.php' ) )
 // Hook apres chargement du theme
 do_action( 'after_setup_theme' );
 
-// on inclus les fonctions et classes pour parser page
+// on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_optimizer.php' );
 require( ABSPATH . INC . '/mp_template.php' );
 

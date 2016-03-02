@@ -9,6 +9,27 @@
 ?>
 <?php snippet('header'); ?>
 
+<?php echo current_time( 'timestamp' ) ?>
+<br>
+<?php
+
+    $gmt = gmdate('Y-m-d H:i:s', time() );
+    echo $gmt;
+    echo '<br>';
+    echo mysql2date( 'G', $gmt, false );
+    echo '<br>';
+    echo '---';
+?>
+<br>
+<?php
+    $date = date('Y-m-d H:i:s', time() );
+    echo $date;
+    echo '<br>';
+    echo '---';
+?>
+<br>
+
+
     <table role="presentation">
       <!-- surtout pas d'attribut summary -->
         <tr>
@@ -47,6 +68,9 @@
         </tr>
         <tr>
             <td class="aside small-visible">
+                <p><!-- test -->
+                    <textarea>testset <!-- eurk -->dsqd</textarea>
+                </p>
                 <?php snippet('aside'); ?>
                 <?php snippet('widget-rss'); ?>
             </td>

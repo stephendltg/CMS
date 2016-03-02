@@ -25,13 +25,7 @@ add_action('shutdown', function() {
 /***********************************************/
 
 // filtre pour title
-add_filter('get_the_blog_title', 'sanitize_allspecialschars' );
-
-// filtre pour subtitle
-add_filter('get_the_blog_subtitle', 'sanitize_allspecialschars' );
-
-// filtre pour author
-add_filter('get_the_blog_author', 'sanitize_allspecialschars' );
+add_filter('get_the_blog_timezone', function( $timezone ){ return $timezone; } );
 
 // filtre pour copyright
 add_filter('get_the_blog_copyright', function( $copyright ){
@@ -40,11 +34,6 @@ add_filter('get_the_blog_copyright', function( $copyright ){
         return parse_text( esc_html($copyright) );
     else
         return;
-} );
-
-// filtre pour lang
-add_filter('get_the_blog_lang', function( $lang ){
-    return is_alpha($lang) && is_between($lang,1,3) ? strtolower($lang) : strtolower( lang() );
 } );
 
 // filtre pour theme
@@ -72,12 +61,6 @@ add_action('muplugins_loaded','mp_load_page_filter');
 
 // Chargement des filtres meta
 function mp_load_page_filter(){
-
-    // filtre pour title
-    add_filter('get_the_title', 'sanitize_allspecialschars' );
-
-    // filtre pour author
-    add_filter('get_the_author', 'sanitize_allspecialschars' );
 
     // filtre pour date
     add_filter('get_the_date', function($date){ return (is_date($date)) ? date('d-m-Y', $date) : ''; } );

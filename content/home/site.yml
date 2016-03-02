@@ -32,10 +32,22 @@ url_rewrite: enable
 
 ----
 
-optimize: 1
+plugins: // List of the plugins separator comma: mp_cache, mp_google
 
 ----
 
 theme: default
+
+----
+
+timezone: Europe/Paris
+
+----
+
+api-key: GFg#drbVMeR:4L(cntZEfk*,YQ?XzsDS
+
+----
+
+api-keysalt: pF@sQ=;tAEeV(+LuHPDg)T!ao6z^28Jj
 
 ----

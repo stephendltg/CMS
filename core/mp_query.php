@@ -133,7 +133,7 @@ function is_page( $page ='' ){
     if( !is_filename( str_replace('/','',$url) ) ) return false;
     $page = glob( CONTENT .'/'. $url , GLOB_MARK|GLOB_ONLYDIR );
     if( empty($page)) return false;
-    $page = glob( $page[0] . basename($url) .'.txt' );
+    $page = glob( $page[0] . basename($url) .'.yml' );
     if( empty($page)) return false;
     return true;
 }

@@ -17,6 +17,16 @@ if( is_page() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_p
 if( is_home() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
 
 
+
+// On vide le cache si changement du thème
+/*
+if( is_different( get_transient('theme_active'), get_the_blog('theme') ) ){
+    mp_clear_cache_all_pages();
+    set_transient('theme_active', get_the_blog('theme') );
+}
+*/
+
+
 // On supprime le cache si une page est renommé
 add_action('do_before_rename_the_page', 'mp_clear_cache_page');
 

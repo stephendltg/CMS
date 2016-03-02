@@ -18,14 +18,14 @@ function rhythmicon_head_meta_theme(){
 }
 
 // Déclaration des feuilles de style
-mp_enqueue_style('knacss', TEMPLATEURL.'/assets/css/knacss.css' );
+mp_enqueue_style('knacss', TEMPLATEURL.'/assets/KNACSS-master/css/knacss.css' );
 mp_enqueue_style('style', TEMPLATEURL.'/assets/css/style.css' );
 
 // On optimise le code
 add_filter('do_optimize', function(){return true;});
-//add_filter('do_optimize_html', function(){return false;});
+add_filter('do_optimize_html', function(){return true;});
 add_filter('do_optimize_css', function(){return true;});
+add_filter('do_optimize_loadimage', function(){return true;});
 
 // On désactive le cache
 add_filter('do_cache', function(){return false;});
-

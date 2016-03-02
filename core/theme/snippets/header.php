@@ -8,7 +8,7 @@
  */
 ?>
 <!doctype html>
-<html <?php the_blog('lang', 'lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
+<html <?php the_lang('lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
 <head>
     <?php mp_head(); ?>
 
@@ -40,7 +40,7 @@
 
     <header class="header ptl pbl txtcenter mtl mbl" role="banner">
         <hgroup class="title mtl">
-            <h1 class="site-title h3-like mbn"><a href="<?php get_home_url(); ?>"><?php the_blog('title') ?></a></h1>
+            <h1 class="site-title h3-like mbn"><a href="<?php the_blog('home'); ?>"><?php the_blog('title') ?></a></h1>
             <h2 class="site-subtitle h6-like mtn"><?php the_blog('subtitle') ?></h2>
         </hgroup>
     </header>

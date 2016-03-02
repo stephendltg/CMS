@@ -10,7 +10,7 @@
 
 define ('DEBUG' , true );
 
-//define( 'DEBUG_DISPLAY', false );
+define( 'DEBUG_DISPLAY', true );
 
 //define( 'DEBUG_LOG', false );
 

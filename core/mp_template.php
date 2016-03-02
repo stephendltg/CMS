@@ -21,15 +21,15 @@ function get_the_args( $field ) {
 
     $field = (string) $field;
 
-    //var_dump($field);
-
     global $__args;
 
+    // On récupère le champ ciblé
     $params = explode('->', $field);
     $size = size($params);
 
     $args = '';
 
+    // On recherche le champ ciblé dans la table
     if( !empty( $__args[ $params[0] ] ) ){
 
         if( is_same( $size, 1 ) )
@@ -46,11 +46,10 @@ function get_the_args( $field ) {
         }
 
     }
-    /*
-    /\([ \t]*'. $name .'[ \t]*:(.*?)\)/i
-    /&(\w+)/i
-    */
-    if( is_string($args) )
+
+    // Si la valeur du champ ciblé est une chaine on vérifie que c'est une variable yaml
+    // et si c'est le cas on recherche sa valeur associé dans la table.
+    if( is_string($args)  && is_different( strpos($args,'&'), false) )
         $args = preg_replace_callback('/&([\w->]+)/i', function($matches){
             $matches = get_the_args($matches[1]);
             return is_array( $matches ) ? '' : $matches ;
@@ -85,8 +84,8 @@ function snippet( $snippet ){
     $snippet = (string) $snippet;
     $snippets = glob( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
     if( !empty($snippets) ){
-        if( glob( TEMPLATEPATH . '/snippets/' . $snippet .'.yaml' ) )
-            $GLOBALS['__args'] = file_get_yaml( TEMPLATEPATH . '/snippets/' . $snippet .'.yaml', true );
+        if( glob( TEMPLATEPATH . '/snippets/' . $snippet .'.yml' ) )
+            $GLOBALS['__args'] = file_get_yaml( TEMPLATEPATH . '/snippets/' . $snippet .'.yml', true );
         include( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
         unset($GLOBALS['__args']);
     }
@@ -120,21 +119,51 @@ function get_template( $template_name ) {
 
 function the_blog( $field,  $before = '', $after = '' ) {
 
-    $field = (string) $field;
+    $field  = (string) $field;
     $before = (string) $before;
-    $after = (string) $after;
+    $after  = (string) $after;
 
-    $value = apply_filter( 'the_blog_'.$field, get_the_blog($field) );
+    switch ($field) {
+
+        case 'home':
+            $value = esc_url_raw( get_permalink() );
+            break;
+        case 'rss':
+            $value = esc_url_raw( get_permalink('rss', 'feed') );
+            break;
+        case 'sitemap':
+            $value = esc_url_raw( get_permalink('sitemap') );
+            break;
+        case 'template_url':
+            $value = esc_url_raw( TEMPLATEURL );
+            break;
+        case 'charset':
+            $value = CHARSET;
+            break;
+        case 'version':
+            $value = MP_VERSION;
+            break;
+        case 'language':
+            $value = get_the_lang();
+            break;
+
+        default:
+            $value = apply_filter( 'the_blog_'.$field, get_the_blog($field) );
+            break;
+    }
+
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
 
-/**
- * On retourne l'url du site
- * @return url
- */
-function get_home_url(){
-    echo get_permalink();
+function the_lang( $before = '', $after = '' ) {
+
+    $before = (string) $before;
+    $after = (string) $after;
+
+    $value = apply_filter('the_lang', get_the_lang() );
+    if ( strlen($value) == 0 )  return;
+    echo $before . $value . $after;
 }
 
 
@@ -174,7 +203,23 @@ function mp_meta_author(){
 function mp_meta_robots(){
     $robots = sanitize_words( apply_filter('meta_robots', get_the_blog('robots') ) );
     $robots = str_replace(' ', ',' , $robots);
-    if( is_in( $robots, robots_authorized() ) ) echo '<meta name="robots" content="'.$robots.'">'."\n";
+    $robots_authorized = apply_filter('meta_robots_authorized', array(
+                                            'noindex',
+                                            'nofollow',
+                                            'noindex,nofollow',
+                                            'noindex,follow',
+                                            'index,nofollow',
+                                            'noarchive',
+                                            'nosnippet',
+                                            'noodp',
+                                            'noydir',
+                                            'noodp,noydir',
+                                            'noarchive,nosnippet',
+                                            'noarchive,noodp,noydir',
+                                            'noarchive,noodp',
+                                            'noarchive,noydir' ) );
+
+    if( is_in( $robots, $robots_authorized ) ) echo '<meta name="robots" content="'.$robots.'">'."\n";
     return;
 }
 
@@ -288,27 +333,35 @@ function the_images( $name ='' , $where = array(), $max = 10, $image_schema = '<
 /***********************************************/
 
 function get_the_menu( $slugs = '' ){
+
     if( is_array($slugs) ){
-        $slugs = array_map( function($slug){ return is_page($slug) ? $slug : null ; }, $slugs);
+
+        $slugs = array_map( function($slug){ return is_page($slug) ? $slug : null; }, $slugs);
         $slugs = array_filter($slugs);
+
     }
     else
         $slugs = get_childs_page( (string) $slugs );
+
     return $slugs;
 }
 
-function the_menu( $slugs = '', $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s"><a href="%1$s">%2$s</a></li>' ){
-    $before = (string) $before;
-    $after = (string) $after;
+function the_menu( $slugs = '',  $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s"><a href="%1$s">%2$s</a></li>' ){
 
-    $slugs = get_the_menu( $slugs );
+    $before = (string) $before;
+    $after  = (string) $after;
+
+    $slugs  = get_the_menu( $slugs );
+
     if ( is_size($slugs, 0) )  return;
 
-    $slugs = array_map( function($slug)use($menu_item){
-        $menu_title = apply_filter('the_menu_title', basename($slug), $slug );
+    array_walk( $slugs, function(&$slug, $title) use ($menu_item){
+
+        $title  = is_string($title) ? sanitize_allspecialschars($title): basename($slug);
         $active = is_same($slug, $GLOBALS['query'] ) ? ' active' : '';
-        return sprintf( $menu_item, get_permalink($slug), $menu_title, $active );
-    }, $slugs);
+        $slug   = sprintf( $menu_item, get_permalink($slug), $title, $active );
+
+    } );
 
     echo $before.implode($slugs).$after;
 }
@@ -349,7 +402,7 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
                 $breadcrumb = ( is_page($slug) ) ? sprintf( $breadcrumb_schema , basename($slug) , get_permalink($slug) ) . $breadcrumb_schema_separator : '';
             $queries = str_replace( $slug.'/' , '', $queries );
         } while ( strlen($slug) > 0 );
-        $breadcrumb .= get_the_blog('title');
+        $breadcrumb .= get_the_page('title');
     }
 
     if( is_home() )

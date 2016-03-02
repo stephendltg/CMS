@@ -8,7 +8,7 @@
  */
 
 // On optimise le rendu html
-if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_html', true ) ) {
+if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_html', true ) ) {
 
     // Add filter optimisation HTML
     add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_minify_html'); } , PHP_INT_MAX );
@@ -16,7 +16,7 @@ if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_html', tr
 }
 
 // On optimise le chargement des images
-if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_loadimage', true ) ) {
+if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_loadimage', true ) ) {
 
     // Add filter lazyload_script
     add_action('mp_head', 'mp_lazyload', PHP_INT_MAX);
@@ -27,7 +27,7 @@ if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_loadimage
 }
 
 // On optimise les feuilles de styles css
-if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_css', true ) ) {
+if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_css', true ) ) {
 
     // Add filter pour enqueue inline style
     add_filter('mp_inline_styles', 'mp_easy_minify');
@@ -41,7 +41,7 @@ if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_css', tru
 }
 
 // On optimise les script js
-if ( apply_filter( 'do_optimize', true ) && apply_filter( 'do_optimize_js', true ) ) {
+if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_js', true ) ) {
 
     // Add filter pour preparer la concetanation des fichiers js
     add_filter('mp_enqueue_script_link', 'mp_prepare_concatenate', 10, 2 );
@@ -77,34 +77,58 @@ function mp_lazyload_images( $html ) {
 /*                  js/css Minify              */
 /***********************************************/
 // Minifie js et css simplement
-function mp_easy_minify( $str ){
+function mp_easy_minify( $str, $comments = true ){
+
     // On enlève les commentaires
-    $str = preg_replace( '!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $str );
+    if($comments)
+        $str = preg_replace( '!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $str );
+
     /* remove tabs, spaces, newlines, etc. */
-    return str_replace( array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $str );
+    $str = str_replace(array("\r\n", "\r", "\n", "\t"), '', $str);
+    while ( stristr($str, '  ') )
+        $str = str_replace('  ', ' ', $str);
+    return $str;
 }
 
 
 /***********************************************/
 /*                  html Minify                */
 /***********************************************/
+
 function mp_minify_html($html){
 
+    // On recherche tous les tag ainsi que leur contenu ( tag => <p style="color:red">, text => "mon texte", tag => </p> )
     preg_match_all( '/<(?<tag>[\/\w.:-]*)(?:".*?"|\'.*?\'|[^\'">]+)*>|(?<text>((<[^!\/\w.:-])?[^<]*)+)|/si', $html, $matches, PREG_SET_ORDER );
+    // On init le toogle tag
     $raw_tag = false;
-    $html = '';
+    // On init le résultat
+    $html    = '';
+
+    // On boucle sur tous les éléments tag ou text trouvés
     foreach( $matches as $token ){
+
+        // On normalise la variable tag
         $tag     = isset( $token['tag'] ) ? strtolower( $token['tag'] ) : null;
+        // On associe le contenu
         $content = $token[0];
+
         if( is_null($tag) ){
+            // On supprimer les commentaires seulement s'il ne sont pas dans un textaera
             if($raw_tag != 'textarea')
                 $content = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $content);
+
         }
         else {
-            if( $tag == 'pre' || $tag == 'textarea' )   $raw_tag = $tag;
-            else if( $tag == '/pre' || $tag == '/textarea' )  $raw_tag = false;
+
+            // On minifie le contenu seulement s'il n'appartient pas à pre ou textaera
+            if( $tag == 'pre' || $tag == 'textarea' )
+                $raw_tag = $tag;
+            else if( $tag == '/pre' || $tag == '/textarea' )
+                $raw_tag = false;
             else {
-                if ( $raw_tag )  $strip = false;
+
+                if ( $raw_tag )
+                    $strip = false;
                 else {
                     $strip   = true;
                     $content = preg_replace('/(\s+)(\w++(?<!\baction|\balt|\bcontent|\bsrc)="")/', '$1', $content);
@@ -112,13 +136,14 @@ function mp_minify_html($html){
                 }
             }
         }
-        if ($strip) {
-            $content = str_replace(array("\r\n", "\r", "\n", "\t"), '', $content);
-            while ( stristr($content, '  ') )
-                $content = str_replace('  ', ' ', $content);
-        }
+
+        // On supprimer les espaces inutiles
+        if ($strip)
+            $content = mp_easy_minify($content, false);
+
         $html .= $content;
     }
+
     return $html;
 }
 

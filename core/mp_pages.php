@@ -48,17 +48,21 @@ function get_the_page( $field, $slug = '' ){
 
         do_action('do_before_get_the_page', $field, $slug);
 
-        $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.txt' );
+        // Date de création de la page corresponds à la date de création du dossier
+        $filectime_page = filemtime( CONTENT .'/'. $slug );
+        // Date d'edition de la page corresponds à la date de modification du fichier
+        $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.yml' );
 
         // On affecte la valeurs title au cas ou non renseigné
         $page[$slug]['title']  = basename($slug);
 
         // On lit le fichier
-        $page[$slug] = file_get_yaml( CONTENT .'/'. $slug .'/'. basename($slug) .'.txt');
+        $page[$slug] = file_get_yaml( CONTENT .'/'. $slug .'/'. basename($slug) .'.yml');
 
         // On affecte les données importante!
-        $page[$slug]['edit_date'] = $filemtime_page;
-        $page[$slug]['slug']      = $slug;
+        $page[$slug]['create_date'] = gmdate( 'Y-m-d H:i:s', $filectime_page );
+        $page[$slug]['edit_date']   = gmdate( 'Y-m-d H:i:s', $filemtime_page );
+        $page[$slug]['slug']        = $slug;
 
         if( is_same($slug,'home') )         $page[$slug]['url'] = HOME;
         elseif( is_same($slug,'error') )    $page[$slug]['url'] = null;
@@ -68,7 +72,18 @@ function get_the_page( $field, $slug = '' ){
 
     }
 
-    return !empty($page[$slug][$field]) ? apply_filter( 'get_the_'.$field, $page[$slug][$field], $slug ) : '';
+    if( !empty($page[$slug][$field]) ){
+
+        if( $field === 'slug' || $field === 'url' )
+            return $page[$slug][$field];
+        elseif( empty( $GLOBALS['mp_hook_filter']['get_the_'.$field] ) )
+            return sanitize_allspecialschars($page[$slug][$field]); // On applique un filter par défaut sur le champ
+        else
+            return apply_filter( 'get_the_'.$field, $page[$slug][$field], $slug );
+    }
+    else
+        return apply_filter( 'default_page_'. $field, '', $field, $slug );
+
 }
 
 
@@ -98,8 +113,8 @@ function set_the_page( $slug , $array ) {
 
         $dir = CONTENT .'/'. $slug;
         @mkdir( $dir , 0755 , true );
-        if ( !file_put_yaml( $dir .'/'. basename($slug).'.txt' , $array ) ) return false;
-        @chmod( $dir .'/'. basename($slug).'.txt' , 0644 );
+        if ( !file_put_yaml( $dir .'/'. basename($slug).'.yml' , $array ) ) return false;
+        @chmod( $dir .'/'. basename($slug).'.yml' , 0644 );
 
         do_action('do_after_edit_the_page', $slug );
 
@@ -138,13 +153,13 @@ function mp_hide_the_page( $slug ) {
 
     $slug = (string) $slug;
 
-    if( file_exists(CONTENT .'/'. $slug .'/@'.$slug.'.txt') ) return true;
+    if( file_exists(CONTENT .'/'. $slug .'/@'.$slug.'.yml') ) return true;
 
     if( !is_page($slug) ) return false;
 
     do_action('do_before_hide_the_page', $slug );
 
-    $hide_the_page = rename( CONTENT .'/'. $slug .'/'.$slug.'.txt' , CONTENT .'/'. $slug .'/@'.$slug.'.txt' );
+    $hide_the_page = rename( CONTENT .'/'. $slug .'/'.$slug.'.txt' , CONTENT .'/'. $slug .'/@'.$slug.'.yml' );
 
     do_action('do_after_hide_the_page', $slug );
 
@@ -165,7 +180,7 @@ function mp_visible_the_page( $slug ) {
 
     do_action('do_before_visible_the_page', $slug );
 
-    $visible_the_page = rename( CONTENT .'/'. $slug .'/@'.$slug.'.txt' , CONTENT .'/'. $slug .'/'.$slug.'.txt' );
+    $visible_the_page = rename( CONTENT .'/'. $slug .'/@'.$slug.'.yml' , CONTENT .'/'. $slug .'/'.$slug.'.yml' );
 
     do_action('do_after_visible_the_page', $slug );
 
@@ -203,7 +218,7 @@ function mp_rename_the_page( $slug , $new_slug ) {
 
     do_action('do_before_rename_the_page', $slug, $newslug );
 
-    if( rename( CONTENT .'/'. $slug .'/'.$slug_file.'.txt' , CONTENT .'/'. $slug .'/'.$new_slug_file.'.txt' ) )
+    if( rename( CONTENT .'/'. $slug .'/'.$slug_file.'.yml' , CONTENT .'/'. $slug .'/'.$new_slug_file.'.yml' ) )
         $rename_the_page = rename( CONTENT .'/'. $slug , CONTENT .'/'. $new_slug );
 
     do_action('do_after_rename_the_page', $slug, $newslug );

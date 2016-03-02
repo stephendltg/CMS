@@ -1,3 +1,12 @@
+# changelog v4.4.4 (23 janvier 2016)
+
+- mise à jour vers Normalize 3.0.3 : https://github.com/necolas/normalize.css/
+- réalignement vertical des input et des label
+
+# changelog v4.4.3 (14 janvier 2016)
+
+- ajout du patch `min-width: 0` sur les flex-items de grilles
+
 # changelog v4.4.2 (24 décembre 2015)
 
 - correction d'un bug responsive des classes `.flex-item-double`

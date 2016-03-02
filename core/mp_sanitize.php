@@ -1,0 +1,267 @@
+<?php defined('ABSPATH') or die('No direct script access.');
+
+/**
+ * Fonction sanitialize
+ *
+ *
+ * @package cms mini POPS
+ * @subpackage sanitialize
+ * @version 1
+ */
+
+
+/***********************************************/
+/*                fonctions sanitialize        */
+/***********************************************/
+
+/**
+ * Supprime toutes les balises ( style et script y comprit ).
+ */
+function strip_all_tags( $string ) {
+    $string = (string) $string;
+    $string = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $string );
+    return trim( strip_tags($string) );
+}
+
+/**
+ * Enlève tous les accents
+ */
+function remove_accent( $string ){
+    $string       = (string) $string;
+    $string = encode_utf8( $string );
+    $char_not_clean = array('/@/','/À/','/Á/','/Â/','/Ã/','/Ä/','/Å/','/Ç/','/È/','/É/','/Ê/','/Ë/','/Ì/','/Í/','/Î/','/Ï/','/Ò/','/Ó/','/Ô/','/Õ/','/Ö/','/Ù/','/Ú/','/Û/','/Ü/','/Ý/','/à/','/á/','/â/','/ã/','/ä/','/å/','/ç/','/è/','/é/','/ê/','/ë/','/ì/','/í/','/î/','/ï/','/ð/','/ò/','/ó/','/ô/','/õ/','/ö/','/ù/','/ú/','/û/','/ü/','/ý/','/ÿ/', '/©/');
+    $clean = array('a','a','a','a','a','a','a','c','e','e','e','e','i','i','i','i','o','o','o','o','o','u','u','u','u','y','a','a','a','a','a','a','c','e','e','e','e','i','i','i','i','o','o','o','o','o','o','u','u','u','u','y','y','copy');
+    $string = preg_replace( $char_not_clean , $clean , $string );
+    $string = utf8_decode($string);
+    $string = preg_replace('/\?/', '', $string);
+    $string = strtolower($string);
+    return $string;
+}
+
+
+/**
+ * Enlève tous les caractères spéciaux
+ */
+function sanitize_allspecialschars( $string ) {
+    $string       = (string) $string;
+    $special_chars = array( "[", "]", "/", "\\", "<", ">", "\"", "{", "}", chr(0) );
+    $special_chars = apply_filter( 'sanitize_allspecialschars_char' , $special_chars );
+    $special_chars = preg_replace( "#\x{00a0}#siu", ' ', $special_chars );
+    $string = str_replace( $special_chars, '', $string );
+    $string = str_replace( '%20', ' ', $string );
+    $string = preg_replace( '/[\r\n\t]+/', ' ', $string );
+    return $string;
+}
+
+/**
+ * Nettoie un nom de fichier
+ */
+function sanitize_file_name( $filename ) {
+    $filename       = (string) $filename;
+    //thanks wordpress
+    $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", chr(0) );
+    $filename = apply_filter( 'sanitize_file_name_char' , $filename );
+    $filename = preg_replace( "#\x{00a0}#siu", ' ', $filename );
+    $filename = str_replace( $special_chars, '', $filename );
+    $filename = str_replace( array( '%20', '+' ), '-', $filename );
+    $filename = preg_replace( '/[\r\n\t -]+/', '-', $filename );
+    $filename = trim( $filename, '.-_' );
+    $filename = remove_accent( $filename );
+    return $filename;
+}
+
+/**
+ * Nettoie un mot de tout caractères
+ */
+function sanitize_words( $words ) {
+    $words       = (string) $words;
+    //thanks wordpress
+    $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", ".", "_", "-", chr(0) );
+    $words = apply_filter( 'sanitize_words_char' , $words );
+    $words = preg_replace( "#\x{00a0}#siu", ' ', $words );
+    $words = str_replace( $special_chars, '', $words );
+    $words = str_replace( array( '%20', '+' ), ' ', $words );
+    $words = preg_replace( '/[\r\n\t ]+/', ' ', $words );
+    return $words;
+}
+
+/**
+ * Nettoie des données svg
+ */
+function sanitize_svg( $svg ){
+
+    // Table des éléments présent normalement dans un fichier svg
+    $whitelist = array(
+        "a"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "href", "xlink:href", "xlink:title"),
+        "circle"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "r", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "clipPath"=>array("class", "clipPathUnits", "id"),
+        "defs"=>array(),
+        "style" =>array("type"),
+        "desc"=>array(),
+        "ellipse"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "feGaussianBlur"=>array("class", "color-interpolation-filters", "id", "requiredFeatures", "stdDeviation"),
+        "filter"=>array("class", "color-interpolation-filters", "filterRes", "filterUnits", "height", "id", "primitiveUnits", "requiredFeatures", "width", "x", "xlink:href", "y"),
+        "foreignObject"=>array("class", "font-size", "height", "id", "opacity", "requiredFeatures", "style", "transform", "width", "x", "y"),
+        "g"=>array("class", "clip-path", "clip-rule", "id", "display", "fill", "fill-opacity", "fill-rule", "filter", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "font-family", "font-size", "font-style", "font-weight", "text-anchor"),
+        "image"=>array("class", "clip-path", "clip-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "style", "systemLanguage", "transform", "width", "x", "xlink:href", "xlink:title", "y"),
+        "line"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "x1", "x2", "y1", "y2"),
+        "linearGradient"=>array("class", "id", "gradientTransform", "gradientUnits", "requiredFeatures", "spreadMethod", "systemLanguage", "x1", "x2", "xlink:href", "y1", "y2"),
+        "marker"=>array("id", "class", "markerHeight", "markerUnits", "markerWidth", "orient", "preserveAspectRatio", "refX", "refY", "systemLanguage", "viewBox"),
+        "mask"=>array("class", "height", "id", "maskContentUnits", "maskUnits", "width", "x", "y"),
+        "metadata"=>array("class", "id"),
+        "path"=>array("class", "clip-path", "clip-rule", "d", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "pattern"=>array("class", "height", "id", "patternContentUnits", "patternTransform", "patternUnits", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xlink:href", "y"),
+        "polygon"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "id", "class", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "polyline"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "radialGradient"=>array("class", "cx", "cy", "fx", "fy", "gradientTransform", "gradientUnits", "id", "r", "requiredFeatures", "spreadMethod", "systemLanguage", "xlink:href"),
+        "rect"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "width", "x", "y"),
+        "stop"=>array("class", "id", "offset", "requiredFeatures", "stop-color", "stop-opacity", "style", "systemLanguage"),
+        "svg"=>array("class", "clip-path", "clip-rule", "filter", "id", "height", "mask", "preserveAspectRatio", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xmlns", "xmlns:se", "xmlns:xlink", "y"),
+        "switch"=>array("class", "id", "requiredFeatures", "systemLanguage"),
+        "symbol"=>array("class", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "opacity", "preserveAspectRatio", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "viewBox"),
+        "text"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "transform", "x", "xml:space", "y"),
+        "textPath"=>array("class", "id", "method", "requiredFeatures", "spacing", "startOffset", "style", "systemLanguage", "transform", "xlink:href"),
+        "title"=>array(),
+        "tspan"=>array("class", "clip-path", "clip-rule", "dx", "dy", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "rotate", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "textLength", "transform", "x", "xml:space", "y"),
+        "use"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "transform", "width", "x", "xlink:href", "y"),
+    );
+
+    // On recherche tous les tag ainsi que leur contenu ( tag => <p style="color:red">, text => "mon texte", tag => </p> )
+    preg_match_all( '/<(?<tag>[\/\w.:-]*)(?:".*?"|\'.*?\'|[^\'">]+)*>|(?<text>((<[^!\/\w.:-])?[^<]*)+)|/si', $svg, $matches, PREG_SET_ORDER );
+    // On init le toogle tag
+    $raw_tag = null;
+    // On init le résultat
+    $svg    = '';
+
+    // On boucle sur tous les éléments tag ou text trouvés
+    foreach( $matches as $token ){
+
+        // On normalise la variable tag
+        $tag     = !empty( $token['tag'] ) ? strtolower( $token['tag'] ) : null;
+        // On associe le contenu
+        $content = $token[0];
+
+        if( array_key_exists($tag, $whitelist) ){
+
+            // toogle pour valider un texte associé au tag
+            $raw_tag = $tag;
+            // On extrait les attributs
+            preg_match_all('#([^\s=]+)\s*=\s*(\'[^<\']*\'|"[^<"]*")#', $content, $matches, PREG_SET_ORDER);
+            // On vérifie que chaque attributs est valid
+            foreach ($matches as $attribute)
+                if( is_notin($attribute[1], $whitelist[$tag]) )
+                    $content = str_replace($attribute[0], '', $content);
+
+        } elseif( array_key_exists(trim($tag,'/'), $whitelist) ){
+
+            // On réecrit un tag de fermeture valid
+            $content = '<'.$tag.'>';
+
+        } else{
+
+            if( !array_key_exists($raw_tag, $whitelist) ) $content = ''; // si tag non valid on ne récupere pas le texte et on ne valid pas le tag
+            else $raw_tag = null; // On reinit le toogle
+
+        }
+
+        $svg .= $content;
+    }
+
+    if( apply_filter( 'do_optimize_svg', true ) ){
+
+        // On supprime les espaces vide, tabulation, retour chariot, ...
+        $svg = str_replace(' />', '/>', $svg);
+        $svg = str_replace(array("\r\n", "\r", "\n", "\t"), '', $svg);
+            while ( stristr($svg, '  ') )
+                $svg = str_replace('  ', ' ', $svg);
+
+    }
+
+    return $svg;
+}
+
+/**
+ * Nettoie des données svg
+ */
+
+/*
+function sanitize_svg( $svg ){
+
+    // Table des éléments présent normalement dans un fichier svg
+    $whitelist = array(
+        "a"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "href", "xlink:href", "xlink:title"),
+        "circle"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "r", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "clipPath"=>array("class", "clipPathUnits", "id"),
+        "defs"=>array(),
+        "style" =>array("type"),
+        "desc"=>array(),
+        "ellipse"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "feGaussianBlur"=>array("class", "color-interpolation-filters", "id", "requiredFeatures", "stdDeviation"),
+        "filter"=>array("class", "color-interpolation-filters", "filterRes", "filterUnits", "height", "id", "primitiveUnits", "requiredFeatures", "width", "x", "xlink:href", "y"),
+        "foreignObject"=>array("class", "font-size", "height", "id", "opacity", "requiredFeatures", "style", "transform", "width", "x", "y"),
+        "g"=>array("class", "clip-path", "clip-rule", "id", "display", "fill", "fill-opacity", "fill-rule", "filter", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "font-family", "font-size", "font-style", "font-weight", "text-anchor"),
+        "image"=>array("class", "clip-path", "clip-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "style", "systemLanguage", "transform", "width", "x", "xlink:href", "xlink:title", "y"),
+        "line"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "x1", "x2", "y1", "y2"),
+        "linearGradient"=>array("class", "id", "gradientTransform", "gradientUnits", "requiredFeatures", "spreadMethod", "systemLanguage", "x1", "x2", "xlink:href", "y1", "y2"),
+        "marker"=>array("id", "class", "markerHeight", "markerUnits", "markerWidth", "orient", "preserveAspectRatio", "refX", "refY", "systemLanguage", "viewBox"),
+        "mask"=>array("class", "height", "id", "maskContentUnits", "maskUnits", "width", "x", "y"),
+        "metadata"=>array("class", "id"),
+        "path"=>array("class", "clip-path", "clip-rule", "d", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "pattern"=>array("class", "height", "id", "patternContentUnits", "patternTransform", "patternUnits", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xlink:href", "y"),
+        "polygon"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "id", "class", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "polyline"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
+        "radialGradient"=>array("class", "cx", "cy", "fx", "fy", "gradientTransform", "gradientUnits", "id", "r", "requiredFeatures", "spreadMethod", "systemLanguage", "xlink:href"),
+        "rect"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "width", "x", "y"),
+        "stop"=>array("class", "id", "offset", "requiredFeatures", "stop-color", "stop-opacity", "style", "systemLanguage"),
+        "svg"=>array("class", "clip-path", "clip-rule", "filter", "id", "height", "mask", "preserveAspectRatio", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xmlns", "xmlns:se", "xmlns:xlink", "y"),
+        "switch"=>array("class", "id", "requiredFeatures", "systemLanguage"),
+        "symbol"=>array("class", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "opacity", "preserveAspectRatio", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "viewBox"),
+        "text"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "transform", "x", "xml:space", "y"),
+        "textPath"=>array("class", "id", "method", "requiredFeatures", "spacing", "startOffset", "style", "systemLanguage", "transform", "xlink:href"),
+        "title"=>array(),
+        "tspan"=>array("class", "clip-path", "clip-rule", "dx", "dy", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "rotate", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "textLength", "transform", "x", "xml:space", "y"),
+        "use"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "transform", "width", "x", "xlink:href", "y"),
+    );
+
+    // On créer un nouveau document xml
+    $xmlDoc = new DOMDocument();
+    $xmlDoc->preserveWhiteSpace = false;
+    // On charge le fichier svg
+    $xmlDoc->loadXML($svg );
+    //$xmlDoc->loadXML($svg,LIBXML_NOWARNING | LIBXML_NOERROR );
+
+    // On liste tout les éléments du fichier
+    $allElements = $xmlDoc->getElementsByTagName("*");
+
+    // On boucle sur chaque éléments
+    for($i = 0; $i < $allElements->length; $i++){
+
+        $currentNode = $allElements->item($i);
+        // On créer un table de comparaison selon le noeuds trouvé
+        $whitelist_attr_arr = array_key_exists($currentNode->tagName, $whitelist) ? $whitelist[$currentNode->tagName] : null;
+
+        // On check les attributs du noeud
+        if(!empty($whitelist_attr_arr)) {
+            for($x = 0; $x < $currentNode->attributes->length; $x++) {
+                // On récupère le nom de l'attribut
+                $attrName = $currentNode->attributes->item($x)->name;
+                // On vérifie si l'attribut est valid sinon on le supprime
+                if( !in_array($attrName, $whitelist_attr_arr) )
+                    if( $currentNode->removeAttribute($attrName) ) $x--; // On boucle jusqu'à ce que tous le noeuds soit clean
+            }
+        }
+        // On supprime le noeud s'il existe pas dans la table whitelist
+        else
+            if( $currentNode->parentNode->removeChild($currentNode) ) $i--;
+    }
+
+    $xmlDoc->formatOutput = true;
+    $svg = $xmlDoc->saveXML();
+    // On supprime les commentaires
+    $svg = preg_replace('#<!--.*?-->#s', '', $svg);
+    // On supprimer les espaces sur balise fermante
+    $svg = str_replace(' />', '/>', $svg);
+    // On supprime  tabs, spaces, newlines, etc...
+    return str_replace( array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $svg );
+}
+*/

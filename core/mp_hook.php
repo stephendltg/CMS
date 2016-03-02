@@ -188,15 +188,15 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
     $accepted_args   = (int) $accepted_args;
 
     // On vérifie qu'il n'y a pas le même filtre avec la même priorité. Thanks to WP :)
-    if ( isset ( $mp_hook_filter[$filter_name]["$priority"] ) ) {
-        foreach ( $mp_hook_filter[$filter_name]["$priority"] as $filter ) {
+    if ( isset ( $mp_hook_filter[$filter_name][$priority] ) ) {
+        foreach ( $mp_hook_filter[$filter_name][$priority] as $filter ) {
             if ( $filter['function'] == $function_to_add ) return true;
         }
     }
     // On stocke le hook par nom d'action puis par priorité
-    $mp_hook_filter[$filter_name]["$priority"][] = array( 'function' => $function_to_add, 'accepted_args' => $accepted_args );
+    $mp_hook_filter[$filter_name][$priority][] = array( 'function' => $function_to_add, 'accepted_args' => $accepted_args );
     // On trie les hook par priorité ( 1 à ... )
-    ksort( $mp_hook_filter[$filter_name]["$priority"] );
+    ksort( $mp_hook_filter[$filter_name] );
 
     return true;
 }
@@ -208,7 +208,7 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
  * remove action
  *
  */
-function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'hook_actions' ){
+function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'mp_hook_actions' ){
 
     if( !empty($GLOBALS[$mp_hook][$tag]) ) {
 
@@ -228,5 +228,5 @@ function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'h
  */
 function remove_filter( $tag, $function_to_remove, $priority = 10 ){
 
-    remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'hook_filter' );
+    remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'mp_hook_filter' );
 }

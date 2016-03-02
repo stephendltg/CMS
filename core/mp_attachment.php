@@ -198,8 +198,7 @@ function get_the_image( $name = '' ){
 function mp_image_compress( $src, $mode = 'normal' ) {
 
     if( function_exists('imagecreatefrompng') // On vérifie que GD est présent
-    && file_exists($src)                      // On vérifie l'existence du fichier
-    && is_writable($src)                      // On vérifie les permissions
+    && is_writable($src)                      // On vérifie les permissions et l'existence du fichier
     && is_in( exif_imagetype($src), array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG) )  // C'est bien une image !
     ){
 
@@ -244,3 +243,4 @@ function mp_image_compress( $src, $mode = 'normal' ) {
         return false;
     }
 }
+
