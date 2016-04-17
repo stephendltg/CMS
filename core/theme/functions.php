@@ -23,9 +23,9 @@ mp_enqueue_style('style', TEMPLATEURL.'/assets/css/style.css' );
 
 // On optimise le code
 add_filter('do_optimize', function(){return true;});
-add_filter('do_optimize_html', function(){return true;});
+add_filter('do_optimize_html', function(){return false;});
 add_filter('do_optimize_css', function(){return true;});
-add_filter('do_optimize_loadimage', function(){return true;});
+add_filter('do_optimize_loadimage', function(){return false;});
 
 // On désactive le cache
 add_filter('do_cache', function(){return false;});

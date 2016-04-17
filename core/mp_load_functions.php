@@ -41,18 +41,6 @@ function mp_check_php_versions() {
 	}
 }
 
-/**
- * On met à l'heure le serveur selon la configuration
- */
-function mp_setting_the_time() {
-    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
-    if( array_key_exists( get_the_blog('timezone', null ) , timezones() ) ){
-        date_default_timezone_set( get_the_blog('timezone') );
-        define('GMT-OFFSET', date('Z'));
-    }elseif( is_intgr( get_the_blog('timezone') ) && is_between( get_the_blog('timezone'), -12, 12 ) ){
-        define( 'GMT-OFFSET', get_the_blog('timezone') * HOUR_IN_SECONDS );
-    }
-}
 
 /**
  * Demarrage du timer.
@@ -86,6 +74,13 @@ function timer_stop( $precision = 3 ) {
 function mp_debug_mode() {
 
     if ( DEBUG ) {
+
+        function _echo( $var, $var_dump = 0 ){
+            echo '<pre>';
+            if($var_dump) var_dump($var);
+            else print_r($var);
+            echo '<pre>';
+        }
 
         error_reporting( E_ALL );
 
@@ -140,12 +135,12 @@ function mp_rewrite_rules(){
 
     $configuration = array();
 
-    $rewrite = get_the_blog('url_rewrite', true );
+    $rewrite = get_option('setting->urlrewrite', true);
 
-    if ( is_same($rewrite, 'enable') )
+    if ($rewrite === 'enable')
         return;
 
-    if( is_same($rewrite, 'disable') ){
+    if($rewrite === 'disable'){
         $is_mod_rewrite = false;
         return;
     }
@@ -154,7 +149,7 @@ function mp_rewrite_rules(){
         $rewrite = false;
 
     // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
-    if ( is_same($rewrite, true) ) {
+    if ( $rewrite === true ) {
 
         $rewrite = 'enable';
 
@@ -196,7 +191,7 @@ function mp_rewrite_rules(){
         $rules .= "RewriteCond %{DOCUMENT_ROOT}/cache/%{HTTP_HOST}%{REQUEST_URI}/index.html -f\n\t";
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
         $rules .= "# block specify files in the cache folder from being accessed directly\n\t";
-        $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|lang|md|mdown|gz)$ error [R=301,L]\n\n\t";
+        $rules .= "RewriteRule ^". str_replace( ABSPATH , "" , CONTENT_DIR ) ."/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]\n\n\t";
         $rules .= "# block all files core folder from being accessed directly\n\t";
         $rules .= "RewriteRule ^core/(.*) error [R=301,L]\n\n\t";
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -209,9 +204,9 @@ function mp_rewrite_rules(){
         $rules .= "# Redirect 301 /index " . HOME . "/\n\n";
         $rules .= "</IfModule>\n\n";
         $rules .= "# END miniPops";
-    }
 
-    if ( is_same($rewrite, false) ){
+    } else {
+
         $rewrite = 'disable';
         $is_mod_rewrite = false;
         $rules = "# BEGIN miniPops\n# END miniPops";
@@ -226,7 +221,7 @@ function mp_rewrite_rules(){
 
     if ( !file_put_contents( ABSPATH . '.htaccess', $rules ) ) cms_maintenance( 'Error file permissions !' );
 
-    if( !set_the_blog( 'url_rewrite', $rewrite) ) cms_maintenance( 'Error file permissions !' );
+    update_option('setting->urlrewrite', $rewrite);
 
 }
 
@@ -453,56 +448,66 @@ function get_template_directory(){
  */
 function get_the_blog( $field, $default = false ){
 
-    static $blog = array();
-
     $field = (string) $field;
 
-    if( empty($blog) && glob(CONTENT .'/site.yml') )
-        $blog = file_get_yaml(CONTENT .'/site.yml');
+    $field = strtolower(trim($field));
 
-    if( !empty($blog[$field]) ){
+    switch ($field) {
 
-        // On applique un filter par défaut sur le champ
-        if( empty( $GLOBALS['mp_hook_filter']['get_the_blog_'.$field] ) )
-            return sanitize_allspecialschars($blog[$field]);
-
-        return apply_filter( 'get_the_blog_'.$field, $blog[$field] );
+        case 'copyright':
+            $value = get_option('blog->'.$field);
+            if( null === $value ) return $default;
+            $value = parse_text($value);
+            break;
+        case 'home':
+            $value = esc_url_raw( get_permalink() );
+            break;
+        case 'rss':
+            $value = esc_url_raw( get_permalink('rss', 'feed') );
+            break;
+        case 'template_url':
+            $value = esc_url_raw( TEMPLATEURL );
+            break;
+        case 'charset':
+            $value = CHARSET;
+            break;
+        case 'version':
+            $value = MP_VERSION;
+            break;
+        case 'language':
+            $value = get_the_lang();
+            break;
+        default:
+            $value = get_option('blog->'.$field, $default);
+            break;
     }
-    else
-        return apply_filter( 'default_blog_'. $field, $default, $field );
+    return apply_filter( 'get_the_blog_'. $field, $value, $field );
 }
 
 
 /**
- * Sauvegarde la configuration du site
- * @return boolean
+ * On init le blog
  */
-function set_the_blog( $field, $value ){
+function init_the_blog(){
 
-    $field = (string) $field;
+    $blog = array(
+        'title'=>'miniPops',
+        'subtitle'=>'Un site sous miniPops',
+        'description'=>'Un site sous miniPops',
+        'keywords'=>'minipops, cms, minipopscms',
+        'author'=>'stephen deletang',
+        'copyright'=>'@2015 -  Propulsé par miniPops',
+        'lang'=> lang(),
+        'theme'=>'default' );
 
-    // On vérifie que le champs est valide et que le valeur associés a bien changé.
-    if( is_same( get_the_blog($field), $value ) ) return false;
+    $setting = array(
+        'urlrewrite'=>true,
+        'timezone'=> 0,
+        'date_format' => 'F j, Y',
+        'time_format' => 'g:i a',
+        'api_key'=>random_salt(32),
+        'api_keysalt'=>random_salt(32) );
 
-    if( glob(CONTENT .'/site.yml') )
-        $blog = file_get_yaml(CONTENT .'/site.yml');
-    else
-        $blog = array(
-            'title'=>'miniPops',
-            'subtitle'=>'Un site sous miniPops',
-            'description'=>'Un site sous miniPops',
-            'keywords'=>'minipops, cms, minipopscms',
-            'author'=>'stephen deletang',
-            'copyright'=>'@2015 -  Propulsé par miniPops',
-            'lang'=> '// Language usage : en ( default )' ,
-            'url_rewrite'=> true,
-            'plugins' => '// List of the plugins separator comma: mp_cache, mp_google',
-            'theme'=>'default',
-            'timezone'=>'// ex: Europe/Paris or GMT +1',
-            'api-key'=>random_salt(32),
-            'api-keysalt'=>random_salt(32) );
-
-    $blog[$field] = $value;
-
-    return file_put_yaml( CONTENT .'/site.yml', $blog );
+    add_option('blog', $blog);
+    add_option('setting', $setting);
 }

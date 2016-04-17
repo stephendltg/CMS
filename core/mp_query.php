@@ -28,14 +28,19 @@ function get_url_queries(){
     global $is_mod_rewrite;
 
     $url = '';
+
     if ( $is_mod_rewrite ){
 
         $request_url = (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : '';
         $script_url  = (isset($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : '';
 
-        if ( $request_url != $script_url ) $url = trim(preg_replace('/'. str_replace('/', '\/', str_replace('index.php', '', $script_url)) .'/', '', $request_url, 1), '/');
+        if ( $request_url != $script_url )
+            $url = trim(preg_replace('/'. str_replace('/', '\/', str_replace('index.php', '', $script_url)) .'/', '', $request_url, 1), '/');
+
         $url = preg_replace('/\?.*/', '', $url);
+
     } else {
+
         $first_get_query = key($_GET);
         $query_rules = array ('p','tag');
         $query_rules = apply_filter( 'query_rules' , $query_rules );
@@ -44,6 +49,7 @@ function get_url_queries(){
                 $url = ( is_same('p',$rule) ) ? $_GET[$first_get_query] : $rule.'/'.$_GET[$first_get_query];
         }
     }
+
     // On supprime le dernier '/' pour certaine requête ( www.local.fr/test/?lkklk ou www.local.fr/index.php?p=test/ ) et rediriger ce type de reqete vers la page demande la plus proche donc limiter les erreurs 404.
     $url = rtrim( $url , '/' );
     return $url;
@@ -129,12 +135,19 @@ function is_page( $page ='' ){
     global $query;
 
     $url = $query;
+
     if ( !empty($page) ) $url = $page;
+
     if( !is_filename( str_replace('/','',$url) ) ) return false;
+
     $page = glob( CONTENT .'/'. $url , GLOB_MARK|GLOB_ONLYDIR );
+
     if( empty($page)) return false;
-    $page = glob( $page[0] . basename($url) .'.yml' );
+
+    $page = glob( $page[0] . basename($url) .'.md' );
+
     if( empty($page)) return false;
+
     return true;
 }
 
@@ -148,7 +161,8 @@ function is_home( $page ='' ){
     global $query;
 
     $url = ( !empty($query) ) ? $query : 'index.php';
-    if( !empty($page) ) $url = $page;
+    if( !empty($page) )
+        $url = $page;
     return is_same( $url , 'index.php');
 }
 

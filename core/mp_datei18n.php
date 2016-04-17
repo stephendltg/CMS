@@ -1,24 +1,21 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonctions constants
+ * Fonction date et internationalisation
  *
  *
  * @package cms mini POPS
- * @subpackage Constants - Constantes par défaut
+ * @subpackage date - fonction date
  * @version 1
  */
 
-/***********************************************/
-/*                fonctions timezone           */
-/***********************************************/
 
 /*
  * Liste des timezone valid
  */
-function timezones(){
+function list_timezones_valid(){
 
-return array(
+    return array(
         'Pacific/Midway'        => "(GMT-11:00) Midway Island",
         'US/Samoa'              => "(GMT-11:00) Samoa",
         'US/Hawaii'             => "(GMT-10:00) Hawaii",
@@ -133,4 +130,157 @@ return array(
         'Pacific/Fiji'          => "(GMT+12:00) Fiji",
         'Asia/Kamchatka'        => "(GMT+12:00) Kamchatka"
     );
+}
+
+
+/**
+* Fonction _date idem à date() avec mise à l'heure
+* @param $format     format de sortie
+* @param $timestamp  timestamp
+* @param $translate  bool traduction true/false
+*/
+function _date( $format = 'Y-m-d H:i:s', $timestamp = false, $translate = true ){
+
+    // On définit le timestamp
+    $i = $timestamp;
+
+    if ( false === $i )                     $i = time();
+    elseif( is_string($i) && is_date($i) )  $i = strtotime($i);
+    else                                    $i = (int) $i;
+
+    // Si le format timestamp demandé on retourne timestamp
+    if ( 'U' === $format )  return $i;
+
+    // On calcul le décalage horaire
+    if( is_intgr(get_option('setting->timezone')) && is_between(get_the_blog('setting->timezone'), -12, 12) )
+        $gmt_offset = get_option('setting->timezone') * HOUR_IN_SECONDS;
+    elseif( array_key_exists( get_option('setting->timezone', null) , list_timezones_valid() ) ){
+        $dateTime     = date_create( date('r', $i) );
+        $dateTimeZone = timezone_open( get_option('setting->timezone') );
+        $gmt_offset   = timezone_offset_get($dateTimeZone, $dateTime);
+    }
+    else    $gmt_offset = 0;
+
+
+    // On lance la traduction
+    if ( $translate ){
+
+        // The Weekdays
+        $weekday[0] =  __('Sunday');
+        $weekday[1] =  __('Monday');
+        $weekday[2] =  __('Tuesday');
+        $weekday[3] =  __('Wednesday');
+        $weekday[4] =  __('Thursday');
+        $weekday[5] =  __('Friday');
+        $weekday[6] =  __('Saturday');
+
+        // Abbreviations for each day.
+        $weekday_abbrev[__('Sunday')]    =  __('Sun');
+        $weekday_abbrev[__('Monday')]    =  __('Mon');
+        $weekday_abbrev[__('Tuesday')]   =  __('Tue');
+        $weekday_abbrev[__('Wednesday')] =  __('Wed');
+        $weekday_abbrev[__('Thursday')]  =  __('Thu');
+        $weekday_abbrev[__('Friday')]    =  __('Fri');
+        $weekday_abbrev[__('Saturday')]  =  __('Sat');
+
+        // The Months
+        $month['01'] = __( 'January' );
+        $month['02'] = __( 'February' );
+        $month['03'] = __( 'March' );
+        $month['04'] = __( 'April' );
+        $month['05'] = __( 'May' );
+        $month['06'] = __( 'June' );
+        $month['07'] = __( 'July' );
+        $month['08'] = __( 'August' );
+        $month['09'] = __( 'September' );
+        $month['10'] = __( 'October' );
+        $month['11'] = __( 'November' );
+        $month['12'] = __( 'December' );
+
+        // Abbreviations for each month.
+        $month_abbrev[__( 'January' )]  = __( 'Jan');
+        $month_abbrev[__( 'February' )] = __( 'Feb');
+        $month_abbrev[__( 'March' )]    = __( 'Mar');
+        $month_abbrev[__( 'April' )]    = __( 'Apr');
+        $month_abbrev[__( 'May' )]      = __( 'May');
+        $month_abbrev[__( 'June' )]     = __( 'Jun');
+        $month_abbrev[__( 'July' )]     = __( 'Jul');
+        $month_abbrev[__( 'August' )]   = __( 'Aug');
+        $month_abbrev[__( 'September' )] = __( 'Sep');
+        $month_abbrev[__( 'October' )]  = __( 'Oct');
+        $month_abbrev[__( 'November' )] = __( 'Nov');
+        $month_abbrev[__( 'December' )] = __( 'Dec');
+
+        // The Meridiems
+        $meridiem['am'] = __('am');
+        $meridiem['pm'] = __('pm');
+        $meridiem['AM'] = __('AM');
+        $meridiem['PM'] = __('PM');
+
+
+        $datemonth              = $month[ date( 'm', $i ) ];
+        $datemonth_abbrev       = $month_abbrev[ $datemonth ];
+        $dateweekday            = $weekday[ date( 'w', $i ) ];
+        $dateweekday_abbrev     = $weekday_abbrev[ $dateweekday ];
+        $datemeridiem           = $meridiem[ date( 'a', $i ) ];
+        $datemeridiem_capital   = $meridiem[ date( 'A', $i ) ];
+
+        $format = ' '.$format;
+
+        $format = preg_replace( "/([^\\\])D/", "\\1" . backslashit( $dateweekday_abbrev ), $format );
+        $format = preg_replace( "/([^\\\])F/", "\\1" . backslashit( $datemonth ), $format );
+        $format = preg_replace( "/([^\\\])l/", "\\1" . backslashit( $dateweekday ), $format );
+        $format = preg_replace( "/([^\\\])M/", "\\1" . backslashit( $datemonth_abbrev ), $format );
+        $format = preg_replace( "/([^\\\])a/", "\\1" . backslashit( $datemeridiem ), $format );
+        $format = preg_replace( "/([^\\\])A/", "\\1" . backslashit( $datemeridiem_capital ), $format );
+
+        $format = substr( $format, 1, strlen( $format ) -1 );
+    }
+    return @date($format, $i + $gmt_offset);
+}
+
+
+/**
+* Récupère la date de publication d'une page
+* @param $format     format de sortie
+* @param $slug       slug de la page (si vide slug de le page appellée par l'url)
+*/
+/***********************************************/
+/*        Internationnalisation time           */
+/***********************************************/
+
+function get_the_date( $format = '', $slug = '' ) {
+
+    $format = (string) $format;
+
+    $pubdate = get_the_page('pubdate', $slug);
+
+    if ( '' == $format )
+        $the_date = _date( get_option( 'setting->date_format', 'F j, Y' ), $pubdate );
+    else
+        $the_date = _date( $format, $pubdate );
+
+    return apply_filter( 'get_the_date', $the_date, $format, $pubdate );
+}
+
+
+/**
+* Récupère l'heure de publication d'une page
+* @param $format     format de sortie
+* @param $slug       slug de la page (si vide slug de le page appellée par l'url)
+*/
+function get_the_time( $format = '', $slug = '' ) {
+
+    $format = (string) $format;
+
+    $pubdate = get_the_page('pubdate', $slug);
+
+    if ( strlen($pubdate) == 0 )  return;
+
+    if ( '' == $format )
+        $the_time = _date( get_option( 'setting->time_format', 'g:i a' ), $pubdate );
+    else
+        $the_time = _date( $format, $pubdate );
+
+    return apply_filter( 'get_the_time', $the_time, $format, $pubdate );
 }

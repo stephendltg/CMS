@@ -48,8 +48,7 @@ function mp_init_constants() {
 	define( 'YEAR_IN_SECONDS',  365 * DAY_IN_SECONDS    );
 
 	// On fixe l'heure en UTC
-	if( date_default_timezone_get() !== 'UTC') )
-		date_default_timezone_set('UTC');
+	date_default_timezone_set('UTC');
 
 }
 
@@ -79,5 +78,5 @@ function mp_plugin_directory_constants() {
  * http://www.sethcardoza.com/api/rest/tools/random_password_generator/length:32
  */
 function mp_secure_constants() {
-    $CP=get_the_blog('api-key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_the_blog('api-salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= CONTENT_DIR.date('Ym').HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
+    $CP=get_option('setting->api_key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_option('setting->api_salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= CONTENT_DIR.date('Ym').HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
 }

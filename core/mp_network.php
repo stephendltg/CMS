@@ -24,21 +24,27 @@
 function email( $params = null , $mode = 'plain' ){
 
     if( is_array( $params ) and !empty( $params ) ) {
+
         if( isset( $params['to'] ) )                                        $to      = $params['to'];
         if( isset( $params['from'] )    && is_email( $params['from'] ) )    $from    = $params['from'];
         if( isset( $params['replyTo'] ) && is_email( $params['replyTo'] ) ) $replyTo = $params['replyTo'];
         if( isset( $params['subject'] ) )                                   $subject = esc_attr( $params['subject'] );
         if( isset( $params['body'] ) )                                      $body    = esc_attr( $params['body'] );
 
-        foreach ( explode( ',' , trim( $to ) ) as $addr_mail ) if( !is_email( $addr_mail ) ) return false;
+        foreach ( explode( ',' , trim( $to ) ) as $addr_mail )
+            if( !is_email( $addr_mail ) ) return false;
+
         if( empty( $to ) || empty( $subject ) || empty( $body ) ) return false;
+
         if( empty( $from ) ) {
             $sitename = strtolower( $_SERVER['SERVER_NAME'] );
             if ( substr( $sitename, 0, 4 ) == 'www.' )
              $sitename = substr( $sitename, 4 );
             $from = 'miniPOPS@' . $sitename;
         }
+
         if( empty( $replyTo ) ) $replyTo = $from;
+
         if( is_notin( $mode , array('plain','html') ) ) return false;
 
         $headers = array(
@@ -50,6 +56,7 @@ function email( $params = null , $mode = 'plain' ){
             'Content-Type: text/'. $mode .'; charset=utf-8',
             'Content-Transfer-Encoding: 8bit',
         );
+
         return mail( $to , encode_utf8( $subject ) , encode_utf8( $body ) , implode( PHP_EOL , $headers ) );
     }
     return false;
@@ -65,6 +72,7 @@ function email( $params = null , $mode = 'plain' ){
  * @return string
  */
 function get_ip_client() {
+
     // IP si internet partagé
     if (isset($_SERVER['HTTP_CLIENT_IP'])) {
        return $_SERVER['HTTP_CLIENT_IP'];

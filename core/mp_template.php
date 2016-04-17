@@ -14,48 +14,33 @@
 /***********************************************/
 
 /**
- * Gestion de lecture d'un argument snippet
+ * Gestion de lecture d'un argument snippet.
  * @return string || array
  */
-function get_the_args( $field ) {
+function get_the_args( $field, $type = null ) {
 
     $field = (string) $field;
 
     global $__args;
 
-    // On récupère le champ ciblé
-    $params = explode('->', $field);
-    $size = size($params);
+    // Si pas d'arguments return
+    if( $__args === false ) return;
 
-    $args = '';
+    // On créer le noeuds de recherche
+    $array_keys = explode('->', $field);
 
-    // On recherche le champ ciblé dans la table
-    if( !empty( $__args[ $params[0] ] ) ){
+    // On récupère la variable selon le noeud
+    $ref = &$__args;
+    foreach ($array_keys as $k)
+        if(!isset($ref[$k]) ) return; else $ref = &$ref[$k];
+    $arg = esc_html($ref);
 
-        if( is_same( $size, 1 ) )
-            $args = $__args[ $params[0] ];
+    // On filtre le résultat si la fonction de validation existe
+    $type = 'is_'.$type;
+    if( function_exists($type) )
+        if( $type($arg)) return $arg; else return;
 
-        elseif( is_same( $size, 2 ) ){
-            if( !empty( $__args[ $params[0] ][ $params[1] ] ) )
-                $args = $__args[ $params[0] ][ $params[1] ];
-        }
-
-        elseif( is_same( $size, 3 ) ){
-            if( !empty( $__args[ $params[0] ][ $params[1] ] ) && !empty( $__args[ $params[0] ][ $params[1] ][ $params[2] ] ) )
-                $args = $__args[ $params[0] ][ $params[1] ][ $params[2] ];
-        }
-
-    }
-
-    // Si la valeur du champ ciblé est une chaine on vérifie que c'est une variable yaml
-    // et si c'est le cas on recherche sa valeur associé dans la table.
-    if( is_string($args)  && is_different( strpos($args,'&'), false) )
-        $args = preg_replace_callback('/&([\w->]+)/i', function($matches){
-            $matches = get_the_args($matches[1]);
-            return is_array( $matches ) ? '' : $matches ;
-        } , $args);
-
-    return $args;
+    return $arg;
 }
 
 
@@ -84,10 +69,9 @@ function snippet( $snippet ){
     $snippet = (string) $snippet;
     $snippets = glob( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
     if( !empty($snippets) ){
-        if( glob( TEMPLATEPATH . '/snippets/' . $snippet .'.yml' ) )
-            $GLOBALS['__args'] = file_get_yaml( TEMPLATEPATH . '/snippets/' . $snippet .'.yml', true );
+        $GLOBALS['__args'] = yaml_parse_file( TEMPLATEPATH . '/snippets/' . $snippet .'.yml', 0, null, true );
         include( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
-        unset($GLOBALS['__args']);
+        unset($GLOBALS['__args']); // On décharge les arguments du snippet
     }
     return;
 }
@@ -123,35 +107,7 @@ function the_blog( $field,  $before = '', $after = '' ) {
     $before = (string) $before;
     $after  = (string) $after;
 
-    switch ($field) {
-
-        case 'home':
-            $value = esc_url_raw( get_permalink() );
-            break;
-        case 'rss':
-            $value = esc_url_raw( get_permalink('rss', 'feed') );
-            break;
-        case 'sitemap':
-            $value = esc_url_raw( get_permalink('sitemap') );
-            break;
-        case 'template_url':
-            $value = esc_url_raw( TEMPLATEURL );
-            break;
-        case 'charset':
-            $value = CHARSET;
-            break;
-        case 'version':
-            $value = MP_VERSION;
-            break;
-        case 'language':
-            $value = get_the_lang();
-            break;
-
-        default:
-            $value = apply_filter( 'the_blog_'.$field, get_the_blog($field) );
-            break;
-    }
-
+    $value = apply_filter( 'the_blog_'.$field, get_the_blog($field) );
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
@@ -177,6 +133,7 @@ function mp_meta_charset(){
 
 function mp_meta_title(){
     $title = apply_filter('meta_title', get_the_blog('title') );
+    $title = excerpt( $title, 65);
     if ( strlen($title) == 0 )  return;
     echo '<title>'.$title.'</title>'."\n";
 }
@@ -188,21 +145,19 @@ function mp_meta_description(){
 }
 
 function mp_meta_keywords(){
-    $keywords = sanitize_words( apply_filter('meta_keywords', get_the_blog('keywords') ) );
-    $keywords = str_replace(' ', ', ', $keywords);
+    $keywords = apply_filter('meta_keywords', get_the_blog('keywords') );
     if ( strlen($keywords) == 0 )  return;
     echo '<meta name="keywords" content="'.$keywords.'">'."\n";
 }
 
 function mp_meta_author(){
-    $author = sanitize_words( apply_filter('meta_author', get_the_blog('author') ) );
+    $author = apply_filter('meta_author', get_the_blog('author') );
     if ( strlen($author) == 0 )  return;
     echo '<meta name="author" content="'.$author.'">'."\n";
 }
 
 function mp_meta_robots(){
-    $robots = sanitize_words( apply_filter('meta_robots', get_the_blog('robots') ) );
-    $robots = str_replace(' ', ',' , $robots);
+    $robots = apply_filter('meta_robots', get_the_blog('robots') );
     $robots_authorized = apply_filter('meta_robots_authorized', array(
                                             'noindex',
                                             'nofollow',
@@ -298,10 +253,37 @@ function the_page( $field,  $before = '', $after = '' ) {
     $field = (string) $field;
     $before = (string) $before;
     $after = (string) $after;
-    $value = apply_filter( 'the_'.$field, get_the_page( $field ) );
+    $value = apply_filter( 'the_page_'.$field, get_the_page( $field ) );
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
+
+/***********************************************/
+/*        Fonctions date                       */
+/***********************************************/
+
+function the_date( $format = '',  $before = '', $after = '', $echo = true ) {
+    $before = (string) $before;
+    $after = (string) $after;
+    $value = apply_filter( 'the_date', get_the_date( $format ) );
+    if ( strlen($value) == 0 )  return;
+    if($echo)
+        echo $before . $value . $after;
+    else
+        return $before . $value . $after;
+}
+
+function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
+    $before = (string) $before;
+    $after = (string) $after;
+    $value = apply_filter( 'the_time', get_the_time( $format ) );
+    if ( strlen($value) == 0 )  return;
+    if($echo)
+        echo $before . $value . $after;
+    else
+        return $before . $value . $after;
+}
+
 
 
 /***********************************************/
@@ -366,17 +348,6 @@ function the_menu( $slugs = '',  $before = '<ul class="menu">', $after = '</ul>'
     echo $before.implode($slugs).$after;
 }
 
-/***********************************************/
-/*        Fonctions loop                       */
-/***********************************************/
-
-function get_the_loop(){
-
-}
-
-function the_loop( ){
-
-}
 
 /***********************************************/
 /*        Fonctions fils ariane                */

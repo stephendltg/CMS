@@ -8,8 +8,6 @@
  * @version 1
  */
 
-//var_dump( $GLOBALS );
-
 //echo '<a href="webcal://'.HOME.'/ical.php">calendar</a>';
 
 if ( 'HEAD' === $_SERVER['REQUEST_METHOD'] ) exit(); // shutdown

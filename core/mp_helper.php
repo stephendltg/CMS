@@ -10,9 +10,13 @@
  */
 
 /***********************************************/
-/*               Fonctions                      */
+/*               Fonctions                     */
 /***********************************************/
 
+/**
+* Detecte le type d'encodage d'une chaine
+* @param $string
+*/
 function detect_encoding( $string ) {
     $string       = (string) $string;
     if ( function_exists( 'mb_internal_encoding' ) ) {
@@ -24,6 +28,10 @@ function detect_encoding( $string ) {
     }
 }
 
+/**
+* Encode une chaine en utf-8
+* @param $string
+*/
 function encode_utf8( $string ){
     $string       = (string) $string;
     $encoding = detect_encoding( $string );
@@ -31,12 +39,19 @@ function encode_utf8( $string ){
     return iconv( $encoding , 'utf-8' , $string );
 }
 
+/**
+* Language du serveur
+*/
 function lang(){
     $lang = explode(',' , $_SERVER['HTTP_ACCEPT_LANGUAGE']);
     return substr($lang[0],0,2);
 }
 
-
+/**
+* Redirection vers url
+* @param $location      url
+* @param $status        etat de la redirection
+*/
 function redirect( $location , $status = 302 ){
 
     $location = esc_url_raw($location);
@@ -46,20 +61,28 @@ function redirect( $location , $status = 302 ){
     return true;
 }
 
-
+/**
+* Convertit un tableau en objet
+* @param $array
+*/
 function arrayToObject($array){
   if( is_array($array) ){
-
     foreach($array as &$item)
         $item = arrayToObject($item);
-
     return (object) $array;
   }
-
   return $array;
 }
 
-
+/**
+* Ajoute des slash dans une chaine
+* @param $string     chaine
+*/
+function backslashit( $string ) {
+    if ( isset( $string[0] ) && $string[0] >= '0' && $string[0] <= '9' )
+        $string = '\\\\' . $string;
+    return addcslashes( $string, 'A..Za..z' );
+}
 
 /**
  * Convertir relative path en absolute url
@@ -81,7 +104,6 @@ function arrayToObject($array){
  * @param string   $base        url base
  * @return string  url
  */
-
 function rel2abs( $rel, $base = null ) {
 
     if($base === null ) $base = HOME.'/';
@@ -128,8 +150,7 @@ function rel2abs( $rel, $base = null ) {
  * Argument $size ( valeur en octet )
  * @return string
  */
-function convert($size)
-{
+function convert($size){
     $unit=array('b','kb','mb','gb','tb','pb');
     return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
 }
@@ -161,10 +182,8 @@ function get_cms_memory( $real_usage = false ) {
  * @return string
  */
 function get_limit_memory( $force_limit_mem = '' ) {
-
     if( is_integer($force_limit_mem) && is_sup($force_limit_mem, 16) )
         @ini_set('memory_limit', $force_limit_mem.'M');
-
     return ini_get('memory_limit');
 }
 
@@ -194,13 +213,12 @@ function get_post_memory() {
  * Argument force_max_time_execution    change la valeur du temps max d'execution d'un script (mini:30s)
  * @return string
  */
-function get_max_time_execution( $force_max_time_execution = '' ) {
-
-    if( is_integer($force_max_time_execution) && $force_max_time_execution > 30 )
-        @ini_set('max_execution_time', $force_max_time_execution);
-
+function get_max_time_execution( $ForceMaxTimeExec = '' ) {
+    if( is_integer($ForceMaxTimeExec) && $ForceMaxTimeExec > 30 )
+        @ini_set('max_execution_time', $ForceMaxTimeExec);
     return ini_get('max_execution_time');
 }
+
 
 
 /***********************************************/
@@ -211,10 +229,10 @@ function get_max_time_execution( $force_max_time_execution = '' ) {
 * Supprimer un répertoire et son contenu
 * @param  string    $dir     Chemin absolu du répertoire
 */
-function rmdir_recursive( $dir ) {
+function rrmdir( $dir ) {
     foreach( glob($dir) as $file ){
-        if( is_dir($file) ){ rmdir_recursive("$file/*"); rmdir($file); }
-        else { unlink($file); }
+        if( is_dir($file) ){ rrmdir("$file/*"); rmdir($file); }
+        else unlink($file);
     }
 }
 
@@ -232,4 +250,168 @@ function random_salt( $length = 8 ) {
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-=+;:,.?";
     $salt = substr( str_shuffle( $chars ), 0, $length );
     return $salt;
+}
+
+
+/***********************************************/
+/*          Functions parser                   */
+/***********************************************/
+
+/**
+ * Encode en base64 pour un usage embarque en data uri(css,html) si fichier sinon encodage seulement
+ * @param  $data : $file(chemin absolu) ou $string
+ * @return string
+ */
+function datauri_encode( $data ) {
+    $data = (string) $data;
+    if ( file_exists( $data ) && !is_dir( $data ) ){
+        $mime_type = mime_content_type( $data );
+        return 'data:' . $mime_type . ';base64,' . base64_encode( file_get_contents( $data ) );
+    }
+    return 'data:' . $mime_type . ';base64,' . base64_encode( $data );
+}
+
+/**
+* Extrait d'une chaine
+* @param  $text     chaine à extraire
+* @param  $length   longueur de l'extrait
+* @param  $mode     mode characère ou mot
+*/
+function excerpt( $text , $length = 140 , $mode = 'chars' ) {
+
+    $text   = (string) $text;
+    $length = (int) $length;
+    $mode   = (string) $mode;
+
+    $text = strip_all_tags($text);
+
+    if( is_same( strtolower($mode) , 'words' ) ){
+        if( str_word_count($text , 0) > $length ) {
+            $words = str_word_count($text, 2);
+            $pos   = array_keys($words);
+            $text  = substr( $text , 0 , $pos[$length]) . '...';
+        }
+        return $text;
+    }
+    else return substr( $text , 0 , $length );
+}
+
+
+/**
+* Parse une chaine markdown en html
+* @param  $markdown     chaine à parser
+*/
+function parse_markdown( $markdown ){
+
+    $markdown = (string) $markdown;
+
+    # commentaires
+    $markdown = str_replace(array('&#039;&#039;', "``"), array('&#8220;', '&#8221;'), $markdown);
+
+    // On parse markdown
+    $Extra = new Parsedown();
+    $markdown = $Extra->text( $markdown );
+
+    // On nettoie toutes les urls dans href
+    $clean_all_url = function($array){ return 'href="'.esc_url_raw($array[2]).'"'; };
+    $markdown = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $markdown );
+
+    // On remet les chevrons pour la balise code
+    $markdown = str_replace( '&amp;', '&' , $markdown );
+
+    # Traits de séparation
+    $markdown = str_replace(array('---', '--'), array('&#8212;', '&#8211;'), $markdown);
+
+    # trois petits points et puis lalala
+    $markdown = str_replace('...', '&#8230;', $markdown);
+
+    return $markdown;
+}
+
+/**
+* Parse une chaine text en html
+* @param  $text     chaine à parser
+*/
+function parse_text( $text ){
+
+    $text = (string) $text;
+
+    # commentaires
+    $text = str_replace(array('&#039;&#039;', "``"), array('&#8220;', '&#8221;'), $text);
+
+    // On nettoie toutes les urls lie à href
+    $clean_all_url = function($array){ return 'href="'.esc_url_raw($array[2]).'"'; };
+    $text = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $text );
+
+    # Traits de séparation
+    $text = str_replace(array('---', '--'), array('&#8212;', '&#8211;'), $text);
+
+    # trois petits points et puis lalala
+    $text = str_replace('...', '&#8230;', $text);
+
+    return $text;
+}
+
+
+/**
+* Parse un fichier au format yaml dans un tableau
+* @param  string    $path     Chemin absolu du fichier
+* @return array
+*/
+function file_get_page( $path ){
+
+    $path = (string) $path;
+
+    $yaml = array();
+
+    // function anonyme pour décoder les valeurs
+    $decode_value = function ( $value ){
+
+        $value = trim($value);
+        $value = json_decode($value, true) ?: $value;
+        if( $value === 'false' )      $value = false;
+        elseif( $value === '~' )      $value = null;
+        elseif( $value === 'null' )   $value = null;
+        elseif( is_array($value) )    $value = serialize($value);
+        return $value;
+    };
+
+    // On ouvre le fichier de la page, on l'encode en utf8 et on nettoie
+    $file = esc_attr( encode_utf8( file_get_contents( $path ) ) );
+
+    if( preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match ) ){
+        $match[1] = array_map( 'strtolower', $match[1] );
+        $yaml = array_combine($match[1], array_map($decode_value, $match[2]) );
+        unset($match);
+    }
+
+    return $yaml;
+}
+
+
+/**
+* Parse un tableau dans un fichier yaml
+* @param  string    $path     Chemin absolu du fichier
+* @return array
+*/
+function file_put_page( $path, $array ){
+
+    $path = (string) $path;
+
+    $text = '# generate by mini-pops'. PHP_EOL;
+
+    foreach( $array as $field => $value ){
+
+        if(     $value === true  )   $value = "true";
+        elseif( $value === false )   $value = "false";
+        elseif( $value === null  )   $value = "~";
+
+        if( !empty($value) )
+            $text .= PHP_EOL . sanitize_key($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
+    }
+
+    if( file_exists($path) && !is_writable($path) )     return false;
+    if( !file_put_contents( $path , $text , LOCK_EX ) ) return false;
+    @chmod( $path , 0644 );
+    return true;
 }

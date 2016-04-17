@@ -19,6 +19,51 @@
 */
 
 /**
+ * Nettoyer une valeur d'une page
+ * @param  $field   nom du champ
+ * @param  $value   valeur à nettoyer
+ * @param  $slug    slug de la page
+ */
+function sanitize_page($field, $value, $slug){
+
+    switch ($field) {
+
+        case 'title':
+        case 'description':
+            $value = esc_html($value);
+            break;
+        case 'keywords':
+        case 'robots':
+            $value = remove_accent($value);
+            $value = sanitize_words($value);
+            $value = str_replace(' ', ',', $value);
+            break;
+        case 'author':
+            $value = sanitize_user($value);
+            break;
+        case 'template':
+            $value = sanitize_file_name($value);
+            break;
+        case 'content':
+            $value = esc_html($value);
+            $value = mp_pops($value, $slug);
+            $value = parse_markdown( $value);
+            break;
+        case 'excerpt':
+            $value = esc_html($value);
+            $value = excerpt( $value, 140, 'words' );
+            if( '' === $value )
+                excerpt( get_the_page('content', $slug ), 140, 'words' );
+            break;
+        default:
+            if( empty( $GLOBALS['mp_hook_filter']['get_the_page_'.$field] ) )
+                $value = sanitize_allspecialschars($value);
+            break;
+    }
+    return $value;
+}
+
+/**
  * Charge un champ d'une page
  * @param  $field   nom du champ recherché
  * @param  $slug    nom du repertoire de la page type blog ou blog/post ( identique au résultat de  get_url_queries )
@@ -37,49 +82,42 @@ function get_the_page( $field, $slug = '' ){
 
         $slug = $query;
 
-        if( is_home() )
-            $slug = is_page('home') ? 'home' : '';
+        if( is_home() )  $slug = is_page('home') ? 'home' : '';
 
-        if( is_404() )
-            $slug = is_page('error') ? 'error' : '';
+        if( is_404() )   $slug = is_page('error') ? 'error' : '';
     }
 
     if( !isset($page[$slug]) && !empty($slug) ){
 
         do_action('do_before_get_the_page', $field, $slug);
 
-        // Date de création de la page corresponds à la date de création du dossier
-        $filectime_page = filemtime( CONTENT .'/'. $slug );
         // Date d'edition de la page corresponds à la date de modification du fichier
-        $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.yml' );
+        $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.md' );
 
         // On affecte la valeurs title au cas ou non renseigné
         $page[$slug]['title']  = basename($slug);
 
         // On lit le fichier
-        $page[$slug] = file_get_yaml( CONTENT .'/'. $slug .'/'. basename($slug) .'.yml');
+        $page[$slug] = file_get_page( CONTENT .'/'. $slug .'/'. basename($slug) .'.md');
 
         // On affecte les données importante!
-        $page[$slug]['create_date'] = gmdate( 'Y-m-d H:i:s', $filectime_page );
         $page[$slug]['edit_date']   = gmdate( 'Y-m-d H:i:s', $filemtime_page );
+        $page[$slug]['pubdate']     = isset($page[$slug]['pubdate']) && is_date($page[$slug]['pubdate']) ? gmdate( 'Y-m-d H:i:s', strtotime($page[$slug]['pubdate']) ) : $page[$slug]['edit_date'];
         $page[$slug]['slug']        = $slug;
 
         if( is_same($slug,'home') )         $page[$slug]['url'] = HOME;
         elseif( is_same($slug,'error') )    $page[$slug]['url'] = null;
-        else $page[$slug]['url'] = get_permalink( $slug );
+        else                                $page[$slug]['url'] = get_permalink( $slug );
 
         do_action('do_after_get_the_page', $field, $slug);
-
     }
 
     if( !empty($page[$slug][$field]) ){
 
         if( $field === 'slug' || $field === 'url' )
             return $page[$slug][$field];
-        elseif( empty( $GLOBALS['mp_hook_filter']['get_the_'.$field] ) )
-            return sanitize_allspecialschars($page[$slug][$field]); // On applique un filter par défaut sur le champ
         else
-            return apply_filter( 'get_the_'.$field, $page[$slug][$field], $slug );
+            return apply_filter('get_the_page_'.$field, sanitize_page($field,$page[$slug][$field],$slug), $slug);
     }
     else
         return apply_filter( 'default_page_'. $field, '', $field, $slug );
@@ -113,8 +151,8 @@ function set_the_page( $slug , $array ) {
 
         $dir = CONTENT .'/'. $slug;
         @mkdir( $dir , 0755 , true );
-        if ( !file_put_yaml( $dir .'/'. basename($slug).'.yml' , $array ) ) return false;
-        @chmod( $dir .'/'. basename($slug).'.yml' , 0644 );
+        if ( !file_put_page( $dir .'/'. basename($slug).'.md' , $array ) ) return false;
+        @chmod( $dir .'/'. basename($slug).'.md' , 0644 );
 
         do_action('do_after_edit_the_page', $slug );
 
@@ -136,7 +174,7 @@ function mp_delete_the_page( $slug ) {
 
     do_action('do_before_delete_the_page', $slug );
 
-    rmdir_recursive(CONTENT .'/'. $slug);
+    rrmdir(CONTENT .'/'. $slug);
 
     do_action('do_after_delete_the_page', $slug );
 
@@ -292,49 +330,4 @@ function get_childs_page ( $slug = '' ) {
  */
 function get_adjacent_page( $slug = '' ) {
     return array_diff( get_childs_page(get_parent_page($slug)) , array($slug) );
-}
-
-
-/***********************************************/
-/*          Function select                    */
-/***********************************************/
-
-function mpops( $args = array('where'=>'', 'max'=>10, 'order'=>'none') ){
-
-    global $query;
-
-    $queries = array();
-
-    $meta_compare = array(
-        'is_between',
-        'is_different',
-        'is_in',
-        'is_max',
-        'is_min',
-        'is_notin',
-        'is_same',
-        'is_size',
-        'is_match',
-        'is_sup',
-        'is_low'
-    );
-
-    $meta_type = array(
-        'is_alpha',
-        'is_alphanum',
-        'is_date',
-        'is_email',
-        'is_filename',
-        'is_intgr',
-        'is_ip',
-        'is_num',
-        'is_url',
-        'is_string',
-    );
-
-    $relation = array(
-        'OR',
-        'AND',
-    ); //Defaut AND
-
 }

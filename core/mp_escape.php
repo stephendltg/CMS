@@ -87,26 +87,32 @@ function esc_xml( $string ) {
  */
 
 function esc_url_raw( $url ) {
-            $good_protocol = false;
-            $protocols = array( 'http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal' );
-            if ( '' == $url ) return $url;
-            $url = preg_replace('|[^a-z0-9-~+_.?#=!&;,/:%@$\|*\'()\\x80-\\xff]|i', '', $url );
-            if ( 0 !== stripos( $url, 'mailto:' ) ) {
-                    $strip = array('%0d', '%0a', '%0D', '%0A');
-                    $url = str_replace($strip, '', $url);
-            }
-            $url = str_replace(';//', '://', $url);
 
-            if ( strpos($url, ':') === false &&
-                ! in_array( $url[0], array( '/', '#', '?' ) ) &&
-                ! preg_match('/^[a-z0-9-]+?\.php/i', $url) )
-                    $url = 'http://' . $url;
-            if ( '/' === $url[0] ) {
-                 $good_protocol = false;
-            } else {
-                foreach ($protocols as $protocol) {
-                    if ( 0 === stripos( $url, $protocol ) ) $good_protocol = true;
-                }
-            }
-            return ($good_protocol) ? $url : '';
+    $good_protocol = false;
+    $protocols = array( 'http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal' );
+
+    if( '' == $url ) return $url;
+
+    $url = preg_replace('|[^a-z0-9-~+_.?#=!&;,/:%@$\|*\'()\\x80-\\xff]|i', '', $url );
+
+    if( 0 !== stripos( $url, 'mailto:' ) ){
+
+        $strip = array('%0d', '%0a', '%0D', '%0A');
+        $url = str_replace($strip, '', $url);
+    }
+
+    $url = str_replace(';//', '://', $url);
+
+    if ( strpos($url, ':') === false
+        && ! in_array( $url[0], array( '/', '#', '?' ) )
+        && ! preg_match('/^[a-z0-9-]+?\.php/i', $url)
+       )
+        $url = 'http://' . $url;
+
+    if( '/' === $url[0] )
+        $good_protocol = false;
+    else
+        foreach ($protocols as $protocol) if ( 0 === stripos( $url, $protocol ) ) $good_protocol = true;
+
+    return ($good_protocol) ? $url : '';
 }

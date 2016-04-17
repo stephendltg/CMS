@@ -1,0 +1,93 @@
+# generate by mini-pops
+
+
+# ~
+# Fichier de traduction pour date
+# ~
+---
+lang :
+
+	fr :
+		Sunday: Dimanche
+		Monday: Lundi
+		Tuesday: Mardi
+		Wednesday: Mercredi
+		Thursday: Jeudi
+		Friday: Vendredi
+		Saturday: Samedi
+
+		Sun: Dim
+		Mon: Lun
+		Tue: Mar
+		Wed: Mer
+		Thu: Jeu
+		Fri: Ven
+		Sat: Sam
+
+		January: Janvier
+		February: Février
+		March: Mars
+		April: Avril
+		May: Mai
+		June: Juin
+		July: Juillet
+		August: Août
+		September: Septembre
+		October: Octobre
+		November: Novembre
+		December: Décembre
+
+		Jan: Janv.
+		Feb: Févr.
+		Mar: Mars
+		Apr: Avr.
+		May: Mai
+		Jun: Juin
+		Jul: Juill.
+		Aug: Août
+		Sep: Sept.
+		Oct: Oct.
+		Nov: Nov.
+		Dec: Déc.
+
+		am: am
+		pm: pm
+		AM: AM
+		PM: PM
+...
+
+
+
+# ~
+# Fichier de traduction mots
+# ~
+---
+lang:
+
+	fr :
+		new : article
+		news : articles
+		comment: commentaire
+		comments: commentaires
+		page: page
+		pages: pages
+		login: identifiant
+		password: mot de passe
+		connect: Se connecter
+		disconnect: Se déconnecter
+...
+
+
+
+# ~
+# Fichier de traduction phrases
+# ~
+---
+lang:
+
+	en :
+		- Made with mini-Pops and <b>♥</b>
+
+	fr :
+		- Fait avec mini-Pops et un peu d'<b>amour</b>
+...

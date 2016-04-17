@@ -12,6 +12,6 @@
       <?php the_blog('copyright'); ?>
     </p>
     <aside role="complementary" class="inbl">
-      - Made with mini-Pops and <b>♥</b>
+    	- <?php _e('Made with mini-Pops and <b>♥</b>'); ?>
    </aside>
 </footer>

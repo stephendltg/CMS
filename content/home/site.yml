@@ -1,53 +1,24 @@
-# generate by mini-pops
+# YAML - minipopS CMS.
 
-title: miniPops
-
-----
-
-subtitle: Un site sous miniPops
-
-----
-
-description: Un site sous miniPops
-
-----
-
-keywords: minipops, cms, minipopscms
-
-----
-
-author: stephen deletang
-
-----
-
-copyright: @2015 -  Propulsé par miniPops
-
-----
-
-lang: fr
-
-----
-
-url_rewrite: enable
-
-----
-
-plugins: // List of the plugins separator comma: mp_cache, mp_google
-
-----
-
-theme: default
-
-----
-
-timezone: Europe/Paris
-
-----
-
-api-key: GFg#drbVMeR:4L(cntZEfk*,YQ?XzsDS
-
-----
-
-api-keysalt: pF@sQ=;tAEeV(+LuHPDg)T!ao6z^28Jj
-
-----
+---
+site: 
+    blog: 
+        title: mini Pops 7
+        subtitle: Un site sous miniPops 7
+        description: Un site sous miniPops 7
+        keywords: minipops, cms, minipopscms
+        author: stephen deletang
+        copyright: @2015 -  Propulsé par miniPops
+        lang: fr
+        theme: default
+    active_plugins: 
+        - test
+    setting: 
+        urlrewrite: enable
+        date_format: F j, Y
+        time_format: g:i a
+        api_key: Ns.zb-tekc5h^vr7G?:f+DKXO
+        api_keysalt: p+qrDmuf4NG%-.By
+test: 
+    kringer: q8PLg57T
+...

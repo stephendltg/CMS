@@ -14,6 +14,9 @@
 /*                fonctions sanitialize        */
 /***********************************************/
 
+
+
+
 /**
  * Supprime toutes les balises ( style et script y comprit ).
  */
@@ -51,6 +54,76 @@ function sanitize_allspecialschars( $string ) {
     $string = str_replace( '%20', ' ', $string );
     $string = preg_replace( '/[\r\n\t]+/', ' ', $string );
     return $string;
+}
+
+
+function sanitize_key( $key ) {
+    $key = strtolower( $key );
+    $key = preg_replace( '/[^a-z0-9_-]/', '', $key );
+    return $key;
+}
+
+
+function sanitize_tag( $tag_name ) {
+    $tag_name = strtolower( preg_replace('/[^a-zA-Z0-9_]/', '', $tag_name) );
+    return $tag_name;
+}
+
+
+function sanitize_html_class( $class ) {
+    $class = preg_replace( '|%[a-fA-F0-9][a-fA-F0-9]|', '', $class );
+    $class = preg_replace( '/[^A-Za-z0-9_-]/', '', $class );
+    return $class;
+}
+
+
+function sanitize_email( $email ){
+
+    if( strlen($email ) < 3 ) return '';
+
+    if( strpos($email, '@', 1 ) === false ) return '';
+
+    list( $local, $domain ) = explode('@', $email, 2);
+
+    $local = preg_replace( '/[^a-zA-Z0-9!#$%&\'*+\/=?^_`{|}~\.-]/', '', $local );
+    if ( '' === $local ) return '';
+
+    $domain = preg_replace( '/\.{2,}/', '', $domain );
+    if ( '' === $domain ) return '';
+
+    $domain = trim( $domain, " \t\n\r\0\x0B." );
+    if ( '' === $domain ) return '';
+
+    // Split the domain into subs
+    $subs = explode( '.', $domain );
+    if ( 2 > count( $subs ) ) return '';
+
+    // Create an array that will contain valid subs
+    $new_subs = array();
+    foreach ( $subs as $sub ) {
+        $sub = trim( $sub, " \t\n\r\0\x0B-" );
+        $sub = preg_replace( '/[^a-z0-9-]+/i', '', $sub );
+        if ( '' !== $sub )
+            $new_subs[] = $sub;
+    }
+    if ( 2 > count( $new_subs ) ) return '';
+
+    $domain = join( '.', $new_subs );
+    $email = $local . '@' . $domain;
+
+    return $email;
+}
+
+
+function sanitize_user( $username ){
+    $username = strip_all_tags( $username );
+    $username = remove_accent( $username );
+    $username = preg_replace( '|%([a-fA-F0-9][a-fA-F0-9])|', '', $username );
+    $username = preg_replace( '/&.+?;/', '', $username );
+    $username = preg_replace( '|[^a-z0-9 _.\-@]|i', '', $username );
+    $username = trim( $username );
+    $username = preg_replace( '|\s+|', ' ', $username );
+    return $username;
 }
 
 /**
@@ -179,89 +252,3 @@ function sanitize_svg( $svg ){
 
     return $svg;
 }
-
-/**
- * Nettoie des données svg
- */
-
-/*
-function sanitize_svg( $svg ){
-
-    // Table des éléments présent normalement dans un fichier svg
-    $whitelist = array(
-        "a"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "href", "xlink:href", "xlink:title"),
-        "circle"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "r", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
-        "clipPath"=>array("class", "clipPathUnits", "id"),
-        "defs"=>array(),
-        "style" =>array("type"),
-        "desc"=>array(),
-        "ellipse"=>array("class", "clip-path", "clip-rule", "cx", "cy", "fill", "fill-opacity", "fill-rule", "filter", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
-        "feGaussianBlur"=>array("class", "color-interpolation-filters", "id", "requiredFeatures", "stdDeviation"),
-        "filter"=>array("class", "color-interpolation-filters", "filterRes", "filterUnits", "height", "id", "primitiveUnits", "requiredFeatures", "width", "x", "xlink:href", "y"),
-        "foreignObject"=>array("class", "font-size", "height", "id", "opacity", "requiredFeatures", "style", "transform", "width", "x", "y"),
-        "g"=>array("class", "clip-path", "clip-rule", "id", "display", "fill", "fill-opacity", "fill-rule", "filter", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "font-family", "font-size", "font-style", "font-weight", "text-anchor"),
-        "image"=>array("class", "clip-path", "clip-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "style", "systemLanguage", "transform", "width", "x", "xlink:href", "xlink:title", "y"),
-        "line"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "x1", "x2", "y1", "y2"),
-        "linearGradient"=>array("class", "id", "gradientTransform", "gradientUnits", "requiredFeatures", "spreadMethod", "systemLanguage", "x1", "x2", "xlink:href", "y1", "y2"),
-        "marker"=>array("id", "class", "markerHeight", "markerUnits", "markerWidth", "orient", "preserveAspectRatio", "refX", "refY", "systemLanguage", "viewBox"),
-        "mask"=>array("class", "height", "id", "maskContentUnits", "maskUnits", "width", "x", "y"),
-        "metadata"=>array("class", "id"),
-        "path"=>array("class", "clip-path", "clip-rule", "d", "fill", "fill-opacity", "fill-rule", "filter", "id", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
-        "pattern"=>array("class", "height", "id", "patternContentUnits", "patternTransform", "patternUnits", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xlink:href", "y"),
-        "polygon"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "id", "class", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
-        "polyline"=>array("class", "clip-path", "clip-rule", "id", "fill", "fill-opacity", "fill-rule", "filter", "marker-end", "marker-mid", "marker-start", "mask", "opacity", "points", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform"),
-        "radialGradient"=>array("class", "cx", "cy", "fx", "fy", "gradientTransform", "gradientUnits", "id", "r", "requiredFeatures", "spreadMethod", "systemLanguage", "xlink:href"),
-        "rect"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "opacity", "requiredFeatures", "rx", "ry", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "width", "x", "y"),
-        "stop"=>array("class", "id", "offset", "requiredFeatures", "stop-color", "stop-opacity", "style", "systemLanguage"),
-        "svg"=>array("class", "clip-path", "clip-rule", "filter", "id", "height", "mask", "preserveAspectRatio", "requiredFeatures", "style", "systemLanguage", "viewBox", "width", "x", "xmlns", "xmlns:se", "xmlns:xlink", "y"),
-        "switch"=>array("class", "id", "requiredFeatures", "systemLanguage"),
-        "symbol"=>array("class", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "opacity", "preserveAspectRatio", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "transform", "viewBox"),
-        "text"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "transform", "x", "xml:space", "y"),
-        "textPath"=>array("class", "id", "method", "requiredFeatures", "spacing", "startOffset", "style", "systemLanguage", "transform", "xlink:href"),
-        "title"=>array(),
-        "tspan"=>array("class", "clip-path", "clip-rule", "dx", "dy", "fill", "fill-opacity", "fill-rule", "filter", "font-family", "font-size", "font-style", "font-weight", "id", "mask", "opacity", "requiredFeatures", "rotate", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "systemLanguage", "text-anchor", "textLength", "transform", "x", "xml:space", "y"),
-        "use"=>array("class", "clip-path", "clip-rule", "fill", "fill-opacity", "fill-rule", "filter", "height", "id", "mask", "stroke", "stroke-dasharray", "stroke-dashoffset", "stroke-linecap", "stroke-linejoin", "stroke-miterlimit", "stroke-opacity", "stroke-width", "style", "transform", "width", "x", "xlink:href", "y"),
-    );
-
-    // On créer un nouveau document xml
-    $xmlDoc = new DOMDocument();
-    $xmlDoc->preserveWhiteSpace = false;
-    // On charge le fichier svg
-    $xmlDoc->loadXML($svg );
-    //$xmlDoc->loadXML($svg,LIBXML_NOWARNING | LIBXML_NOERROR );
-
-    // On liste tout les éléments du fichier
-    $allElements = $xmlDoc->getElementsByTagName("*");
-
-    // On boucle sur chaque éléments
-    for($i = 0; $i < $allElements->length; $i++){
-
-        $currentNode = $allElements->item($i);
-        // On créer un table de comparaison selon le noeuds trouvé
-        $whitelist_attr_arr = array_key_exists($currentNode->tagName, $whitelist) ? $whitelist[$currentNode->tagName] : null;
-
-        // On check les attributs du noeud
-        if(!empty($whitelist_attr_arr)) {
-            for($x = 0; $x < $currentNode->attributes->length; $x++) {
-                // On récupère le nom de l'attribut
-                $attrName = $currentNode->attributes->item($x)->name;
-                // On vérifie si l'attribut est valid sinon on le supprime
-                if( !in_array($attrName, $whitelist_attr_arr) )
-                    if( $currentNode->removeAttribute($attrName) ) $x--; // On boucle jusqu'à ce que tous le noeuds soit clean
-            }
-        }
-        // On supprime le noeud s'il existe pas dans la table whitelist
-        else
-            if( $currentNode->parentNode->removeChild($currentNode) ) $i--;
-    }
-
-    $xmlDoc->formatOutput = true;
-    $svg = $xmlDoc->saveXML();
-    // On supprime les commentaires
-    $svg = preg_replace('#<!--.*?-->#s', '', $svg);
-    // On supprimer les espaces sur balise fermante
-    $svg = str_replace(' />', '/>', $svg);
-    // On supprime  tabs, spaces, newlines, etc...
-    return str_replace( array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $svg );
-}
-*/

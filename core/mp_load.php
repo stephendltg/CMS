@@ -35,9 +35,7 @@ require( ABSPATH . INC . '/mp_helper.php' );
 require( ABSPATH . INC . '/mp_validator.php' );
 require( ABSPATH . INC . '/mp_sanitize.php' );
 require( ABSPATH . INC . '/mp_escape.php' );
-require( ABSPATH . INC . '/mp_yaml.php' );
 require( ABSPATH . INC . '/mp_network.php' );
-require( ABSPATH . INC . '/mp_constants.php' );
 
 // On vérifier que le cms est bien installer et les droits d'écriture sur les repertoires.
 cms_not_installed();
@@ -57,14 +55,19 @@ require( ABSPATH . INC . '/mp_filters.php' );
 // On définit les constantes pour plugins ( + declaration de HOME )
 mp_plugin_directory_constants();
 
+// On charge la gestion des fichier yaml
+require( ABSPATH . INC . '/mp_yaml.php' );
+// On charge les fonctions gérant les options des plugins et du thème
+require( ABSPATH . INC . '/mp_options.php' );
+
+// On init le blog
+init_the_blog();
+
 // On créer les constantes de securite.
 mp_secure_constants();
 
 // On active le mod rewrite si disponible
 mp_rewrite_rules();
-
-// Mise à l'heure
-mp_setting_the_time();
 
 // Fonction d'extinction de minipops
 register_shutdown_function( 'shutdown_action_hook' );
@@ -77,15 +80,15 @@ get_http_header();
 
 require( ABSPATH . INC . '/mp_api.php' );
 
-
 // Fonction pour gérer les pages
 //require( ABSPATH . INC . '/cron.php' );
-require( ABSPATH . INC . '/mp_parser.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
 require( ABSPATH . INC . '/mp_attachment.php' );
 require( ABSPATH . INC . '/mp_pops.php' );
 require( ABSPATH . INC . '/mp_cache.php' );
 require( ABSPATH . INC . '/parsedown.php' );
+// On charge les fonctions gérant la date
+require( ABSPATH . INC . '/mp_datei18n.php' );
 
 // On verifie l'utilisateur et son roles
 // à faire
@@ -102,13 +105,12 @@ do_action( 'muplugins_loaded' );
 require( ABSPATH . INC . '/mp_enqueue.php' );
 // On charge les fonctions gérant la traduction
 require( ABSPATH . INC . '/mp_lang.php' );
-// On charge les fonctions gérant les options des plugins et du thème
-require( ABSPATH . INC . '/mp_options.php' );
 
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = test, memory, ...
 @mkdir( PLUGIN_DIR , 0755 , true );
-if( get_the_blog('plugins') ){
-	foreach ( glob( PLUGIN_DIR .'/{'.get_the_blog('plugins', null ).'}' , GLOB_BRACE | GLOB_ONLYDIR ) as $plugin ){
+$plugins = get_option('active_plugins');
+if( $plugins ){
+	foreach( glob(PLUGIN_DIR .'/{'.implode(',', $plugins).'}', GLOB_BRACE|GLOB_ONLYDIR) as $plugin ){
 		if( glob( $plugin.'/'. basename($plugin).'.php' ) )
 			include_once( $plugin.'/'. basename($plugin).'.php' );
 	}

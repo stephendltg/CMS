@@ -12,9 +12,13 @@
 /*       Gestion du cache des pages            */
 /***********************************************/
 
+global $is_mod_rewrite;
+
 // On gérer le cache si page ou home
-if( is_page() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
-if( is_home() ) add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+if( is_page() && !DEBUG && $is_mod_rewrite && apply_filter('do_cache', false) )
+    add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+if( is_home() && !DEBUG && $is_mod_rewrite && apply_filter('do_cache', false))
+    add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
 
 
 
@@ -46,12 +50,9 @@ add_action('do_before_delete_the_page', 'mp_clear_cache_page');
 
 function mp_cache_pages( $html ){
 
-    global $query, $is_mod_rewrite;
+    global $query;
 
-    if( !DEBUG
-    && apply_filter('do_cache', true)
-    && $is_mod_rewrite
-    && $_SERVER['REQUEST_METHOD'] == 'GET'
+    if( $_SERVER['REQUEST_METHOD'] == 'GET'
     && is_notin( $query, apply_filter('nocache_pages', array() ) )
     && empty( $_GET )
     && isset( $_SERVER['HTTP_USER_AGENT'] )
@@ -66,10 +67,10 @@ function mp_cache_pages( $html ){
 
 function mp_clear_cache_all_pages(){
     if( is_dir($_SERVER['DOCUMENT_ROOT'].'/cache/') )
-        rmdir_recursive($_SERVER['DOCUMENT_ROOT'].'/cache/');
+        rrmdir($_SERVER['DOCUMENT_ROOT'].'/cache/');
 }
 
 function mp_clear_cache_page( $slug ){
     if( is_dir($_SERVER['DOCUMENT_ROOT'].'/cache/'.$slug.'/') )
-        rmdir_recursive($_SERVER['DOCUMENT_ROOT'].'/cache/'.$slug.'/');
+        rrmdir($_SERVER['DOCUMENT_ROOT'].'/cache/'.$slug.'/');
 }

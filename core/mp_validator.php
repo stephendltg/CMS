@@ -62,7 +62,27 @@ function is_email( $value ){
 }
 
 function is_filename( $value ){
-    return is_match( $value , '/^[a-z0-9@._-]+$/i' ) and is_min( $value , 2 );
+    return is_match( $value , '/^[a-z0-9@._-]+$/i' ) and is_min( $value , 3 );
+}
+
+function is_validate_file( $file ) {
+
+    if ( false !== strpos( $file, '..' ) )
+        return 1;
+
+    if ( false !== strpos( $file, './' ) )
+        return 1;
+
+    if ( false !== strpos( $file, '@' ) )
+        return 1;
+
+    if (':' == substr( $file, 1, 1 ) )
+        return 2;
+
+    if ( !is_filename($file) )
+        return 3;
+
+    return 0;
 }
 
 function is_in( $value , $in ){
