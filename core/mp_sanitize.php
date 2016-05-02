@@ -59,7 +59,7 @@ function sanitize_allspecialschars( $string ) {
 
 function sanitize_key( $key ) {
     $key = strtolower( $key );
-    $key = preg_replace( '/[^a-z0-9_-]/', '', $key );
+    $key = preg_replace( '/[^a-z0-9\/_-]/', '', $key );
     return $key;
 }
 

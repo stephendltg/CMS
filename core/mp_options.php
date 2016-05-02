@@ -85,13 +85,21 @@ function sanitize_option($option, $value){
         case 'site_setting_time_format':
             $value = sanitize_allspecialschars($value);
             break;
-        case 'site_setting_urlrewrite':
-            $value = $value;
-            break;
         case 'site_setting_api_key':
         case 'site_setting_api_keysalt':
             $value = sanitize_allspecialschars($value);
             if( strlen($value) < 32) return '';
+            break;
+        case 'site_optimize_page_no_cache':
+            if( !is_array($value) )
+                $value = null;
+            break;
+        case 'site_setting_urlrewrite':
+            if( is_notin($value, array(true, false, 'disable', 'enable') ) )
+                $value = null;
+            break;
+        case 'site_optimize_cache':
+            if( !is_bool($value) ) $value = null;
             break;
         default:
             break;

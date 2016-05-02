@@ -169,10 +169,10 @@ function mp_prepare_concatenate( $link, $data ){
 }
 
 
+
 /***********************************************/
 /*        Concate css                          */
 /***********************************************/
-
 function mp_concatenate_css($enqueue, $footer, $type = 'css'){
 
     global $concatenate;
@@ -186,7 +186,7 @@ function mp_concatenate_css($enqueue, $footer, $type = 'css'){
     // On cherche si un fichier de combination a été créé
     $files = glob( CONTENT_DIR.'/cache/'.$footer_hash.'/*.'.$type );
 
-    // Si un fichier combination créé on affecte le fichier au html
+    // Si un fichier combination créé on affecte le fichier
     if( is_size($files,1) )
         $file_concatenate = $files[0];
 
@@ -274,7 +274,7 @@ function mp_concatenate_css($enqueue, $footer, $type = 'css'){
     // Nom du fichier de combination
     $handleds = substr( md5($handleds), -12, 10 );
 
-    // On créé le le fichier de combination
+    // On créé le fichier de combination
     @mkdir( CONTENT_DIR.'/cache/'.$footer_hash, 0755, true );
 
     $file_content = apply_filter('mp_before_concatenate', $file_content);

@@ -110,7 +110,7 @@ function pops_audio( $array ){
     $text  = !empty($array['text']) ? '<figcaption>'. $array['text'] .'</figcaption>' : '';
 
     // On associe la classe Css
-    $class = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
 
     // Scheme du shortcode
     $schema = apply_filter('pops_audio_schema' ,'<figure%5$s><audio controls="controls"><source src=%1$s type="audio/mp3">%3$s<a href=%1$s download=%2$s>$mp3</a></audio>%4$s</figure>');
@@ -143,7 +143,7 @@ function pops_email( $array ){
 
     // On associe le texte, class et rel
     $text   = !empty($array['text']) ? $array['text'] : '@'.substr( $email , 0 , strpos($email,'@') );
-    $class  = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class  = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
     $rel    = !empty($array['rel']) && is_same($array['rel'] , 'me') ? ' rel="'. $array['rel'] .'"' : '';
 
     // Scheme du shortcode
@@ -188,7 +188,7 @@ function pops_file( $array ){
     // On associe le texte, class et link_file
     $link_file  = $url . $file;
     $text       = !empty($array['text']) ? $array['text'] : $file;
-    $class      = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class      = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
 
     // Scheme du shortcode
     $schema   = apply_filter('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
@@ -232,7 +232,7 @@ function pops_image( $array ){
     $path       = $path . $image;
     $alt        = !empty( $array['alt'] ) ? $array['alt'] : ' ';
     $text       = !empty( $array['text'] ) ? '<figcaption>'. $array['text'] .'</figcaption>' : '';
-    $class      = !empty( $array['class'] ) ? ' class="'. $array['class'] .'"' : '';
+    $class      = !empty( $array['class'] ) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
 
     if( !empty($array['ratio'])
         && is_intgr($array['ratio'])
@@ -289,7 +289,7 @@ function pops_link( $array ){
     // On associe le texte, titre, class, rel
     $title      = !empty($array['title']) ? ' title="'. $array['title'] .'"' : '';
     $text       = !empty($array['text']) ? $array['text'] : esc_html($link);
-    $class      = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class      = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
     $rel        = !empty($array['rel']) && is_in($array['rel'] , array('me','nofollow')) ? ' rel="'. $array['rel'] .'"' : '';
 
     // Scheme du shortcode
@@ -326,7 +326,7 @@ function pops_map( $array ){
     $height     = !empty($array['height']) && is_intgr($array['height']) && is_between($array['height'] , 200 , 640) ? ' height='.$array['height'] : '';
     $width      = !empty($array['width']) && is_intgr($array['width']) && is_between($array['width'] , 200 , 640) ? ' width='.$array['width'] : '';
     $size       = !empty($height) && !empty($width) ? '&size='.$array['width'].'x'.$array['height'] : '&size=640x640';
-    $class      = !empty( $array['class'] ) ? ' class="'. $array['class'] .'"' : '';
+    $class      = !empty( $array['class'] ) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
 
     $key_api    = apply_filter('pops_map_google_key_api', 'AIzaSyCKyegO4Pf19zi7yUjrQF8CuXBl85Ic3dI'); //https://console.developers.google.com
 
@@ -355,7 +355,7 @@ function pops_tel( $array ){
 
     $tel        = $array['tel'];
     $text       = !empty($array['text']) ? $array['text'] : $tel;
-    $class      = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class      = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
 
     // Scheme du shortcode
     $schema   = apply_filter('pops_tel_schema', '<a href="tel:%1$s"%3$s>%2$s</a>');
@@ -387,7 +387,7 @@ function pops_twitter( $array ){
 
     $twitter     = str_replace( '@' , '' ,  $array['twitter'] );
     $text        = !empty($array['text']) ? $array['text'] : $array['twitter'];
-    $class       = !empty($array['class']) ? ' class="'. $array['class'] .'"' : '';
+    $class       = !empty($array['class']) ? ' class="'. sanitize_html_class($array['class']) .'"' : '';
     $rel         = !empty($array['rel']) && is_same($array['rel'] , 'me') ? ' rel="'. $array['rel'] .'"' : '';
 
     // Scheme du shortcode
@@ -418,7 +418,7 @@ function pops_youtube( $array ){
 
     $youtube     = str_replace ( 'watch?v=' , '' , basename($array['youtube']) );
     $text        = !empty($array['text']) ? '<figcaption>'. $array['text'] .'</figcaption>' : '';
-    $class       = !empty($array['class']) ? 'class="'. $array['class'] .'"' : '';
+    $class       = !empty($array['class']) ? 'class="'. sanitize_html_class($array['class']) .'"' : '';
 
     // Scheme du shortcode
     $schema   = apply_filter('pops_youtube_schema', '<figure%3$s><iframe src="//youtube.com/embed/%1$s" width=560 height=315 frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>%2$s</figure>');

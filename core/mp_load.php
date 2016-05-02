@@ -85,7 +85,6 @@ require( ABSPATH . INC . '/mp_api.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
 require( ABSPATH . INC . '/mp_attachment.php' );
 require( ABSPATH . INC . '/mp_pops.php' );
-require( ABSPATH . INC . '/mp_cache.php' );
 require( ABSPATH . INC . '/parsedown.php' );
 // On charge les fonctions gérant la date
 require( ABSPATH . INC . '/mp_datei18n.php' );
@@ -135,6 +134,7 @@ if ( glob( TEMPLATEPATH . '/functions.php' ) )
 do_action( 'after_setup_theme' );
 
 // on inclus les fonctions d'optimisation et des templates
+require( ABSPATH . INC . '/mp_cache.php' );
 require( ABSPATH . INC . '/mp_optimizer.php' );
 require( ABSPATH . INC . '/mp_template.php' );
 

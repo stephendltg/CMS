@@ -314,38 +314,40 @@ function the_images( $name ='' , $where = array(), $max = 10, $image_schema = '<
 /*        Fonctions menu                       */
 /***********************************************/
 
-function get_the_menu( $slugs = '' ){
+function get_the_menu( $menu_nav = '' ){
 
-    if( is_array($slugs) ){
+    $menu_items = get_option('customize->'. $menu_nav);
 
-        $slugs = array_map( function($slug){ return is_page($slug) ? $slug : null; }, $slugs);
-        $slugs = array_filter($slugs);
+    if( is_array($menu_items) ){
 
+        foreach ($menu_items as $item => $title)
+            if( is_page($item) )   $menu[$item] = esc_html($title);
+        $menu = array_flip($menu);
     }
     else
-        $slugs = get_childs_page( (string) $slugs );
+        $menu = get_childs_page();
 
-    return $slugs;
+    return $menu;
 }
 
-function the_menu( $slugs = '',  $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s"><a href="%1$s">%2$s</a></li>' ){
+function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s"><a href="%1$s">%2$s</a></li>' ){
 
     $before = (string) $before;
     $after  = (string) $after;
 
-    $slugs  = get_the_menu( $slugs );
+    $menu  = get_the_menu( $menu_nav );
 
-    if ( is_size($slugs, 0) )  return;
+    if ( is_size($menu, 0) )  return;
 
-    array_walk( $slugs, function(&$slug, $title) use ($menu_item){
+    array_walk( $menu, function(&$slug, $title) use ($menu_item){
 
-        $title  = is_string($title) ? sanitize_allspecialschars($title): basename($slug);
+        $title  = is_string($title) ? $title: basename($slug);
         $active = is_same($slug, $GLOBALS['query'] ) ? ' active' : '';
         $slug   = sprintf( $menu_item, get_permalink($slug), $title, $active );
 
     } );
 
-    echo $before.implode($slugs).$after;
+    echo $before.implode($menu).$after;
 }
 
 

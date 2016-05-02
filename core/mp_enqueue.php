@@ -101,7 +101,7 @@ function mp_enqueue_style( $handled, $src , $array = array(), $media = null , $v
  * @param  $footer   : boolean, true pour placer la feuille de style dans le footer de la page sinon dans le header
  * @return array    retourne les résultats sous forme de tableau
  */
-function mp_enqueue_script( $handled, $src , $ver, $footer = false ){
+function mp_enqueue_script( $handled, $src , $ver = null, $footer = false ){
     mp_enqueue_style( $handled, $src , null , null , $ver, $footer, $type ='script' );
 }
 
@@ -163,7 +163,7 @@ function mp_dequeue_style( $handled , $footer = false , $type = 'style' ){
 
     if( !empty($GLOBALS['mp_'.$type][$where]['enqueue'][$handled]) )
         unset( $GLOBALS['mp_'.$type][$where]['enqueue'][$handled] );
-    elseif( !empty($GLOBALS['mp_'.$type][$where]['iniline'][$handled]) )
+    elseif( !empty($GLOBALS['mp_'.$type][$where]['inline'][$handled]) )
         unset( $GLOBALS['mp_'.$type][$where]['inline'][$handled] );
 
 }

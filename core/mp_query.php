@@ -100,28 +100,7 @@ function is_404(){
     if( is_same( $query , 'error') ) return true;
     if( is_home() )         return false;
     if( is_page() )         return false;
-    //if( !is_author() )       return false;
-    //if( !is_tag() )          return false;
     else return true;
-}
-
-
-/**
- * Vérifie si le paramètre demandé est un mot clé
- * @param  string Si vide on utilise la requête $query
- * @return boolean
- */
-function is_tag( $tag ='' ){
-
-    global $query;
-
-    $url = $query;
-    if ( !empty($tag) ) $url = $tag;
-
-    // on cherche dans la base tag si le mot clé tag existe sinon false
-    // non construit pour le moment
-
-    return false;
 }
 
 

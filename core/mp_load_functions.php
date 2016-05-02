@@ -133,7 +133,7 @@ function mp_rewrite_rules(){
 
     global $is_apache, $is_mod_rewrite;
 
-    $configuration = array();
+    //$configuration = array();
 
     $rewrite = get_option('setting->urlrewrite', true);
 
@@ -501,8 +501,8 @@ function init_the_blog(){
         'theme'=>'default' );
 
     $setting = array(
-        'urlrewrite'=>true,
-        'timezone'=> 0,
+        'urlrewrite'=> true,
+        'timezone'=> 1,
         'date_format' => 'F j, Y',
         'time_format' => 'g:i a',
         'api_key'=>random_salt(32),
@@ -510,4 +510,10 @@ function init_the_blog(){
 
     add_option('blog', $blog);
     add_option('setting', $setting);
+
+    add_option('optimize->cache', true);
+    add_option('optimize->pages_no_cache', '~');
+    add_option('optimize->cache_theme', '~');
+
+    add_option('customize->primary_menu', '~');
 }

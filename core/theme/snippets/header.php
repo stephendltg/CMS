@@ -11,7 +11,6 @@
 <html <?php the_lang('lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
 <head>
     <?php mp_head(); ?>
-
     <style>
 
         .box-label,.box-content{

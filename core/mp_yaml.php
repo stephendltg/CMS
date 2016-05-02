@@ -332,7 +332,7 @@ class yaml {
             /***********************/
 
             // On recherche les iterators ( tableau ou liste)
-            elseif( preg_match('/^([ \t]*)([\-\w]+)[ \t]*:[ \t]*(.*)/', $line, $match ) || preg_match('/^([ \t]*)[\-]+[ \t]*(.*)/', $line, $match ) ){
+            elseif( preg_match('/^([ \t]*)([\/\-\w]+)[ \t]*:[ \t]*(.*)/', $line, $match ) || preg_match('/^([ \t]*)[\-]+[ \t]*(.*)/', $line, $match ) ){
 
                 // L'intends du tableau de retour
                 $indents = (int) round ( strlen( str_replace("\t", $this->TAB , $match[1]) )/4 );
@@ -351,7 +351,7 @@ class yaml {
                     // On supprime le commentaire si présent
                     $value = $this->_delete_comment($match[2]);
                     // On recherche si table tel que "- label : texte"
-                    if( preg_match('/^([-\w]+)[ \t]*:[ \t]*(.*)/', $value, $match) )
+                    if( preg_match('/^([\/\-\w]+)[ \t]*:[ \t]*(.*)/', $value, $match) )
                         $value = '{"'. $match[1] .'":"'. $match[2].'"}';
                 }
 

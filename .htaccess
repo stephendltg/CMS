@@ -31,8 +31,8 @@ AddType audio/mp3  .mp3
 	RewriteCond %{REQUEST_METHOD} ^TRACE
 	RewriteRule .* - [F]
 
-	# if you homepage is http://minipops.local
-	# RewriteBase /
+	# if you homepage is http://localhost/www/miniPOPS
+	# RewriteBase /www/miniPOPS
 
 	# block specify the cache
 	RewriteCond %{REQUEST_METHOD} GET
@@ -53,7 +53,7 @@ AddType audio/mp3  .mp3
 	RewriteRule ^(.*) index.php [L]
 
 	# Update code bellow for SEO improvements
-	# Redirect 301 /index http://minipops.local/
+	# Redirect 301 /index http://localhost/www/miniPOPS/
 
 </IfModule>
 
