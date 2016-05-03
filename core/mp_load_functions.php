@@ -502,7 +502,7 @@ function init_the_blog(){
 
     $setting = array(
         'urlrewrite'=> true,
-        'timezone'=> 1,
+        'timezone'=> 'Europe/London',
         'date_format' => 'F j, Y',
         'time_format' => 'g:i a',
         'api_key'=>random_salt(32),

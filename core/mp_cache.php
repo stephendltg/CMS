@@ -31,9 +31,7 @@ if( !DEBUG
         die();
     }
 
-    if( ( is_page() || is_home() )
-        && is_notin( $query, get_option('optimize->pages_no_cache', array()) )
-    ){
+    if( (is_page()||is_home()) && is_notin($query, get_option('optimize->pages_no_cache', array())) ){
         add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
     }
 
