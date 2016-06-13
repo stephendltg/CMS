@@ -132,7 +132,7 @@ function get_the_page( $field, $slug = '' ){
  * @param  $array   	Données à sauvegarder sous format de tableau (array)
  * @return boolean
  */
-function mp_set_the_page( $slug , $array ) {
+function set_the_page( $slug , $array ) {
 
     $slug = (string) $slug;
 
@@ -308,7 +308,7 @@ function get_parent_page( $slug = '' ) {
  * @param  $slug    slug de la page parents
  * @return
  */
-function get_childs_page( $slug = '' ) {
+function get_childs_page ( $slug = '' ) {
 
     $childs = glob( str_replace( '//','/', CONTENT .'/'.$slug.'/*' ) , GLOB_ONLYDIR );
 
@@ -330,24 +330,4 @@ function get_childs_page( $slug = '' ) {
  */
 function get_adjacent_page( $slug = '' ) {
     return array_diff( get_childs_page(get_parent_page($slug)) , array($slug) );
-}
-
-
-/**
- * Boucle pages
- * @param  $args    array
- *                  'where'   array() : Listes des slugs de pages où chercher sous forme de tableau si vide recherche selon la requete $query
- *                  'filter'  string  : Listes des champs recherchés séparer par des virgules ex: drums,loops
- *                  'max'     integer : Nombre de résultat par défaut : 10
- *                  'order'   string  : Mode de tri "ASC" ( par défaut ), "DESC" ou "SHUFFLE"
- *                  'orderby' string  : Trier par "date" ( par défaut ), "auteur", "tag" ou par "custom"
- * @return array    retourne les résultats sous forme de tableau
- */
-function the_loop( $args = array() ){
-
-global $query;
-
-
-
-
 }

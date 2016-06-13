@@ -23,7 +23,7 @@ if( !DEBUG
     && $_SERVER['REQUEST_METHOD'] == 'GET'
     && empty($_GET)
     && isset($_SERVER['HTTP_USER_AGENT'])
-    && !preg_match( '/(mp_logged_in_|mp-postpass_|comment_author_|comment_author_email_)/', var_export( $_COOKIE , true ) )
+    && !preg_match( '/(mpops_logged_in_|mpops-postpass_|comment_author_|comment_author_email_)/', var_export( $_COOKIE , true ) )
     ){
 
     if( file_exists($_SERVER['DOCUMENT_ROOT'].'/cache/'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'/index.html') ){
@@ -36,7 +36,6 @@ if( !DEBUG
     }
 
 }
-
 
 
 // On vide le cache si changement du thème

@@ -18,7 +18,9 @@
 
                 <main id="main" role="main">
 
-                    <?php the_breadcrumb() ?>
+                    <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
+                        <?php the_breadcrumb(' / ') ?>
+                    </nav>
 
                     <article class="article mtl" >
 
