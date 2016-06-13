@@ -318,10 +318,14 @@ function get_the_menu( $menu_nav = '' ){
 
     $menu_items = get_option('customize->'. $menu_nav);
 
+    $menu = array();
+
     if( is_array($menu_items) ){
 
-        foreach ($menu_items as $item => $title)
-            if( is_page($item) )   $menu[$item] = esc_html($title);
+        foreach ($menu_items as $item => $title){
+            if( is_integer($item) )   $item = $title; $title = basename($title);
+            if( is_page($item) )      $menu[$item] = esc_html($title);
+        }
         $menu = array_flip($menu);
     }
     else
@@ -358,9 +362,12 @@ function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</u
 function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '' ) {
 
     $separator = (string) $separator;
-    $before = (string) $before;
-    $after = (string) $after;
-    $breadcrumb = '';
+    $before    = (string) $before;
+    $after     = (string) $after;
+    $breadcrumb       = '';
+    $breadcrumb_begin = '<nav role="navigation" aria-label="'. __('You are here') .' : " id="breadcrumb" class="breadcrumb">';
+    $breadcrumb_begin = apply_filter('breadcrumb_begin', $breadcrumb_begin);
+    $breadcrumb_end   = apply_filter('breadcrumb_end', '</nav>');
     $breadcrumb_schema_separator = sprintf( apply_filter('breadcrumb_schema_separator' , '<span aria-hidden="true">%s</span>' ) , $separator );
     $breadcrumb_schema = '<span itemscope itemtype="http://data-vocabulary.org/Breadcrumb"><a itemprop="url" title="%1$s" href="%2$s"><span itemprop="title">%1$s</span></a></span>';
     $breadcrumb_schema = apply_filter('breadcrumb_schema' , $breadcrumb_schema );
@@ -384,5 +391,5 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
     if( is_404() )
         $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , HOME ) . $breadcrumb_schema_separator . '404';
 
-    echo $before . $breadcrumb . $after;
+    echo $breadcrumb_begin . $before . $breadcrumb . $after . $breadcrumb_end;
 }

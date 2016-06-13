@@ -12,12 +12,12 @@ site:
         lang: fr
         theme: default
     setting: 
-        urlrewrite: enable
-        timezone: 1
+        urlrewrite: disable
+        timezone: Europe/London
         date_format: F j, Y
         time_format: g:i a
-        api_key: @HLSdhiA?-Kv=u8ZyqB.5W4$ajNr01bk
-        api_keysalt: TyS.KLwN?UOJAlsHGiE@6d(^Vx$+rthg
+        api_key: ,bAmsCQzZ=7.WPqKe9Rf*JiyH+Bg0IwO
+        api_keysalt: S!4wd+(8T&o9AVByP-b,@.6EYuJtR2h)
     optimize: 
         cache: true
         pages_no_cache: ~
