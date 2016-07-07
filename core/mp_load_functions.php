@@ -14,15 +14,6 @@
 error_reporting(0);
 @ini_set( 'display_errors', 0 ); // A voir selon la philosophie
 
-/***********************************************/
-/*              Variables globales             */
-/***********************************************/
-
-global $is_apache, $is_mod_rewrite;
-
-$is_apache = ( strpos( $_SERVER['SERVER_SOFTWARE'], 'Apache' ) !== false || strpos( $_SERVER['SERVER_SOFTWARE'], 'LiteSpeed') !== false );
-
-$is_mod_rewrite = function_exists('apache_get_modules') ? in_array( 'mod_rewrite', apache_get_modules() ) : false ;
 
 
 /***********************************************/
@@ -75,13 +66,6 @@ function mp_debug_mode() {
 
     if ( DEBUG ) {
 
-        function _echo( $var, $var_dump = 0 ){
-            echo '<pre>';
-            if($var_dump) var_dump($var);
-            else print_r($var);
-            echo '<pre>';
-        }
-
         error_reporting( E_ALL );
 
         if ( DEBUG_DISPLAY ){
@@ -103,6 +87,18 @@ function mp_debug_mode() {
         @ini_set( 'display_errors', 0 );
 }
 
+
+/**
+ * Affiche $var si seulement mode DEBUG actif
+ */
+function _echo( $var, $var_dump = 0 ){
+
+    if ( !DEBUG ) return null;
+    echo '<pre>';
+    if($var_dump) var_dump($var);
+    else print_r($var);
+    echo '<pre>';
+}
 
 /**
  * On créé les repertoires si cms non installé et on verifie les droits en ecriture.
@@ -157,20 +153,7 @@ function mp_rewrite_rules(){
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , HOME ) ;
         if ( empty( $root ) ) $root = '/';
 
-        $rules  = "# BEGIN miniPops\n\n";
-        $rules .= "# protect the htaccess file\n";
-        $rules .= "<files .htaccess>\n\t";
-        $rules .= "order allow,deny\n\t";
-        $rules .= "deny from all\n";
-        $rules .= "</files>\n\n";
-        $rules .= "# Disable directory listing\n";
-        $rules .= "Options -Indexes\n\n";
-        $rules .= "# XSS Protection & iFrame Protection & Mime Security\n";
-        $rules .= "<IfModule mod_headers.c>\n\t";
-        $rules .= 'Header set X-XSS-Protection "1; mode=block"'."\n\t";
-        $rules .= "Header always append X-Frame-Options SAMEORIGIN\n\t"; // DENY, SAMEORIGIN
-        $rules .= "Header set X-Content-Type-Options nosniff\n";
-        $rules .= "</IfModule>\n\n";
+        $rules  = "# BEGIN MINIPOPS\n\n";
         $rules .= "# Set default charset utf-8\n";
         $rules .= "AddDefaultCharset UTF-8\n\n";
         $rules .= "# Format audio \n";
@@ -178,15 +161,12 @@ function mp_rewrite_rules(){
         $rules .= "AddType audio/mp3  .mp3\n\n";
         $rules .= "<IfModule mod_rewrite.c>\n\n\t";
         $rules .= "RewriteEngine on\n\n\t";
-        $rules .= "# HTTP trace method\n\t";
-        $rules .= "RewriteCond %{REQUEST_METHOD} ^TRACE\n\t";
-        $rules .= "RewriteRule .* - [F]\n\n\t";
         $rules .= "# if you homepage is ". HOME ."\n\t";
         $rules .= "# RewriteBase $root\n\n\t";
-        $rules .= "# block specify the cache\n\t";
+        $rules .= "# block specify the static cache\n\t";
         $rules .= "RewriteCond %{REQUEST_METHOD} GET\n\t";
         $rules .= "RewriteCond %{QUERY_STRING} !.*=.*\n\t";
-        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(mpops_logged_in_|mpops-postpass_|comment_author_|comment_author_email_).*$\n\t";
+        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(mp_logged_in_|mp-postpass_|comment_author_|comment_author_email_).*$\n\t";
         $rules .= "RewriteCond %{HTTPS} off\n\t";
         $rules .= "RewriteCond %{DOCUMENT_ROOT}/cache/%{HTTP_HOST}%{REQUEST_URI}/index.html -f\n\t";
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
@@ -203,19 +183,20 @@ function mp_rewrite_rules(){
         $rules .= "# Update code bellow for SEO improvements\n\t";
         $rules .= "# Redirect 301 /index " . HOME . "/\n\n";
         $rules .= "</IfModule>\n\n";
-        $rules .= "# END miniPops";
+        $rules .= "# END MINIPOPS";
+
 
     } else {
 
         $rewrite = 'disable';
         $is_mod_rewrite = false;
-        $rules = "# BEGIN miniPops\n# END miniPops";
+        $rules = "# BEGIN MINIPOPS\n# END MINIPOPS";
     }
 
     if ( file_exists( ABSPATH . '.htaccess' ) ) {
         $rule = file_get_contents( ABSPATH . '.htaccess' );
-        $marker_begin =  strpos( $rule , '# BEGIN miniPops') ;
-        $marker_end =  strpos( $rule , '# END miniPops') + strlen('# END miniPops') ;
+        $marker_begin =  strpos( $rule , '# BEGIN MINIPOPS') ;
+        $marker_end =  strpos( $rule , '# END MINIPOPS') + strlen('# END MINIPOPS') ;
         $rules = substr_replace( $rule , $rules , $marker_begin , $marker_end );
     }
 

@@ -109,23 +109,23 @@ function is_404(){
  * @param  string Si vide on utilise la requête $query
  * @return boolean  [[Description]]
  */
-function is_page( $page ='' ){
+function is_page( $page = '' ){
 
     global $query;
 
     $url = $query;
 
-    if ( !empty($page) ) $url = $page;
+    if ( strlen($page) >0 ) $url = $page;
 
     if( !is_filename( str_replace('/','',$url) ) ) return false;
 
     $page = glob( CONTENT .'/'. $url , GLOB_MARK|GLOB_ONLYDIR );
 
-    if( empty($page)) return false;
+    if( empty($page) ) return false;
 
     $page = glob( $page[0] . basename($url) .'.md' );
 
-    if( empty($page)) return false;
+    if( empty($page) ) return false;
 
     return true;
 }

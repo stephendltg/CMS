@@ -10,9 +10,65 @@
  */
 
 
+/*
+
+6G:[QUERY STRINGS]
+
+Cette partie vérifie que l'URL demandée par le client n'a pas été faite pour profiter de failles sur votre serveur web ou votre code PHP. Si c'est le cas, il va interdire l'accès à la page grace à (RewriteRule .* - [F]), ou le [F] signifie que l'accès n'est pas autorisé.
+
+6G: [REQUEST METHOD]
+
+Cette partie teste les méthodes HTTP envoyées. Les navigateurs ne prenant en charge que GET et POST, toutes les autres se retrouvent bloquées avec la même méthode que le bloc précédent.
+
+6G:[REFERRERS]
+
+Ce bloc est là pour bloquer le trafique provenant de certains referers (c'est-à-dire les referents, les sites d'où proviennent les visiteurs). Si vos êtes soumis a dû référer spam, c'est à cet endroit que vous pourrez lister les adresses de spammeur.
+
+6G:[REQUEST STRINGS]
+
+Ce bloc est là pour bloquer les appels les plus fréquents fait pas des Bots essayant de déterminer le type de site que vous possédez.
+
+6G:[USER AGENTS]
+
+Cette ligne bloque les bots dont le nom est dans la grande liste que vous pouvez voir.
+
+Notez la présence de archive.org en tout premier. J'ai personnellement autorise ce bot, car je trouve que la présence d'une copie de son site sur la waybackmachine n'est pas un mal, au contraire.
+
+6G:[BAD IPS]
+
+Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques. Si vous subissez les assauts d'un bot ou une tentative de DDOS depuis une IP, c'est à cet endroit qu'il faudra l'inserer !
+
+*/
+
 /***********************************************/
 /*          Functions Firewall                 */
 /***********************************************/
+
+if( get_option('security->firewall') === null ){
+
+    $bad_ips = get_option('security->bad_ips');
+    $bad_user_agents = get_option('security->bad_user_agents');
+    $bad_referrers = get_option('security->bad_referrers';)
+
+
+$rules = <<<EOT
+# BEGIN SECURITY
+
+# protect the htaccess file
+<files .htaccess>
+    order allow,deny
+    deny from all
+</files>
+
+# Disable directory listing
+Options -Indexes
+
+# XSS Protection & iFrame Protection & Mime Security
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header always append X-Frame-Options SAMEORIGIN
+    Header set X-Content-Type-Options nosniff
+</IfModule>
 
 # 6G FIREWALL/BLACKLIST
 # @ https://perishablepress.com/6g/
@@ -59,7 +115,7 @@
     RedirectMatch 403 (?i)/(=|\$&|_mm|cgi-|etc/passwd|muieblack)
     RedirectMatch 403 (?i)(&pws=0|_vti_|\(null\)|\{\$itemURL\}|echo(.*)kae|etc/passwd|eval\(|self/environ)
     RedirectMatch 403 (?i)\.(aspx?|bash|bak?|cfg|cgi|dll|exe|git|hg|ini|jsp|log|mdb|out|sql|svn|swp|tar|rar|rdf)$
-    RedirectMatch 403 (?i)/(^$|(wp-)?config|mobiquo|phpinfo|shell|sqlpatch|thumb|thumb_editor|thumbopen|timthumb|webshell)\.php
+    RedirectMatch 403 (?i)/(^$|(mp-)?config|mobiquo|phpinfo|shell|sqlpatch|thumb|thumb_editor|thumbopen|timthumb|webshell)\.php
 </IfModule>
 
 # 6G:[USER AGENTS]
@@ -81,34 +137,11 @@
     # Deny from 123.456.789
 </Limit>
 
-/*
+# END SECURITY
+EOT;
 
-Le seul reproche que je fais à cette ressource est qu'il n'existe pas de version commentée pour expliquer son fonctionnement, je vais donc vous expliquer grossièrement le rôle de chacune des parties, pour que vous ne vous retrouviez pas à installer quelque chose sans le comprendre.
+_echo($rules,1);
 
-6G:[QUERY STRINGS]
+}
 
-Cette partie vérifie que l'URL demandée par le client n'a pas été faite pour profiter de failles sur votre serveur web ou votre code PHP. Si c'est le cas, il va interdire l'accès à la page grace à (RewriteRule .* - [F]), ou le [F] signifie que l'accès n'est pas autorisé.
-
-6G: [REQUEST METHOD]
-
-Cette partie teste les méthodes HTTP envoyées. Les navigateurs ne prenant en charge que GET et POST, toutes les autres se retrouvent bloquées avec la même méthode que le bloc précédent.
-
-6G:[REFERRERS]
-
-Ce bloc est là pour bloquer le trafique provenant de certains referers (c'est-à-dire les referents, les sites d'où proviennent les visiteurs). Si vos êtes soumis a dû référer spam, c'est à cet endroit que vous pourrez lister les adresses de spammeur.
-
-6G:[REQUEST STRINGS]
-
-Ce bloc est là pour bloquer les appels les plus fréquents fait pas des Bots essayant de déterminer le type de site que vous possédez.
-
-6G:[USER AGENTS]
-
-Cette ligne bloque les bots dont le nom est dans la grande liste que vous pouvez voir.
-
-Notez la présence de archive.org en tout premier. J'ai personnellement autorise ce bot, car je trouve que la présence d'une copie de son site sur la waybackmachine n'est pas un mal, au contraire.
-
-6G:[BAD IPS]
-
-Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques. Si vous subissez les assauts d'un bot ou une tentative de DDOS depuis une IP, c'est à cet endroit qu'il faudra l'inserer !
-
-*/
+//_echo($rules,1);

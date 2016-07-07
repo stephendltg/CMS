@@ -134,6 +134,7 @@ if ( glob( TEMPLATEPATH . '/functions.php' ) )
 do_action( 'after_setup_theme' );
 
 // on inclus les fonctions d'optimisation et des templates
+//require( ABSPATH . INC . '/mp_firewall.php' );
 require( ABSPATH . INC . '/mp_cache.php' );
 require( ABSPATH . INC . '/mp_optimizer.php' );
 require( ABSPATH . INC . '/mp_template.php' );

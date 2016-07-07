@@ -9,6 +9,108 @@
  * @version 1
  */
 
+
+global $is_lynx, $is_gecko, $is_winIE, $is_macIE, $is_opera, $is_NS4, $is_safari, $is_chrome, $is_iphone, $is_IE, $is_edge,
+       $is_apache, $is_IIS, $is_iis7, $is_nginx,
+       $is_mod_rewrite;
+
+
+
+/***********************************************/
+/*                Browser detection            */
+/***********************************************/
+
+$is_lynx = $is_gecko = $is_winIE = $is_macIE = $is_opera = $is_NS4 = $is_safari = $is_chrome = $is_iphone = $is_edge = false;
+  
+if( isset($_SERVER['HTTP_USER_AGENT']) ) {
+
+    if( strpos($_SERVER['HTTP_USER_AGENT'], 'Lynx') !== false )
+        $is_lynx = true;
+
+    elseif( strpos( $_SERVER['HTTP_USER_AGENT'], 'Edge' ) !== false )
+        $is_edge = true;
+
+    elseif( stripos($_SERVER['HTTP_USER_AGENT'], 'chrome') !== false )
+        $is_chrome = true;
+
+    elseif( stripos($_SERVER['HTTP_USER_AGENT'], 'safari') !== false )
+        $is_safari = true;
+
+    elseif( ( strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false || strpos($_SERVER['HTTP_USER_AGENT'], 'Trident') !== false ) && strpos($_SERVER['HTTP_USER_AGENT'], 'Win') !== false )
+        $is_winIE = true;
+
+    elseif( strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false && strpos($_SERVER['HTTP_USER_AGENT'], 'Mac') !== false )
+        $is_macIE = true;
+
+    elseif( strpos($_SERVER['HTTP_USER_AGENT'], 'Gecko') !== false )
+        $is_gecko = true;
+
+    elseif( strpos($_SERVER['HTTP_USER_AGENT'], 'Opera') !== false )
+        $is_opera = true;
+
+    elseif( strpos($_SERVER['HTTP_USER_AGENT'], 'Nav') !== false && strpos($_SERVER['HTTP_USER_AGENT'], 'Mozilla/4.') !== false )
+        $is_NS4 = true;
+}
+  
+if ( $is_safari && stripos($_SERVER['HTTP_USER_AGENT'], 'mobile') !== false )
+    $is_iphone = true;  
+
+$is_IE = ( $is_macIE || $is_winIE );
+
+
+
+/***********************************************/
+/*                Serveur detection            */
+/***********************************************/
+
+$is_apache = ( strpos( $_SERVER['SERVER_SOFTWARE'], 'Apache' ) !== false || strpos( $_SERVER['SERVER_SOFTWARE'], 'LiteSpeed') !== false );
+
+$is_nginx = ( strpos( $_SERVER['SERVER_SOFTWARE'], 'nginx' ) !== false );
+
+$is_IIS = !$is_apache && (strpos($_SERVER['SERVER_SOFTWARE'], 'Microsoft-IIS') !== false || strpos($_SERVER['SERVER_SOFTWARE'], 'ExpressionDevServer') !== false);
+
+$is_iis7 = $is_IIS && intval( substr( $_SERVER['SERVER_SOFTWARE'], strpos( $_SERVER['SERVER_SOFTWARE'], 'Microsoft-IIS/' ) + 14 ) ) >= 7;
+
+
+
+/***********************************************/
+/*          module apache detection            */
+/***********************************************/
+
+$is_mod_rewrite = function_exists('apache_get_modules') ? in_array( 'mod_rewrite', apache_get_modules() ) : false ;
+
+
+
+/***********************************************/
+/*                 mobile detection            */
+/***********************************************/
+
+// Mobile detection
+function is_mobile() {
+
+    if( empty($_SERVER['HTTP_USER_AGENT']) ) {
+        $is_mobile = false;
+
+    } elseif( strpos($_SERVER['HTTP_USER_AGENT'], 'Mobile') !== false // many mobile devices (all iPhone, iPad, etc.)
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'Android') !== false
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'Silk/') !== false
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'Kindle') !== false
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'BlackBerry') !== false
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'Opera Mini') !== false
+           || strpos($_SERVER['HTTP_USER_AGENT'], 'Opera Mobi') !== false 
+    ){
+        $is_mobile = true;
+
+    } else {
+        $is_mobile = false;
+    }
+ 
+    return $is_mobile;
+}
+
+
+
+
 /***********************************************/
 /*                fonctions validation         */
 /***********************************************/
@@ -133,5 +235,3 @@ function is_url( $value ){
     $regex = '_^(?:(?:https?|ftp)://)(?:\S+(?::\S*)?@)?(?:(?!10(?:\.\d{1,3}){3})(?!127(?:\.\d{1,3}){3})(?!169\.254(?:\.\d{1,3}){2})(?!192\.168(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)(?:\.(?:[a-z\x{00a1}-\x{ffff}0-9]+-?)*[a-z\x{00a1}-\x{ffff}0-9]+)*(?:\.(?:[a-z\x{00a1}-\x{ffff}]{2,})))(?::\d{2,5})?(?:/[^\s]*)?$_iu';
     return is_match( $value , $regex );
 }
-
-
