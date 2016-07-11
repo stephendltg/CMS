@@ -139,7 +139,7 @@ function mp_doing_sitemap(){
     $sitemap   .= '</urlset>';
 
     echo apply_filter( 'the_sitemap', $sitemap );
-    //exit();
+    exit();
 }
 
 // On génére le flux rss

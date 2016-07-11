@@ -8,7 +8,7 @@
  */
 
 // On optimise le rendu html
-if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_html', true ) ) {
+if ( apply_filter( 'do_optimize', true ) && get_option('optimize->files->html') ) {
 
     // Add filter optimisation HTML
     add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_minify_html'); } , PHP_INT_MAX );
@@ -16,7 +16,7 @@ if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_html', t
 }
 
 // On optimise le chargement des images
-if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_loadimage', true ) ) {
+if ( apply_filter( 'do_optimize', true ) && get_option('optimize->lazyload->images') ) {
 
     // Add filter lazyload_script
     add_action('mp_head', 'mp_lazyload', PHP_INT_MAX);
@@ -27,7 +27,7 @@ if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_loadimag
 }
 
 // On optimise les feuilles de styles css
-if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_css', true ) ) {
+if ( apply_filter( 'do_optimize', true ) && get_option('optimize->files->css') ) {
 
     // Add filter pour enqueue inline style
     add_filter('mp_inline_styles', 'mp_easy_minify');
@@ -41,7 +41,7 @@ if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_css', tr
 }
 
 // On optimise les script js
-if ( apply_filter( 'do_optimize', false ) && apply_filter( 'do_optimize_js', true ) ) {
+if ( apply_filter( 'do_optimize', true ) && get_option('optimize->files->js') ) {
 
     // Add filter pour preparer la concetanation des fichiers js
     add_filter('mp_enqueue_script_link', 'mp_prepare_concatenate', 10, 2 );
@@ -65,7 +65,7 @@ function mp_lazyload(){
 
 function mp_lazyload_images( $html ) {
 
-    $lazyload_replace_callback = function( $matches) {
+    $lazyload_replace_callback = function($matches) {
         return sprintf( '<img%1$s src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" data-lazy-original=%2$s%3$s><noscript><img%1$s src=%2$s%3$s></noscript>', $matches[1], $matches[2], $matches[3] );
     };
 
@@ -79,6 +79,8 @@ function mp_lazyload_images( $html ) {
 // Minifie js et css simplement
 function mp_easy_minify( $str, $comments = true ){
 
+    $str = apply_filter('pre_mp_easy_minify', $str);
+
     // On enlève les commentaires
     if($comments)
         $str = preg_replace( '!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $str );
@@ -87,7 +89,8 @@ function mp_easy_minify( $str, $comments = true ){
     $str = str_replace(array("\r\n", "\r", "\n", "\t"), '', $str);
     while ( stristr($str, '  ') )
         $str = str_replace('  ', ' ', $str);
-    return $str;
+
+    return apply_filter('mp_easy_minify', $str);
 }
 
 
@@ -96,6 +99,8 @@ function mp_easy_minify( $str, $comments = true ){
 /***********************************************/
 
 function mp_minify_html($html){
+
+    $html = apply_filter('pre_mp_minify_html', $html);
 
     // On recherche tous les tag ainsi que leur contenu ( tag => <p style="color:red">, text => "mon texte", tag => </p> )
     preg_match_all( '/<(?<tag>[\/\w.:-]*)(?:".*?"|\'.*?\'|[^\'">]+)*>|(?<text>((<[^!\/\w.:-])?[^<]*)+)|/si', $html, $matches, PREG_SET_ORDER );
@@ -144,7 +149,9 @@ function mp_minify_html($html){
         $html .= $content;
     }
 
-    return $html;
+    do_action('mp_minify_html');
+
+    return apply_filter('mp_minify_html', $html);
 }
 
 
@@ -184,7 +191,7 @@ function mp_concatenate_css($enqueue, $footer, $type = 'css'){
     $footer_hash = substr( base64_encode(CONTENT_DIR).(string)$footer, -12, 10 );
 
     // On cherche si un fichier de combination a été créé
-    $files = glob( CONTENT_DIR.'/cache/'.$footer_hash.'/*.'.$type );
+    $files = glob( CONTENT_DIR.'/assets/'.$footer_hash.'/*.'.$type );
 
     // Si un fichier combination créé on affecte le fichier
     if( is_size($files,1) )
@@ -275,12 +282,12 @@ function mp_concatenate_css($enqueue, $footer, $type = 'css'){
     $handleds = substr( md5($handleds), -12, 10 );
 
     // On créé le fichier de combination
-    @mkdir( CONTENT_DIR.'/cache/'.$footer_hash, 0755, true );
+    @mkdir( CONTENT_DIR.'/assets/'.$footer_hash, 0755, true );
 
     $file_content = apply_filter('mp_before_concatenate', $file_content);
 
     // Si le fichier est bien créer on l'enqueue
-    if( file_put_contents( CONTENT_DIR.'/cache/'.$footer_hash.'/'.$handleds.'.css', $file_content ) ){
+    if( file_put_contents( CONTENT_DIR.'/assets/'.$footer_hash.'/'.$handleds.'.css', $file_content ) ){
 
         unset($file);
 
@@ -289,7 +296,7 @@ function mp_concatenate_css($enqueue, $footer, $type = 'css'){
             unset($enqueue[$handled]);
 
         // On récupère l'url du fichier de combination
-        $file_concatenate_url = rel2abs(str_replace(ABSPATH ,'' ,CONTENT_DIR.'/cache/'.$footer_hash.'/'.$handleds.'.'.$type) );
+        $file_concatenate_url = rel2abs(str_replace(ABSPATH ,'' ,CONTENT_DIR.'/assets/'.$footer_hash.'/'.$handleds.'.'.$type) );
 
         // On enqueue le fichier de combination
         $enqueue[] = sprintf( $scheme, $file_concatenate_url );

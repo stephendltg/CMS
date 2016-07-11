@@ -89,7 +89,7 @@ function get_attached_media( $args = array() ) {
     /* On récupère la liste des fichiers en nettoyant les fichiers sensibles */
     foreach( $args['where'] as $slug ){
         $medias = glob( str_replace( '//', '/', CONTENT .'/'. $slug .'/'. $search ) , GLOB_BRACE );
-        $medias = array_diff( $medias , array( CONTENT.'/site.txt', CONTENT.'/'.$slug.'/'.basename($slug).'.txt') );
+        $medias = array_diff( $medias , array( CONTENT.'/site.yml', CONTENT.'/'.$slug.'/'.basename($slug).'.md') );
     }
 
     /* On filtre par "orderby" et "order" */

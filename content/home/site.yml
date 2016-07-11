@@ -13,15 +13,28 @@ site:
         theme: default
     setting: 
         urlrewrite: disable
-        timezone: Europe/London
+        timezone: 1
         date_format: F j, Y
         time_format: g:i a
-        api_key: ,bAmsCQzZ=7.WPqKe9Rf*JiyH+Bg0IwO
-        api_keysalt: S!4wd+(8T&o9AVByP-b,@.6EYuJtR2h)
+        api_key: @HLSdhiA?-Kv=u8ZyqB.5W4$ajNr01bk
+        api_keysalt: TyS.KLwN?UOJAlsHGiE@6d(^Vx$+rthg
     optimize: 
-        cache: false
-        pages_no_cache: ~
-        cache_theme: default
+        files: 
+            html: false
+            css: false
+            js: false
+        lazyload: 
+            images: false
+        cache: 
+            cached: false
+            pages_no_cache: ~
+            theme: default
     customize: 
         primary_menu: ~
+    security: 
+        firewall: 
+            bad_ips: ~
+            bad_user_agents: ~
+            bad_referrers: ~
+            active: true
 ...

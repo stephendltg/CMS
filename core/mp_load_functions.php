@@ -15,7 +15,6 @@ error_reporting(0);
 @ini_set( 'display_errors', 0 ); // A voir selon la philosophie
 
 
-
 /***********************************************/
 /*              Fonctions globales             */
 /***********************************************/
@@ -25,11 +24,18 @@ error_reporting(0);
  * On vérifie la version de php utilisé si non compatible on fait un die
  */
 function mp_check_php_versions() {
-    if ( version_compare( phpversion() , "5.2.0", "<" ) ) { // passer à 5.4 pour http_response_code() ligne 337
+
+    if( !function_exists('http_response_code') ){
+        $msg =  '<p>Error PHP function</p><p>this cms need function: "http_response_code".</p>';
+        cms_maintenance( $msg );
+    }
+
+    if ( version_compare( phpversion() , "5.2.0", "<" ) ) {
         $msg =  '<p>Server PHP version ' . phpversion() .
                 ' .</p><p>this cms need PHP version 5.4 .</p>';
         cms_maintenance( $msg );
 	}
+
 }
 
 
@@ -66,6 +72,13 @@ function mp_debug_mode() {
 
     if ( DEBUG ) {
 
+        function _echo( $var, $var_dump = 0 ){
+            echo '<pre>';
+            if($var_dump) var_dump($var);
+            else print_r($var);
+            echo '<pre>';
+        }
+
         error_reporting( E_ALL );
 
         if ( DEBUG_DISPLAY ){
@@ -87,18 +100,6 @@ function mp_debug_mode() {
         @ini_set( 'display_errors', 0 );
 }
 
-
-/**
- * Affiche $var si seulement mode DEBUG actif
- */
-function _echo( $var, $var_dump = 0 ){
-
-    if ( !DEBUG ) return null;
-    echo '<pre>';
-    if($var_dump) var_dump($var);
-    else print_r($var);
-    echo '<pre>';
-}
 
 /**
  * On créé les repertoires si cms non installé et on verifie les droits en ecriture.
@@ -127,9 +128,9 @@ function mp_rewrite_rules(){
 
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
-    global $is_apache, $is_mod_rewrite;
+    global $is_apache, $is_mod_rewrite, $is_rewrite_rules;
 
-    //$configuration = array();
+    $is_rewrite_rules = $is_mod_rewrite;
 
     $rewrite = get_option('setting->urlrewrite', true);
 
@@ -137,7 +138,7 @@ function mp_rewrite_rules(){
         return;
 
     if($rewrite === 'disable'){
-        $is_mod_rewrite = false;
+        $is_rewrite_rules = false;
         return;
     }
 
@@ -153,7 +154,7 @@ function mp_rewrite_rules(){
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , HOME ) ;
         if ( empty( $root ) ) $root = '/';
 
-        $rules  = "# BEGIN MINIPOPS\n\n";
+        $rules  = "# BEGIN miniPops\n\n";
         $rules .= "# Set default charset utf-8\n";
         $rules .= "AddDefaultCharset UTF-8\n\n";
         $rules .= "# Format audio \n";
@@ -163,10 +164,10 @@ function mp_rewrite_rules(){
         $rules .= "RewriteEngine on\n\n\t";
         $rules .= "# if you homepage is ". HOME ."\n\t";
         $rules .= "# RewriteBase $root\n\n\t";
-        $rules .= "# block specify the static cache\n\t";
+        $rules .= "# block specify the cache\n\t";
         $rules .= "RewriteCond %{REQUEST_METHOD} GET\n\t";
         $rules .= "RewriteCond %{QUERY_STRING} !.*=.*\n\t";
-        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(mp_logged_in_|mp-postpass_|comment_author_|comment_author_email_).*$\n\t";
+        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(mpops_logged_in_|mpops-postpass_|comment_author_|comment_author_email_).*$\n\t";
         $rules .= "RewriteCond %{HTTPS} off\n\t";
         $rules .= "RewriteCond %{DOCUMENT_ROOT}/cache/%{HTTP_HOST}%{REQUEST_URI}/index.html -f\n\t";
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
@@ -183,20 +184,19 @@ function mp_rewrite_rules(){
         $rules .= "# Update code bellow for SEO improvements\n\t";
         $rules .= "# Redirect 301 /index " . HOME . "/\n\n";
         $rules .= "</IfModule>\n\n";
-        $rules .= "# END MINIPOPS";
-
+        $rules .= "# END miniPops";
 
     } else {
 
         $rewrite = 'disable';
-        $is_mod_rewrite = false;
-        $rules = "# BEGIN MINIPOPS\n# END MINIPOPS";
+        $is_rewrite_rules = false;
+        $rules = "# BEGIN miniPops\n# END miniPops";
     }
 
     if ( file_exists( ABSPATH . '.htaccess' ) ) {
         $rule = file_get_contents( ABSPATH . '.htaccess' );
-        $marker_begin =  strpos( $rule , '# BEGIN MINIPOPS') ;
-        $marker_end =  strpos( $rule , '# END MINIPOPS') + strlen('# END MINIPOPS') ;
+        $marker_begin =  strpos( $rule , '# BEGIN miniPops') ;
+        $marker_end =  strpos( $rule , '# END miniPops') + strlen('# END miniPops') ;
         $rules = substr_replace( $rule , $rules , $marker_begin , $marker_end );
     }
 
@@ -314,7 +314,7 @@ function shutdown_action_hook() {
 function get_http_header() {
 
     header( 'Content-Type: text/html; charset='.CHARSET );
-    //http_response_code(200);
+    http_response_code(200);
 
     if( is_robots() || is_feed() )
         header( 'Content-Type: text/plain; charset='.CHARSET );
@@ -370,7 +370,7 @@ function is_ssl() {
  */
 function guess_url() {
 
-    global $is_mod_rewrite;
+    global $is_rewrite_rules;
 
 	if ( defined('HOME') && '' != HOME ) { $url = HOME; }
     else {
@@ -390,7 +390,7 @@ function guess_url() {
 				$path = $_SERVER['REQUEST_URI'];
 			}
 		}
-        if ( !$is_mod_rewrite ) { $path = str_replace( array('index.php','index'),'', $_SERVER['PHP_SELF']); }
+        if ( !$is_rewrite_rules ) { $path = str_replace( array('index.php','index'),'', $_SERVER['PHP_SELF']); }
 
         $schema = is_ssl() ? 'https://' : 'http://';
 		$url = $schema . $_SERVER['HTTP_HOST'] . $path;
@@ -410,12 +410,13 @@ function get_template_directory(){
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
     if( get_the_blog('theme') ){
+        
         // On liste les thèmes présents dans le repertoire
-        $themes = glob( THEMES_DIR .'/', GLOB_MARK|GLOB_ONLYDIR );
+        $themes = glob( THEMES_DIR .'/*', GLOB_ONLYDIR );
         if( is_sup($themes, 0) ){
             foreach( $themes as $theme )
                 if( is_same( $theme, THEMES_DIR . '/' . get_the_blog('theme') ) )
-                    return $theme;
+                    return $theme .'/';
         }
     }
 
@@ -492,9 +493,20 @@ function init_the_blog(){
     add_option('blog', $blog);
     add_option('setting', $setting);
 
-    add_option('optimize->cache', true);
-    add_option('optimize->pages_no_cache', '~');
-    add_option('optimize->cache_theme', '~');
+    add_option('security->firewall->active', 'true');
+    add_option('security->firewall->bad_ips', '~');
+    add_option('security->firewall->bad_user_agents', '~');
+    add_option('security->firewall->bad_referrers', '~');
+
+    add_option('optimize->files->html', false);
+    add_option('optimize->files->css', false);
+    add_option('optimize->files->js', false);
+    
+    add_option('optimize->lazyload->images', false);
+
+    add_option('optimize->cache->cached', false);
+    add_option('optimize->cache->pages_no_cache', '~');
+    add_option('optimize->cache->theme', '~');
 
     add_option('customize->primary_menu', '~');
 }

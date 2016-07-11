@@ -44,11 +44,48 @@ Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques. Si
 /*          Functions Firewall                 */
 /***********************************************/
 
-if( get_option('security->firewall') === null ){
+function mp_firewall_rules(){
 
-    $bad_ips = get_option('security->bad_ips');
-    $bad_user_agents = get_option('security->bad_user_agents');
-    $bad_referrers = get_option('security->bad_referrers';)
+    $firewall = get_option('security->firewall->active', true);
+
+    if ($firewall === 'enable' || $firewall === 'disable')
+        return;
+
+    if( !$is_apache || !$is_mod_rewrite )
+        $firewall = false;
+
+    // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
+    if ( $firewall === true ) {
+
+        $firewall = 'enable';
+
+        $rules = 'etc...';
+
+    } else {
+
+        $firewall = 'disable';
+        $rules = "# BEGIN miniPops\n# END miniPops";
+    }
+
+    if ( file_exists( ABSPATH . '.htaccess' ) ) {
+        $rule = file_get_contents( ABSPATH . '.htaccess' );
+        $marker_begin =  strpos( $rule , '# BEGIN miniPops') ;
+        $marker_end =  strpos( $rule , '# END miniPops') + strlen('# END miniPops') ;
+        $rules = substr_replace( $rule , $rules , $marker_begin , $marker_end );
+    }
+
+    if ( !file_put_contents( ABSPATH . '.htaccess', $rules ) ) 
+        $firewall = 'disable';
+
+    update_option('security->firewall->active', $firewall);
+
+}
+
+if( get_option('security->firewall->active') === true ){
+
+    $bad_ips = get_option('security->firewall->bad_ips');
+    $bad_user_agents = get_option('security->firewall->bad_user_agents');
+    $bad_referrers = get_option('security->firewall->bad_referrers';)
 
 
 $rules = <<<EOT
@@ -66,7 +103,7 @@ Options -Indexes
 # XSS Protection & iFrame Protection & Mime Security
 <IfModule mod_headers.c>
     Header set X-XSS-Protection "1; mode=block"
-    Header always append X-Frame-Options SAMEORIGIN
+    Header always append X-Frame-Options SAMEORIGIN /* DENY, SAMEORIGIN */
     Header set X-Content-Type-Options nosniff
 </IfModule>
 

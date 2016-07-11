@@ -447,7 +447,7 @@ class yaml {
 
         if( is_readable($path) ){
 
-            $cache = dirname($path).'/.'.basename($path);
+            $cache = dirname($path).'/.~'.basename($path);
 
             if( $cached
                 && is_readable($cache)

@@ -1,12 +1,11 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 /**
- * template: index.php
+ * template: page.php
  *
  * @package miniPops
  * @subpackage Rhythmicon
  * @version 1
  */
-
 ?>
 <?php snippet('header'); ?>
 
@@ -16,12 +15,10 @@
             <td rowspan="2" class="main small-visible large-w66">
 
                 <main id="main" role="main">
-
-                    <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
+                     <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
                         <?php the_breadcrumb(' / ') ?>
                     </nav>
-
-                    <article class="article mtl" >
+                    <article class="article" >
 
                         <header class="header" >
                             <?php the_page('title', '<h1>', '</h1>') ?>
@@ -48,9 +45,6 @@
         </tr>
         <tr>
             <td class="aside small-visible">
-                <p><!-- test -->
-                    <textarea>testset <!-- eurk -->dsqd</textarea>
-                </p>
                 <?php snippet('aside'); ?>
             </td>
         </tr>

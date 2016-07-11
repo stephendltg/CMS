@@ -15,15 +15,15 @@
 
 
 
-global $is_mod_rewrite, $query;
+global $is_rewrite_rules, $query;
 
 if( !DEBUG
-    && $is_mod_rewrite
-    && get_option('optimize->cache')
+    && $is_rewrite_rules
+    && get_option('optimize->cache->cached')
     && $_SERVER['REQUEST_METHOD'] == 'GET'
     && empty($_GET)
     && isset($_SERVER['HTTP_USER_AGENT'])
-    && !preg_match( '/(mp_logged_in_|mp-postpass_|comment_author_|comment_author_email_)/', var_export( $_COOKIE , true ) )
+    && !preg_match( '/(mpops_logged_in_|mpops-postpass_|comment_author_|comment_author_email_)/', var_export( $_COOKIE , true ) )
     ){
 
     if( file_exists($_SERVER['DOCUMENT_ROOT'].'/cache/'.$_SERVER['HTTP_HOST'].$_SERVER['REQUEST_URI'].'/index.html') ){
@@ -31,18 +31,17 @@ if( !DEBUG
         die();
     }
 
-    if( (is_page()||is_home()) && is_notin($query, get_option('optimize->pages_no_cache', array())) ){
+    if( (is_page()||is_home()) && is_notin($query, get_option('optimize->cache->pages_no_cache', array())) ){
         add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
     }
 
 }
 
 
-
 // On vide le cache si changement du thème
-if( get_the_blog('theme') !== get_option('optimize->cache_theme') ){
+if( get_the_blog('theme') !== get_option('optimize->cache->theme') ){
     mp_clear_cache_all_pages();
-    update_option('optimize->cache_theme', get_the_blog('theme') );
+    update_option('optimize->cache->theme', get_the_blog('theme') );
 }
 
 

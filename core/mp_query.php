@@ -25,11 +25,11 @@ $query = get_url_queries();
 
 function get_url_queries(){
 
-    global $is_mod_rewrite;
+    global $is_rewrite_rules;
 
     $url = '';
 
-    if ( $is_mod_rewrite ){
+    if ( $is_rewrite_rules ){
 
         $request_url = (isset($_SERVER['REQUEST_URI'])) ? $_SERVER['REQUEST_URI'] : '';
         $script_url  = (isset($_SERVER['PHP_SELF'])) ? $_SERVER['PHP_SELF'] : '';
@@ -65,19 +65,19 @@ function get_permalink( $slug ='' , $type ='page' ){
     $type = (string) $type;
     $slug = (string) $slug;
 
-    global $is_mod_rewrite;
+    global $is_rewrite_rules;
 
-    if( is_same($type , 'page') &&  empty($slug) )
+    if( is_same($type , 'page') && empty($slug) )
         return HOME;
 
     if( is_same($type , 'page') &&  is_page($slug) )
-        $link = ( $is_mod_rewrite ) ? HOME .'/'. $slug : HOME .'/index.php?p='.$slug;
+        $link = ( $is_rewrite_rules ) ? HOME .'/'. $slug : HOME .'/index.php?p='.$slug;
     if( is_same($type, 'feed') && is_same($slug , 'rss') )
-        $link = ( $is_mod_rewrite ) ? HOME .'/'. 'feed' : HOME .'/index.php?p='. 'feed';
+        $link = ( $is_rewrite_rules ) ? HOME .'/'. 'feed' : HOME .'/index.php?p='. 'feed';
     if( is_same($type , 'page') &&  is_same($slug , 'sitemap') )
-        $link = ( $is_mod_rewrite ) ? HOME .'/sitemap.xml' : HOME .'/index.php?p=sitemap.xml';
+        $link = ( $is_rewrite_rules ) ? HOME .'/sitemap.xml' : HOME .'/index.php?p=sitemap.xml';
     if( is_same($type , 'tag') &&  is_tag($slug) )
-        $link = ( $is_mod_rewrite ) ? HOME .'/tag/'.$slug : HOME .'/index.php?tag='.$slug;
+        $link = ( $is_rewrite_rules ) ? HOME .'/tag/'.$slug : HOME .'/index.php?tag='.$slug;
 
     if(!empty($link) ) return $link;
     else return false;

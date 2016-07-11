@@ -90,16 +90,28 @@ function sanitize_option($option, $value){
             $value = sanitize_allspecialschars($value);
             if( strlen($value) < 32) return '';
             break;
-        case 'site_optimize_page_no_cache':
+        case 'site_optimize_cache_page_no_cache':
             if( !is_array($value) )
                 $value = null;
             break;
         case 'site_setting_urlrewrite':
+        case 'site_security_firewall_active':
             if( is_notin($value, array(true, false, 'disable', 'enable') ) )
                 $value = null;
             break;
-        case 'site_optimize_cache':
+        case 'site_optimize_cache_cached':
+        case 'site_optimize_lazyload_images':
+        case 'site_optimize_files_html':
+        case 'site_optimize_files_css':
+        case 'site_optimize_files_js':
             if( !is_bool($value) ) $value = null;
+            break;
+        case 'site_security_firewall_bad_ips':
+            if( !is_ip($value) ) $value = null;
+            break;
+        case 'site_security_firewall_bad_user_agents':
+        case 'site_security_firewall_bad_referrers':
+            $value = esc_html($value);
             break;
         default:
             break;

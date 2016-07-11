@@ -8,7 +8,7 @@ Author: Stephen Deletang
 Author URI:
 */
 
-// on Ajoute les meta pour le theme
+// on ajoute les meta pour le theme
 add_action('mp_head','rhythmicon_head_meta_theme', 10 );
 
 function rhythmicon_head_meta_theme(){
@@ -20,7 +20,3 @@ function rhythmicon_head_meta_theme(){
 // Déclaration des feuilles de style
 mp_enqueue_style('knacss', TEMPLATEURL.'/assets/css/knacss.css' );
 mp_enqueue_style('style', TEMPLATEURL.'/assets/css/style.css' );
-
-
-// On force l'optimisation des fichiers CSS (=>firewall)
-add_filter( 'pre_option_site_optimize_files_css', function(){return true;} );

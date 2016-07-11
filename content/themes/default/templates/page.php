@@ -1,12 +1,11 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 /**
- * template: index.php
+ * template: page.php
  *
  * @package miniPops
  * @subpackage Rhythmicon
  * @version 1
  */
-
 ?>
 <?php snippet('header'); ?>
 
@@ -17,25 +16,21 @@
 
                 <main id="main" role="main">
 
-                    <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
-                        <?php the_breadcrumb(' / ') ?>
-                    </nav>
+                    <?php the_breadcrumb() ?>
 
-                    <article class="article mtl" >
+                    <article class="article" >
 
                         <header class="header" >
-                            <?php the_page('title', '<h1>', '</h1>') ?>
+                            <?php the_page('title', '<h1>', '</h1>'); ?>
                         </header>
 
                         <section class="content">
                         <?php the_page('content') ?>
                         </section>
 
-                        <? if( is_page() ) : ?>
                         <footer class="footer">
                             <?php the_page('author') ?>
                         </footer>
-                        <? endif ?>
 
                     </article>
 
@@ -48,9 +43,6 @@
         </tr>
         <tr>
             <td class="aside small-visible">
-                <p><!-- test -->
-                    <textarea>testset <!-- eurk -->dsqd</textarea>
-                </p>
                 <?php snippet('aside'); ?>
             </td>
         </tr>

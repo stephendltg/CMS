@@ -57,7 +57,11 @@ function mp_enqueue_style( $handled, $src , $array = array(), $media = null , $v
     $handled  = apply_filter('mp_enqueue_'.$type.'_handled', sanitize_file_name($handled) );
     $path     = $_SERVER['DOCUMENT_ROOT'].parse_url($source, PHP_URL_PATH);
 
-    if( glob($path)
+    // Extension valid
+    $type_extension = ($type === 'script') ? 'js' : 'css';
+
+    if( pathinfo($path, PATHINFO_EXTENSION) === $type_extension
+        && glob($path)
         && is_sup($handled,0)
         && !isset($GLOBALS['mp_'.$type][$where]['enqueue'][$handled])
         && !isset($GLOBALS['mp_'.$type][$where]['inline'][$handled])
