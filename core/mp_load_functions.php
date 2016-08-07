@@ -19,23 +19,80 @@ error_reporting(0);
 /*              Fonctions globales             */
 /***********************************************/
 
+/**
+ * Function de compatibilité pour ancienne version de PHP
+ */
+if (!function_exists('http_response_code')) {
+
+    function http_response_code($code = NULL) { 
+
+        $prev_code = (isset($GLOBALS['http_response_code']) ? $GLOBALS['http_response_code'] : 200);
+
+        if ($code === NULL) {
+            return $prev_code;
+        }
+
+        switch ($code) {
+            case 100: $text = 'Continue'; break;
+            case 101: $text = 'Switching Protocols'; break;
+            case 200: $text = 'OK'; break;
+            case 201: $text = 'Created'; break;
+            case 202: $text = 'Accepted'; break;
+            case 203: $text = 'Non-Authoritative Information'; break;
+            case 204: $text = 'No Content'; break;
+            case 205: $text = 'Reset Content'; break;
+            case 206: $text = 'Partial Content'; break;
+            case 300: $text = 'Multiple Choices'; break;
+            case 301: $text = 'Moved Permanently'; break;
+            case 302: $text = 'Moved Temporarily'; break;
+            case 303: $text = 'See Other'; break;
+            case 304: $text = 'Not Modified'; break;
+            case 305: $text = 'Use Proxy'; break;
+            case 400: $text = 'Bad Request'; break;
+            case 401: $text = 'Unauthorized'; break;
+            case 402: $text = 'Payment Required'; break;
+            case 403: $text = 'Forbidden'; break;
+            case 404: $text = 'Not Found'; break;
+            case 405: $text = 'Method Not Allowed'; break;
+            case 406: $text = 'Not Acceptable'; break;
+            case 407: $text = 'Proxy Authentication Required'; break;
+            case 408: $text = 'Request Time-out'; break;
+            case 409: $text = 'Conflict'; break;
+            case 410: $text = 'Gone'; break;
+            case 411: $text = 'Length Required'; break;
+            case 412: $text = 'Precondition Failed'; break;
+            case 413: $text = 'Request Entity Too Large'; break;
+            case 414: $text = 'Request-URI Too Large'; break;
+            case 415: $text = 'Unsupported Media Type'; break;
+            case 500: $text = 'Internal Server Error'; break;
+            case 501: $text = 'Not Implemented'; break;
+            case 502: $text = 'Bad Gateway'; break;
+            case 503: $text = 'Service Unavailable'; break;
+            case 504: $text = 'Gateway Time-out'; break;
+            case 505: $text = 'HTTP Version not supported'; break;
+            default:
+                trigger_error('Unknown http status code ' . $code, E_USER_ERROR); 
+                // exit('Unknown http status code "' . htmlentities($code) . '"');
+                return $prev_code;
+        }
+
+        $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
+        header($protocol . ' ' . $code . ' ' . $text);
+        $GLOBALS['http_response_code'] = $code;
+
+        // original function always returns the previous or current code
+        return $prev_code;
+    }
+}
+
 
 /**
  * On vérifie la version de php utilisé si non compatible on fait un die
  */
 function mp_check_php_versions() {
 
-    if( !function_exists('http_response_code') ){
-        $msg =  '<p>Error PHP function</p><p>this cms need function: "http_response_code".</p>';
-        cms_maintenance( $msg );
-    }
-
-    if ( version_compare( phpversion() , "5.2.0", "<" ) ) {
-        $msg =  '<p>Server PHP version ' . phpversion() .
-                ' .</p><p>this cms need PHP version 5.4 .</p>';
-        cms_maintenance( $msg );
-	}
-
+    if ( version_compare( phpversion() , "5.2.0", "<" ) )
+        cms_maintenance( '<p>Server PHP version ' . phpversion() . ' .</p><p>this cms need PHP version 5.2 .</p>' );
 }
 
 
@@ -45,7 +102,9 @@ function mp_check_php_versions() {
  * @return true
  */
 function timer_start() {
+
 	global $timestart;
+
 	$timestart = microtime( true );
 	return true;
 }
@@ -58,6 +117,7 @@ function timer_start() {
 function timer_stop( $precision = 3 ) {
 
 	global $timestart;
+
     $precision   = (int) $precision;
 	$timeend = microtime( true );
 	$timeend = $timeend - $timestart;
@@ -71,13 +131,6 @@ function timer_stop( $precision = 3 ) {
 function mp_debug_mode() {
 
     if ( DEBUG ) {
-
-        function _echo( $var, $var_dump = 0 ){
-            echo '<pre>';
-            if($var_dump) var_dump($var);
-            else print_r($var);
-            echo '<pre>';
-        }
 
         error_reporting( E_ALL );
 
@@ -100,6 +153,19 @@ function mp_debug_mode() {
         @ini_set( 'display_errors', 0 );
 }
 
+/**
+ * Fonction de tracing error pour mode debug
+ */
+function _echo( $var, $var_dump = 0 ){
+
+    if (!DEBUG) return null;
+
+    echo '<pre>';
+    if($var_dump) var_dump($var);
+    else print_r($var);
+    echo '<pre>';
+
+}
 
 /**
  * On créé les repertoires si cms non installé et on verifie les droits en ecriture.
@@ -108,14 +174,16 @@ function cms_not_installed() {
 
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
-    if ( !is_writable( realpath( ABSPATH ) ) ) cms_maintenance( 'Error directory permissions !' );
+    if ( !is_writable( realpath( ABSPATH ) ) ) 
+        cms_maintenance( 'Error directory permissions !' );
 
     @mkdir( CONTENT_DIR , 0755 , true );
-
-    if ( !is_writable( CONTENT_DIR ) ) cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT_DIR ) .' !' );
+    if ( !is_writable( CONTENT_DIR ) ) 
+        cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT_DIR ) .' !' );
 
     @mkdir( CONTENT , 0755 , true );
-    if ( !is_writable( CONTENT ) ) cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT ) .' !' );
+    if ( !is_writable( CONTENT ) ) 
+        cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT ) .' !' );
 
     @mkdir( THEMES_DIR , 0755 , true );
 }
@@ -167,7 +235,7 @@ function mp_rewrite_rules(){
         $rules .= "# block specify the cache\n\t";
         $rules .= "RewriteCond %{REQUEST_METHOD} GET\n\t";
         $rules .= "RewriteCond %{QUERY_STRING} !.*=.*\n\t";
-        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(mpops_logged_in_|mpops-postpass_|comment_author_|comment_author_email_).*$\n\t";
+        $rules .= "RewriteCond %{HTTP:Cookie} !^.*(minipops_auth|comment_author_|comment_author_email_).*$\n\t";
         $rules .= "RewriteCond %{HTTPS} off\n\t";
         $rules .= "RewriteCond %{DOCUMENT_ROOT}/cache/%{HTTP_HOST}%{REQUEST_URI}/index.html -f\n\t";
         $rules .= "RewriteRule ^(.*) cache/%{HTTP_HOST}%{REQUEST_URI}/index.html [L]\n\n\t";
@@ -206,16 +274,16 @@ function mp_rewrite_rules(){
 
 }
 
+
 /**
  * Mise en maintenance de CMS
  *
  */
 function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Service Unavailable' , $http_response_code = 503 ) {
+
     //ini_set( 'display_errors', 0 );
     header( 'Content-Type: text/html; charset=utf-8' );
-    if( function_exists('http_response_code'))
-        http_response_code($http_response_code);
-    else header( $_SERVER['SERVER_PROTOCOL']." 503 Service Unavailable", true, 503 );
+    http_response_code($http_response_code);
  	header( 'Retry-After: 600' );
 ?>
 	<!DOCTYPE html>
@@ -286,7 +354,9 @@ function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Servic
  * On vérifier l'encodage de la config ( voir default-constant.php )
  */
 function mp_set_internal_encoding() {
+
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
+
     header_remove( 'x-powered-by' );
     if ( function_exists( 'mb_language' ) ) mb_language( 'uni' );
     if ( function_exists( 'mb_regex_encoding' ) ) mb_regex_encoding( CHARSET );
@@ -314,20 +384,11 @@ function shutdown_action_hook() {
 function get_http_header() {
 
     header( 'Content-Type: text/html; charset='.CHARSET );
-    http_response_code(200);
-
-    if( is_robots() || is_feed() )
-        header( 'Content-Type: text/plain; charset='.CHARSET );
-
-    if( is_sitemap() )
-        header( 'Content-Type: text/xml; charset='.CHARSET );
-
-    // Empêcher le crawl des mauvais robots du sitempa.xml
-    if( is_sitemap() || is_robots() )
-        header("X-Robots-Tag: noindex", true);
 
     if( is_404() )
         http_response_code(404);
+    else
+        http_response_code(200);
 }
 
 
@@ -337,7 +398,9 @@ function get_http_header() {
  */
 
 function mp_magic_quotes() {
+
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
+
 	if ( get_magic_quotes_gpc() ) {
         function stripslashesGPC(&$value) { $value = stripslashes( $value ); }
         array_walk_recursive($_GET, 'stripslashesGPC');
@@ -355,10 +418,16 @@ function mp_magic_quotes() {
  * @return string The guessed URL.
  */
 function is_ssl() {
+
     if ( isset($_SERVER['HTTPS']) ) {
+
         if ( 'on' == strtolower($_SERVER['HTTPS']) ) return true;
         if ( '1' == $_SERVER['HTTPS'] ) return true;
-    } elseif ( isset($_SERVER['SERVER_PORT']) && ( '443' == $_SERVER['SERVER_PORT'] ) ) { return true; }
+
+    } elseif ( isset($_SERVER['SERVER_PORT']) && ( '443' == $_SERVER['SERVER_PORT'] ) ) {
+        return true; 
+    }
+
     return false;
 }
 
@@ -379,7 +448,9 @@ function guess_url() {
 
 		if ( $script_filename_dir . '/' == $abspath_fix ) {
 			$path = preg_replace( '#/[^/]*$#i', '', $_SERVER['PHP_SELF'] );
+
 		} else {
+
 			if ( false !== strpos( $_SERVER['SCRIPT_FILENAME'], $abspath_fix ) ) {
 				$directory = str_replace( ABSPATH, '', $script_filename_dir );
 				$path = preg_replace( '#/' . preg_quote( $directory, '#' ) . '/[^/]*$#i', '' , $_SERVER['REQUEST_URI'] );
@@ -390,7 +461,11 @@ function guess_url() {
 				$path = $_SERVER['REQUEST_URI'];
 			}
 		}
-        if ( !$is_rewrite_rules ) { $path = str_replace( array('index.php','index'),'', $_SERVER['PHP_SELF']); }
+
+        if ( !$is_rewrite_rules ) { 
+
+            $path = str_replace( array('index.php','index'),'', $_SERVER['PHP_SELF']); 
+        }
 
         $schema = is_ssl() ? 'https://' : 'http://';
 		$url = $schema . $_SERVER['HTTP_HOST'] . $path;
@@ -459,6 +534,14 @@ function get_the_blog( $field, $default = false ){
         case 'language':
             $value = get_the_lang();
             break;
+        case 'logo':
+            $path = apply_filter('mp_path_logo', CONTENT.'/logo');
+            $logos = glob($path.'.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
+            if( isset($logos[0]) )
+                $value = '<img src="'.rel2abs( str_replace(ABSPATH, '', $logos[0]) ).'" class="site-logo" alt="logo - '.get_the_blog('title').'" title="'.get_the_blog('title').'" >';
+            else
+                $value = null;
+            break;   
         default:
             $value = get_option('blog->'.$field, $default);
             break;
@@ -478,9 +561,11 @@ function init_the_blog(){
         'description'=>'Un site sous miniPops',
         'keywords'=>'minipops, cms, minipopscms',
         'author'=>'stephen deletang',
+        'author_email'=>'~',
         'copyright'=>'@2015 -  Propulsé par miniPops',
         'lang'=> lang(),
-        'theme'=>'default' );
+        'theme'=>'default',
+        'robots'=>'index' );
 
     $setting = array(
         'urlrewrite'=> true,

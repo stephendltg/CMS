@@ -167,7 +167,7 @@ function get_the_images( $name ='', $where = array(), $max = 10 ){
  * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_the_image( $name = '' ){
+function get_the_image( $name = '', $url = true ){
 
     $name   = (string) $name;
 
@@ -179,7 +179,9 @@ function get_the_image( $name = '' ){
 
     do_action('do_after_get_the_image', $name );
 
-    return $image;
+    if( !$image ) return;
+
+    return $url ? CONTENT_URL.'/'.$image : CONTENT.'/'.$image;
 }
 
 

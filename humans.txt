@@ -1,0 +1,18 @@
+# humanstxt.org/
+# The humans responsible & technology minipops
+
+# TEAM
+
+    <Stephen Deletang> -- <Developper> -- <@sephendltg>
+    <Fabienne Deletang> -- <Graphic>
+
+# THANKS
+
+    Wordpress Members
+
+# TECHNOLOGY MINIPOPS
+
+    HTML5, CSS3
+    VanillaJs
+    Php, minipops
+    Yaml, markdown

@@ -11,51 +11,36 @@
 
 <?php snippet('header'); ?>
 
-    <table role="presentation">
-      <!-- surtout pas d'attribut summary -->
-        <tr>
-            <td rowspan="2" class="main small-visible large-w66">
+<main id="main" role="main">
 
-                <main id="main" role="main">
+    <?php //the_breadcrumb() ?>
 
-                    <?php the_breadcrumb() ?>
+    <article class="article" >
+        
+        <section class="content">
+            <?php the_page('content') ?>
+        </section>
 
-                    <article class="article mtl" >
+        <header class="entry-header" >
+            <?php the_page('title', '<h1>', '</h1>') ?>
+            
+        </header>
 
-                        <header class="header" >
-                            <?php the_page('title', '<h1>', '</h1>') ?>
-                        </header>
+        <section class="content">
+            <?php the_page('content') ?>
+        </section>
 
-                        <section class="content">
-                        <?php the_page('content') ?>
-                        </section>
+        <? if( is_page() ) : ?>
+        <footer class="footer">
+            <?php the_page('author') ?>
+        </footer>
+        <? endif ?>
 
-                        <? if( is_page() ) : ?>
-                        <footer class="footer">
-                            <?php the_page('author') ?>
-                        </footer>
-                        <? endif ?>
+    </article>
 
-                    </article>
-
-                </main>
-
-            </td>
-            <td class="nav small-visible">
-                <?php snippet('menu') ?>
-            </td>
-        </tr>
-        <tr>
-            <td class="aside small-visible">
-                <p><!-- test -->
-                    <textarea>testset <!-- eurk -->dsqd</textarea>
-                </p>
-                <?php snippet('aside'); ?>
-            </td>
-        </tr>
-    </table>
-
-    <?php snippet('footer'); ?>
+</main>
+        
+<?php snippet('footer'); ?>
 
 <?php mp_footer(); ?>
 </body>

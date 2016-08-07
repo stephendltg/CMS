@@ -3,21 +3,23 @@
 ---
 site: 
     blog: 
-        title: miniPops
+        title: Jacky Chazalette
         subtitle: Un site sous miniPops
         description: Un site sous miniPops
         keywords: minipops, cms, minipopscms
-        author: stephen deletang
-        copyright: @2015 -  Propulsé par miniPops
+        author: Jacky Chazalette
+        author_email: ~
+        copyright: @2015 - Propulsé par miniPops
         lang: fr
         theme: default
+        robots: index
     setting: 
-        urlrewrite: disable
-        timezone: 1
+        urlrewrite: enable
+        timezone: Europe/London
         date_format: F j, Y
         time_format: g:i a
-        api_key: @HLSdhiA?-Kv=u8ZyqB.5W4$ajNr01bk
-        api_keysalt: TyS.KLwN?UOJAlsHGiE@6d(^Vx$+rthg
+        api_key: 9pJ?b3sduAwFWPL+qe
+        api_keysalt: 1W.RoC-*(nV9fF
     optimize: 
         files: 
             html: false
@@ -31,10 +33,4 @@ site:
             theme: default
     customize: 
         primary_menu: ~
-    security: 
-        firewall: 
-            bad_ips: ~
-            bad_user_agents: ~
-            bad_referrers: ~
-            active: true
 ...

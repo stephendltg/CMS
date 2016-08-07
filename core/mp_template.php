@@ -194,7 +194,91 @@ function mp_meta_canonical_link(){
 }
 
 function mp_meta_favicon(){
-    echo '<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">'."\n";
+
+    $meta_favicon = '';
+
+    $favicon_path = apply_filter( 'mp_meta_favicon_path', 'favicon.ico' );
+    if( glob($favicon_path) ){
+        // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
+        $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon_path.'" type="image/x-icon">'."\n";
+    }
+
+    $apple_icon_touch_path = apply_filter( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
+    if( glob($apple_icon_touch_path) ){
+        // <!-- Apple icon: no error 404 for safari and ios -->
+        $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch_path.'" type= "text/plain">'."\n";
+    }
+
+    $humans_path = apply_filter( 'mp_meta_humans_path', 'humans.txt' );
+    if( glob($humans_path) ){
+        // <!-- Because the humans is important! -->
+        $meta_favicon .= '<link rel="author" href="'.$humans_path.'">'."\n";
+    }
+
+    echo $meta_favicon;
+
+    do_action('mp_meta_favicon');
+}
+
+function mp_ie_rendering(){
+
+    $ie_rendering = '<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->'."\n";
+    echo apply_filter('mp_meta_ie_rendering', $ie_rendering );
+}
+
+
+function mp_meta_viewport(){
+
+    /*  Mobile Viewport
+    http://j.mp/mobileviewport & http://davidbcalhoun.com/2010/viewport-metatag
+    device-width : Occupy full width of the screen in its current orientation
+    initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
+    maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width (wrong for most sites)
+    */
+    $viewport = '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no">'."\n";
+    echo apply_filter('mp_meta_viewport', $viewport);
+}
+
+function mp_meta_google_site_verification(){
+
+    // Don't forget to set your site up: http://google.com/webmasters
+    $google_check = apply_filter('mp_meta_google_check', '');
+    if ( strlen($google_check) == 0 )  return;
+    echo '<meta name="google-site-verification" content="'.$google_check.'" />'."\n";
+}
+
+function mp_meta_opengraph(){
+
+    if( is_404() )
+        return;
+
+    $description = excerpt( apply_filter('meta_description', get_the_blog('description') ) );
+    if ( strlen($description) == 0 )  return;
+
+    $title = excerpt( apply_filter('meta_title', get_the_blog('title') ) , 65);
+    if ( strlen($title) == 0 )  return;
+
+    global $query;
+
+    // Twitter: see https://dev.twitter.com/docs/cards/types/summary-card for details
+    $opengraph = '<meta name="twitter:card" content="summary">'."\n";
+    $opengraph .= '<meta name="twitter:site" content="'.get_the_blog('title') .'">'."\n";
+    $opengraph .= '<meta name="twitter:title" content="'.$title.'">'."\n";
+    $opengraph .= '<meta name="twitter:description" content="'.$description.'">'."\n";
+    $opengraph .= '<meta name="twitter:url" content="'.get_permalink($query).'">'."\n";
+
+    // Facebook (and some others) use the Open Graph protocol: see http://ogp.me/ for details
+    $opengraph .= '<meta property="og:title" content="'.$title.'" />'."\n";
+    $opengraph .= '<meta property="og:description" content="'.$description.'" />'."\n";
+    $opengraph .= '<meta property="og:url" content="'.get_permalink($query).'" />'."\n";
+
+
+    $image = get_the_image();
+    if( $image )
+        $opengraph .= '<meta property="og:image" content="'.$image.'" />'."\n";
+
+    echo $opengraph;
+    
 }
 
 
@@ -203,18 +287,22 @@ function mp_meta_favicon(){
 /***********************************************/
 
 add_action('mp_head','mp_meta_charset', 1);
-add_action('mp_head','mp_meta_title', 2);
-add_action('mp_head','mp_meta_description', 3);
-add_action('mp_head','mp_meta_keywords', 4);
-add_action('mp_head','mp_meta_author', 5);
-add_action('mp_head','mp_meta_robots', 6);
-add_action('mp_head','mp_meta_feed_link', 7);
-add_action('mp_head','mp_meta_sitemap_link', 8);
-add_action('mp_head','mp_meta_canonical_link', 9);
-add_action('mp_head','mp_enqueue_styles', 10 );
-add_action('mp_head','mp_enqueue_scripts', 11 );
-add_action('mp_head','mp_meta_favicon', 12 );
-
+add_action('mp_head','mp_ie_rendering', 2);
+add_action('mp_head','mp_meta_title', 3);
+add_action('mp_head','mp_meta_description', 4);
+add_action('mp_head','mp_meta_keywords', 5);
+add_action('mp_head','mp_meta_author', 6);
+add_action('mp_head','mp_meta_robots', 7);
+add_action('mp_head','mp_meta_viewport', 8);
+add_action('mp_head','mp_meta_favicon', 9 );
+add_action('mp_head','mp_meta_google_site_verification', 10);
+add_action('mp_head','mp_meta_feed_link', 11);
+add_action('mp_head','mp_meta_sitemap_link', 12);
+add_action('mp_head','mp_meta_canonical_link', 13);
+add_action('mp_head','mp_enqueue_styles', 14 );
+add_action('mp_head','mp_enqueue_scripts', 15 );
+add_action('mp_head','mp_meta_opengraph', 16);
+add_action('mp_head', 'mp_meta_google_site_verification', 17);
 
 /***********************************************/
 /*        hook mpops_footer                      */
@@ -243,6 +331,33 @@ function mp_footer(){
     return do_action('mp_footer');
 }
 
+/***********************************************/
+/*              element Class                  */
+/***********************************************/
+
+function body_class( $class = '' ){
+
+    $classes = array();
+    
+    if( is_page() )
+        $classes[] = 'paged';
+
+    if( is_404() )
+        $classes[] = 'error404';
+
+    if( is_home() )
+        $classes[] = 'home';
+
+    if ( ! empty( $class ) ) {
+        if ( !is_array( $class ) )
+            $class = preg_split( '#\s+#', $class );
+        $classes = array_merge( $classes, $class );
+    }
+
+    $classes = array_map('sanitize_html_class', $classes);
+
+    echo 'class="' . join( ' ', $classes ) . '"';
+}
 
 
 /***********************************************/

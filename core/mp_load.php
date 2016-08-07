@@ -78,8 +78,6 @@ require( ABSPATH . INC . '/mp_query.php' );
 // On charge le bon http header selon la requête
 get_http_header();
 
-require( ABSPATH . INC . '/mp_api.php' );
-
 // Fonction pour gérer les pages
 //require( ABSPATH . INC . '/cron.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
@@ -132,6 +130,12 @@ if ( glob( TEMPLATEPATH . '/functions.php' ) )
 
 // Hook apres chargement du theme
 do_action( 'after_setup_theme' );
+
+// On créer les constantes pour les cookies
+mp_cookies_constants();
+
+// On charge la gestion des utilisateurs
+require( ABSPATH . INC . '/mp_auth.php' );
 
 // on inclus les fonctions d'optimisation et des templates
 //require( ABSPATH . INC . '/mp_firewall.php' );

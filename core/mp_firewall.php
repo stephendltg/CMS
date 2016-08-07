@@ -11,6 +11,18 @@
 
 
 /*
+ $update_url = 'https://raw.github.com/ai/autoprefixer-rails/master/vendor/autoprefixer.js';
+        $local_path = __DIR__ . '/vendor/autoprefixer.js';
+        $new = file_get_contents($update_url);
+        $old = file_get_contents($local_path);
+       
+        if (md5($new) == md5($old)) return false;
+       
+        file_put_contents($local_path, $new);
+        return true;
+*/
+
+/*
 
 6G:[QUERY STRINGS]
 

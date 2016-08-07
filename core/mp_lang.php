@@ -53,7 +53,7 @@ function __( $text, $domain = null ){
     $local_lang   = get_the_lang();
 
     // On charge la traductions du snippets ( fichiers traduction temporaire et valide le temps du snippets )
-    if( is_same( $domain, 'snippet') ){
+    if( is_same( $domain, 'snippets') ){
 
         $domain = !empty($GLOBALS['__args']['lang']) ? $GLOBALS['__args']['lang'] : null ;
 

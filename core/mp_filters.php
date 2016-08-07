@@ -98,28 +98,44 @@ add_action('do_favicon' , 'mp_doing_favicon');
 // On génére un fichier robots
 function mp_doing_robots(){
 
-    $robots = sanitize_words( get_the_blog('robots') );
-    $robots = str_replace(' ', ',' , $robots);
+    // On déclarer le bon header
+    header( 'Content-Type: text/plain; charset='.CHARSET );
+    header("X-Robots-Tag: noindex", true);
+
+    $robot = sanitize_words( get_the_blog('robots') );
+    $robot = str_replace(' ', ',' , $robot);
+
+    $robots     = "# www.robotstxt.org/\n\n";
 
     // on desindex le site si noindex declaré
-    if( is_in($robots, array('noindex', 'noindex,nofollow',) ) )
-        $robots = "User-agent: *\nDisallow: /\n";
+    if( is_in($robot, array('noindex', 'noindex,nofollow',) ) )
+        $robots .= "User-agent: *\nDisallow: /\n";
 
     else{
 
-        $robots     = "User-agent: *\n";
+        $robots    .= "User-agent: *\n";
         $robots    .= "Disallow: /*?\n";
+        // On désindexe tous les URL ayant des paramètres (duplication de contenu) sauf les fichier css et js ( numero de version après le ? de l'url)
+        $robots    .= "Allow: /*css?*\n";
+        $robots    .= "Allow: /*js?*\n";
+        // On bloque les URL de ping et de trackback
+        $robots    .= "Disallow: */trackback\n";
+        // On bloque tous les flux RSS sauf celui principal (enlevez /* pour bloquer TOUS les flux)
         $robots    .= "Disallow: /*/feed\n";
+        // On élimine ce répertoire sensible présent sur certains serveurs 
         $robots    .= "Disallow: /cgi-bin\n";
+        // On désindexe tous les fichiers qui n'ont pas lieu de l'être
         $robots    .= "Disallow: /*.php$\n";
         $robots    .= "Disallow: /*.inc$\n";
         $robots    .= "Disallow: /*.gz\n";
         $robots    .= "Disallow: /*.cgi\n";
-        $robots    .= "Allow: /*css?*\n";
-        $robots    .= "Allow: /*js?*\n\n";
+        // ne pas indexer des pages, mais de faire en sorte que les images qu’elles contiennent soient quand même ajoutées dans le moteur de recherche google
         $robots    .= "# Google Image\n";
         $robots    .= "User-agent: Googlebot-Image\n";
         $robots    .= "Disallow:\n";
+        $robots    .= "User-agent: Mediapartners-Google\n";
+        $robots    .= "Disallow:\n";
+        // Sitemap: Google : href="http://www.google.fr/webmasters/ | Yahoo & Bing: href="http://www.bing.com/toolbox/webmaster
         $robots    .= 'Sitemap: '.HOME.'/sitemap.xml';
     }
 
@@ -129,6 +145,10 @@ function mp_doing_robots(){
 
 // On génére un sitemap
 function mp_doing_sitemap(){
+
+    // On déclare le bon header
+    header( 'Content-Type: text/xml; charset='.CHARSET );
+    header("X-Robots-Tag: noindex", true);
 
     $sitemap    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $sitemap   .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
@@ -144,6 +164,9 @@ function mp_doing_sitemap(){
 
 // On génére le flux rss
 function mp_doing_feed(){
+
+    // on déclarerle bon header
+    header( 'Content-Type: text/plain; charset='.CHARSET );
 
     $feed    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $feed   .= '<rss version="2.0"

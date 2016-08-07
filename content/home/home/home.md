@@ -1,4 +1,4 @@
-#generate by minpos
+#generate by minipos
 
 
 title: HOME
@@ -27,6 +27,8 @@ Date: 27.10.2015
 ----
 
 content:
+
+(image: jackychazalette.jpg  )
 
 <p>test</p>
 

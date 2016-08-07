@@ -9,6 +9,8 @@
 ?>
 <?php snippet('header'); ?>
 
+    <?php snippet('contact') ?>
+
     <table role="presentation">
       <!-- surtout pas d'attribut summary -->
         <tr>

@@ -7,51 +7,69 @@
  * @version 1
  */
 ?>
-<?php snippet('header'); ?>
 
-    <table role="presentation">
-      <!-- surtout pas d'attribut summary -->
-        <tr>
-            <td rowspan="2" class="main small-visible large-w66">
+<!doctype html>
+<html <?php the_lang('lang="', '" prefix="og: http://ogp.me/ns#"') ?> class="no-js">
+<head>
+    <?php mp_head(); ?>
+</head>
+<body <?php body_class()?> role="document">
 
-                <main id="main" role="main">
-                     <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
-                        <?php the_breadcrumb(' / ') ?>
-                    </nav>
-                    <article class="article" >
+<!--[if lt IE 8]>
+    <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+<![endif]-->
 
-                        <header class="header" >
-                            <?php the_page('title', '<h1>', '</h1>') ?>
-                        </header>
+<div class="wrapper flex-container">
 
-                        <section class="content">
-                        <?php the_page('content') ?>
-                        </section>
+    <header role="banner" class = "error-header tiny-hidden">
+        <?php the_blog('logo') ?>
 
-                        <? if( is_page() ) : ?>
-                        <footer class="footer">
-                            <?php the_page('author') ?>
-                        </footer>
-                        <? endif ?>
+    </header>
 
-                    </article>
+    <main role="main" id="error-main" class="error-main flex-item-fluid flex-item-first" >
 
-                </main>
+        <article role="content" class="article txtcenter">
 
-            </td>
-            <td class="nav small-visible">
-                <?php snippet('menu') ?>
-            </td>
-        </tr>
-        <tr>
-            <td class="aside small-visible">
-                <?php snippet('aside'); ?>
-            </td>
-        </tr>
-    </table>
+            <aside role="complementary" class="error-aside center">
+                <?php the_page('content') ?>
 
-    <?php snippet('footer'); ?>
+            </aside>
 
-<?php mp_footer(); ?>
+            <header role="banner">
+                <h1 class="error-title"><?php the_page('title') ?></h1>
+
+            </header>
+            
+            <main role="main" id="main-article" class="error-content">
+                <p><?php the_page('description') ?></p>
+
+            </main>
+
+            <footer role="contentinfo" classe="error-footer">
+                <a class="button-home" href="<?php the_blog('home'); ?>"><?php _e('Home') ?></a>
+            </footer>
+
+        </article>
+
+    </main>
+
+</div>
+
+
+<!-- Asynchronous google analytics; this is the official snippet.
+     Replace UA-XXXXXX-XX with your site's ID and uncomment to enable.
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-XXXXXX-XX', 'auto');
+  ga('send', 'pageview');
+
+</script>
+-->
+
 </body>
 </html>

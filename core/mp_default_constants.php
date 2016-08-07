@@ -78,5 +78,35 @@ function mp_plugin_directory_constants() {
  * http://www.sethcardoza.com/api/rest/tools/random_password_generator/length:32
  */
 function mp_secure_constants() {
-    $CP=get_option('setting->api_key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_option('setting->api_salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= CONTENT_DIR.date('Ym').HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','SECURE_AUTH','LOGGED_IN','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
+    $CP=get_option('setting->api_key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_option('setting->api_salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= CONTENT_DIR.date('Ym').HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
 }
+
+/**
+ *
+ * On definit les constantes des cookies
+ */
+function mp_cookies_constants() {
+
+	define('AUTH_COOKIE', 'minipops_auth_' . COOKIEHASH);
+
+	if ( !defined('COOKIEPATH') )
+		define('COOKIEPATH', preg_replace('|https?://[^/]+|i', '', get_option('home') . '/' ) );
+
+	if ( !defined('COOKIE_DOMAIN') )
+		define('COOKIE_DOMAIN', false);
+
+	if ( !defined('ADMIN_COOKIE_PATH') )
+		define( 'ADMIN_COOKIE_PATH', COOKIEPATH . 'mp-admin' );
+
+	// Spécifie la durée de vie du cookie en secondes. La valeur de 0 signifie : "Jusqu'à ce que le navigateur soit éteint".
+    if ( !defined('SESSION_COOKIE_LIFE') )
+        define('SESSION_COOKIE_LIFE', 0);
+
+    define('SESSION_COOKIE', 'minipops_' . COOKIEHASH);
+
+    // Modifie les paramètres du cookie de session
+    $secure = is_ssl() && 'https' === parse_url( HOME, PHP_URL_SCHEME );
+    session_set_cookie_params ( SESSION_COOKIE_LIFE, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
+    session_name(SESSION_COOKIE);
+}
+

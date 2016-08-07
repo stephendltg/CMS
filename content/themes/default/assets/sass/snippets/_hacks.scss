@@ -1,0 +1,34 @@
+// @author : DELETANG Stephen
+// Hacks
+
+@mixin hardwareAccel {
+	// Acceleration matériel pour transformation sur mobile / tablette
+	transform: translateZ(0);
+	transform: translate3d(0,0,0);
+	perspective: 1000;
+	-webkit-transform: matrix(1,0,0,1,0,0); // Correction des polices pour safari, en appliquant une transformation on force safari à utiliser l'antialiasing (pour être 100% efficace il faut que l'evenemtn entrainant un effet soit unique)
+}
+
+@mixin improveAntiAlias {
+	// Améliorer anti aliasing lors de transformation sur mobile / tablette
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0);
+}
+
+@mixin fontSmooth { 
+   // Lissage des polices placer dans body afin d'activer sur tout les éléments
+	-webkit-backface-visibility: hidden;
+	backface-visibility: hidden;
+	-webkit-font-smoothing: subpixel-antialiased;
+}
+
+@mixin forceBlockLevel {
+	// Pour faire un élément transformable
+	display: inline-block;
+	vertical-align: middle;
+}
+
+@mixin hacks() {
+   @include forceBlockLevel;
+   @include hardwareAccel; // defaut sur safari et firefox sous macos
+   @include improveAntiAlias;
+}

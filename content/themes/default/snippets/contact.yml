@@ -1,0 +1,32 @@
+# generate by mini-pops
+
+
+# ~
+# Fichier de traduction mots
+# ~
+---
+lang:
+
+	fr :
+		Contact: Contact
+		Email: Email
+		Subject: Sujet
+		Message: Message
+		Send : Envoyer
+
+...
+
+# ~
+# Fichier de traduction phrases
+# ~
+---
+lang:
+
+	en :
+		- Succes ! You message was sent.
+		- An error occured during sending, try again in a few minutes.
+
+	fr :
+		- Votre message a été envoyé !
+		- Une erreur est survenu, veuillez recommencer dans quelques minutes.
+...

@@ -8,14 +8,6 @@ Author: Stephen Deletang
 Author URI:
 */
 
-// on Ajoute les meta pour le theme
-add_action('mp_head','rhythmicon_head_meta_theme', 10 );
-
-function rhythmicon_head_meta_theme(){
-    $meta  ='<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->'."\n";
-    $meta .= '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no">'."\n";
-    echo $meta;
-}
 
 // Déclaration des feuilles de style
 mp_enqueue_style('knacss', TEMPLATEURL.'/assets/css/knacss.css' );

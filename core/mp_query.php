@@ -100,6 +100,9 @@ function is_404(){
     if( is_same( $query , 'error') ) return true;
     if( is_home() )         return false;
     if( is_page() )         return false;
+    if( is_robots() )       return false;
+    if( is_feed() )         return false;
+    if( is_sitemap() )      return false;
     else return true;
 }
 
@@ -176,15 +179,4 @@ function is_sitemap(){
     global $query;
 
     return is_same( $query , 'sitemap.xml');
-}
-
-/**
- * Vérifie si la requête passé à l'url est le fichier favicon.ico (seulement si apache est actif )
- * @return boolean
- */
-function is_favicon(){
-
-    global $query;
-
-    return is_same( $query , 'favicon.ico');
 }

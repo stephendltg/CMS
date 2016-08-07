@@ -21,9 +21,6 @@ elseif ( is_feed() ) :
 elseif ( is_sitemap() ) :
 	do_action( 'do_sitemap' );
 	return;
-elseif ( is_favicon() ) :
-	do_action( 'do_favicon' );
-	return;
 endif;
 
 if     ( is_404()            && $template = get_template('templates/404')     	) :

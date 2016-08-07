@@ -1,0 +1,62 @@
+// @author : DELETANG Stephen
+// Techniques CSS
+
+
+/*----------------------*/
+/*      Hacks           */
+/*----------------------*/
+        
+/* supprimer espace entre éléments en ligne ( LF CR )*/
+.fix_white_space{
+    font-size:0px;
+}
+
+/*----------------------*/
+/*      touch-scroll-x  */
+/*----------------------*/
+
+// touch-scroll-x : Permettre le scroll horizontal sur appareil tactile en outre
+// http://lc.cx/demo-scroll-x
+// Fonctionnement: le parent prends la classe touch-scroll-x et tous les enfants rentrent dans le scroll horizontal
+// Mise en place : on active le touch-scroll-x via css par appel ex : div { @include touch-scroll-x; }
+
+
+@mixin touch-scroll-x ( $scrollx-background : #fff , $scrollx-scrollbar-color: #000 ){
+    overflow: auto;
+    
+    // On cache le scroll sous firefox
+    // https://developer.mozilla.org/fr/docs/Web/CSS/Reference/Mozilla_Extensions
+    overflow: -moz-scrollbars-none;
+    
+    // Effet inertie sur Touch: IOS
+	-webkit-overflow-scrolling: touch;
+    
+    background-color: $scrollx-background;
+    
+    // c'est la ligne magique qui rends possible le scroll horizontal
+    white-space: nowrap; // c'est la ligne magique qui rends possible le scroll horizontal
+
+    // On enlève la barre de scroll sous IE > ou = 10
+    // https://msdn.microsoft.com/en-us/library/ie/hh771902%28v=vs.85%29.aspx
+    -ms-overflow-style: none; 
+    
+	// On modifie la scrollbar pour IE8,IE9 car support inline-block + media query
+	// ( on applique la même couleur que le fond de l'élément )
+	scrollbar-base-color: 		 $scrollx-background;
+	scrollbar-base-color: 		 $scrollx-scrollbar-color; 	// Couleur: barre défilement
+	scrollbar-3dlight-color: 	 $scrollx-background;
+	scrollbar-highlight-color:   $scrollx-background;
+	scrollbar-track-color: 		 $scrollx-background;
+	scrollbar-arrow-color: 		 $scrollx-background;
+	scrollbar-shadow-color: 	 $scrollx-background;
+	scrollbar-dark-shadow-color: $scrollx-background;
+    
+	&::-webkit-scrollbar {
+		// On cache la scrollbar sous safari, chrome, opera
+		display: none;
+	}
+}
+
+.touch-scroll-x {
+	@include touch-scroll-x ();
+}

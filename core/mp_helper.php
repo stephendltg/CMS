@@ -74,6 +74,29 @@ function arrayToObject($array){
   return $array;
 }
 
+
+/**
+* Applique une fonction callback de façon recursive
+* @param $array
+*/
+function map_deep( $value, $callback ) {
+
+    if ( is_array( $value ) ) {
+        foreach ( $value as $index => $item ) {
+            $value[ $index ] = map_deep( $item, $callback );
+        }
+    } elseif ( is_object( $value ) ) {
+        $object_vars = get_object_vars( $value );
+        foreach ( $object_vars as $property_name => $property_value ) {
+            $value->$property_name = map_deep( $property_value, $callback );
+        }
+    } else {
+        $value = call_user_func( $callback, $value );
+    }
+
+    return $value;
+}
+
 /**
 * Ajoute des slash dans une chaine
 * @param $string     chaine
@@ -82,6 +105,15 @@ function backslashit( $string ) {
     if ( isset( $string[0] ) && $string[0] >= '0' && $string[0] <= '9' )
         $string = '\\\\' . $string;
     return addcslashes( $string, 'A..Za..z' );
+}
+
+
+/**
+* Supprime les antislashs d'une chaîne
+* @param $string     chaine
+*/
+function stripslashes_deep( $value ) {
+    return is_string( $value ) ? stripslashes( $value ) : $value;
 }
 
 /**
