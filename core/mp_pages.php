@@ -49,6 +49,11 @@ function sanitize_page($field, $value, $slug){
             $value = mp_pops($value, $slug);
             $value = parse_markdown( $value);
             break;
+        case 'image':
+            $value = esc_html($value);
+            $value = mp_pops($value, $slug);
+            break;
+            
         case 'excerpt':
             $value = esc_html($value);
             $value = excerpt( $value, 140, 'words' );

@@ -30,6 +30,20 @@ add_action('shutdown', function() {
 add_action('TEMPLATE_REDIRECT','mp_load_meta_filter');
 
 function mp_load_meta_filter(){
+    
+    /***********************************************/
+    /*        meta for the 404                     */
+    /***********************************************/
+
+    if( is_404() ){
+
+        add_filter('meta_title', function($title){ return '404 | '. $title; } );
+        add_filter('meta_description', function(){ return null; } );
+        add_filter('meta_keywords', function(){ return null; } );
+        add_filter('meta_author', function(){ return null; } );
+        add_filter('meta_canonical_link', function(){ return null; } );
+    }
+    
 
     /***********************************************/
     /*        meta for the page                    */
@@ -62,18 +76,6 @@ function mp_load_meta_filter(){
 
     }
 
-    /***********************************************/
-    /*        meta for the 404                     */
-    /***********************************************/
-
-    if( is_404() ){
-
-        add_filter('meta_title', function($title){ return '404 | '. $title; } );
-        add_filter('meta_description', function(){ return null; } );
-        add_filter('meta_keywords', function(){ return null; } );
-        add_filter('meta_author', function(){ return null; } );
-        add_filter('meta_canonical_link', function(){ return null; } );
-    }
 }
 
 
