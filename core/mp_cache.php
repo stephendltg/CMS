@@ -7,7 +7,14 @@
  * @version 1
  */
 
+/***********************************************/
+/*       Déclaration des données de cache      */
+/***********************************************/
 
+
+add_option('optimize->cache->cached', false, 'mp_cache');
+//add_option('optimize->cache->pages_no_cache', '~', 'mp_cache');
+//add_option('optimize->cache->theme', '~', 'mp_cache');
 
 /***********************************************/
 /*       Gestion du cache des pages            */
@@ -45,17 +52,21 @@ if( get_the_blog('theme') !== get_option('optimize->cache->theme') ){
 }
 
 
-// On supprime le cache si une page est renommé
-add_action('do_before_rename_the_page', 'mp_clear_cache_page');
+if( get_option('optimize->cache->cached') ){
 
-// On supprime le cache si une page est caché
-add_action('do_before_hide_the_page', 'mp_clear_cache_page');
+    // On supprime le cache si une page est renommé
+    add_action('do_before_rename_the_page', 'mp_clear_cache_page');
 
-// On supprime le cache si une page a été modifiée
-add_action('do_before_edit_the_page', 'mp_clear_cache_page');
+    // On supprime le cache si une page est caché
+    add_action('do_before_hide_the_page', 'mp_clear_cache_page');
 
-// On supprime le cache si une page a été suprrimée
-add_action('do_before_delete_the_page', 'mp_clear_cache_page');
+    // On supprime le cache si une page a été modifiée
+    add_action('do_before_edit_the_page', 'mp_clear_cache_page');
+
+    // On supprime le cache si une page a été suprrimée
+    add_action('do_before_delete_the_page', 'mp_clear_cache_page');
+
+}
 
 
 /***********************************************/

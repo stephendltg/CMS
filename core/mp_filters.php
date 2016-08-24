@@ -167,8 +167,16 @@ function mp_doing_sitemap(){
 // On génére le flux rss
 function mp_doing_feed(){
 
+/*
+     mp_set_the_page('colletions', array('title'=>'Accueil', 'content' => 'test') );
+     mp_set_the_page('demon', array('title'=>'Accueil', 'content' => 'test') );
+     mp_set_the_page('collections/Contact', array('title'=>'Accueil', 'content' => 'test') );
+     mp_set_the_page('demon/Contact', array('title'=>'Accueil', 'content' => 'test') );
+*/
+    _echo( the_loop( array('filter'=>'pubdate', 'order'=>'desc' ) ) );
+
     // on déclarerle bon header
-    header( 'Content-Type: text/plain; charset='.CHARSET );
+    //header( 'Content-Type: text/plain; charset='.CHARSET );
 
     $feed    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $feed   .= '<rss version="2.0"

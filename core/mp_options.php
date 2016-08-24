@@ -50,8 +50,8 @@ function sanitize_option($option, $value){
         case 'site_blog_copyright':
             $value = esc_html($value);
             break;
-        case 'site_active_plugins':
-            $plugins = null;
+        case 'site_plugins_active_plugins':
+            $plugins = array();
             if( is_array($value) ){
                 foreach ($value as $plugin) {
                     if( !is_validate_file($plugin) // $plugin must validate as file
@@ -172,7 +172,7 @@ class options {
         // On récupère le chemin de la table du domain
         if( $domain === null )
             $node = 'site->'.$node;
-        elseif( is_in( $domain, get_option('active_plugins') ) )
+        elseif( is_in( $domain, get_option('plugins->active_plugins') ) )
             $node = $domain.'->'.$node;
         else return false;
 

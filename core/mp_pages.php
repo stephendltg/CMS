@@ -94,7 +94,7 @@ function get_the_page( $field, $slug = '' ){
 
     if( !isset($page[$slug]) && !empty($slug) ){
 
-        do_action('do_before_get_the_page', $field, $slug);
+        do_action('do_before_get_the_page', array($field, $slug) );
 
         // Date d'edition de la page corresponds à la date de modification du fichier
         $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.md' );
@@ -114,7 +114,7 @@ function get_the_page( $field, $slug = '' ){
         elseif( is_same($slug,'error') )    $page[$slug]['url'] = null;
         else                                $page[$slug]['url'] = get_permalink( $slug );
 
-        do_action('do_after_get_the_page', $field, $slug);
+        do_action('do_after_get_the_page', array($field, $slug) );
     }
 
     if( !empty($page[$slug][$field]) ){
@@ -152,14 +152,14 @@ function mp_set_the_page( $slug , $array ) {
                 if(!is_page($page)) return false;
         }
 
-        do_action('do_before_edit_the_page', $slug );
+        do_action('do_before_edit_the_page', array($slug) );
 
         $dir = CONTENT .'/'. $slug;
         @mkdir( $dir , 0755 , true );
         if ( !file_put_page( $dir .'/'. basename($slug).'.md' , $array ) ) return false;
         @chmod( $dir .'/'. basename($slug).'.md' , 0644 );
 
-        do_action('do_after_edit_the_page', $slug );
+        do_action('do_after_edit_the_page', array($slug) );
 
         return true;
     }
@@ -177,11 +177,11 @@ function mp_delete_the_page( $slug ) {
 
     if( !get_childs_page($slug) ) return false;
 
-    do_action('do_before_delete_the_page', $slug );
+    do_action('do_before_delete_the_page', array($slug) );
 
     rrmdir(CONTENT .'/'. $slug);
 
-    do_action('do_after_delete_the_page', $slug );
+    do_action('do_after_delete_the_page', array($slug) );
 
     return true;
 }
@@ -200,11 +200,11 @@ function mp_hide_the_page( $slug ) {
 
     if( !is_page($slug) ) return false;
 
-    do_action('do_before_hide_the_page', $slug );
+    do_action('do_before_hide_the_page', array($slug) );
 
     $hide_the_page = rename( CONTENT .'/'. $slug .'/'.$slug.'.txt' , CONTENT .'/'. $slug .'/@'.$slug.'.yml' );
 
-    do_action('do_after_hide_the_page', $slug );
+    do_action('do_after_hide_the_page', array($slug) );
 
     return $hide_the_page;
 }
@@ -221,11 +221,11 @@ function mp_visible_the_page( $slug ) {
 
     if( is_page($slug) ) return true;
 
-    do_action('do_before_visible_the_page', $slug );
+    do_action('do_before_visible_the_page', array($slug) );
 
     $visible_the_page = rename( CONTENT .'/'. $slug .'/@'.$slug.'.yml' , CONTENT .'/'. $slug .'/'.$slug.'.yml' );
 
-    do_action('do_after_visible_the_page', $slug );
+    do_action('do_after_visible_the_page', array($slug) );
 
     return $visible_the_page;
 }
@@ -259,12 +259,12 @@ function mp_rename_the_page( $slug , $new_slug ) {
     } else
         return false;
 
-    do_action('do_before_rename_the_page', $slug, $newslug );
+    do_action('do_before_rename_the_page', array($slug, $newslug) );
 
     if( rename( CONTENT .'/'. $slug .'/'.$slug_file.'.yml' , CONTENT .'/'. $slug .'/'.$new_slug_file.'.yml' ) )
         $rename_the_page = rename( CONTENT .'/'. $slug , CONTENT .'/'. $new_slug );
 
-    do_action('do_after_rename_the_page', $slug, $newslug );
+    do_action('do_after_rename_the_page', array($slug, $newslug) );
 
     return $rename_the_page;
 }
@@ -341,18 +341,96 @@ function get_adjacent_page( $slug = '' ) {
 /**
  * Boucle pages
  * @param  $args    array
- *                  'where'   array() : Listes des slugs de pages où chercher sous forme de tableau si vide recherche selon la requete $query
- *                  'filter'  string  : Listes des champs recherchés séparer par des virgules ex: drums,loops
+ *                  'where'   array() : Listes des slugs de pages où chercher sous forme de tableau si vide recherche dans toutes les pages
+ *                  'filter'  string  : Listes des champs recherchés séparer par des virgules ex: title,pubdate
  *                  'max'     integer : Nombre de résultat par défaut : 10
  *                  'order'   string  : Mode de tri "ASC" ( par défaut ), "DESC" ou "SHUFFLE"
- *                  'orderby' string  : Trier par "date" ( par défaut ), "auteur", "tag" ou par "custom"
+ *                  'orderby' string  : Trier par "date" ( par défaut ), "auteur", "tag", tout champs valide dans le document
  * @return array    retourne les résultats sous forme de tableau
  */
 function the_loop( $args = array() ){
 
-global $query;
+    /* Init "where" */
+    if( empty($args['where']) )
+        $args['where'] = get_all_page();
+
+     /* Init et validation "max" */
+    $max = !empty($args['max']) && is_intgr($args['max']) ? $args['max'] : 10;
+
+    /* Init et nettoyage "order" */
+    $args['order'] = !empty($args['order']) ? strtoupper($args['order']) : 'ASC';
+
+    /* Init et validation "orderby" */
+    $args['orderby'] = !empty($args['orderby']) && is_in( $args['orderby'], array('pubdate','author','tag') ) ? $args['orderby'] : 'pubdate';
 
 
+    /* On filtre par filter */
+    if( !empty($args['filter']) ){
 
+        foreach ($args['where'] as $key => $page){
+
+            $filter = get_the_page($args['filter'], $page);
+
+            // On applique le filtre
+            if( strlen($filter) == 0 ) 
+                unset($args['where'][$key]);
+
+            // On applique la valeur au filtre
+            if( !empty($args['value']) ){
+
+                $args['value'] = is_array($args['value']) ? $args['value'] : array($args['value']);
+
+                // var toogle
+                $i = 0;
+
+                foreach ($args['value'] as $value)
+                    if( strstr($filter, $value) )  $i = -1;
+
+                if( !$i )
+                    unset($args['where'][$key]);
+            }
+        }
+    }
+
+
+    /* On filtre par "orderby" et "order" */
+    if( !empty($args['orderby']) ){
+
+        foreach ($args['where'] as $key => $page){
+
+            $order_by = get_the_page($args['orderby'], $page);
+
+            if( strlen($order_by) == 0 ) 
+                unset($args['where'][$key]);
+            else
+                $tmp[] = $order_by;
+        }
+
+       // _echo ($tmp);
+
+
+        if( empty($args['where']) || empty($tmp) )
+            return array();
+
+
+        /* On filtre par "order" uniquement */
+        $args['where'] = array_combine( $args['where'] , $tmp );
+        if( is_same($args['order'], 'ASC') ) asort($args['where']);
+        if( is_same($args['order'], 'DESC') ) arsort($args['where']);
+        $args['where'] = array_keys($args['where']);
+
+    } else {
+
+        /* On filtre par "order" uniquement */
+        if( is_same($args['order'], 'ASC') ) sort($args['where']);
+        if( is_same($args['order'], 'DESC') ) rsort($args['where']);
+
+    }
+
+    /* Limite de resultat */
+    array_splice( $args['where'], $max );
+
+
+    return $args['where'];
 
 }

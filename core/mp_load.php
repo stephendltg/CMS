@@ -105,8 +105,8 @@ require( ABSPATH . INC . '/mp_lang.php' );
 
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = test, memory, ...
 @mkdir( PLUGIN_DIR , 0755 , true );
-$plugins = get_option('active_plugins');
-if( $plugins ){
+$plugins = get_option('plugins->active_plugins');
+if( !empty($plugins) ){
 	foreach( glob(PLUGIN_DIR .'/{'.implode(',', $plugins).'}', GLOB_BRACE|GLOB_ONLYDIR) as $plugin ){
 		if( glob( $plugin.'/'. basename($plugin).'.php' ) )
 			include_once( $plugin.'/'. basename($plugin).'.php' );

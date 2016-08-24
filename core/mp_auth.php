@@ -11,6 +11,7 @@ global $current_user;
 
 $current_user = array();
 
+
 /**
  * Chargement de la session active
  */
@@ -51,37 +52,6 @@ if( $ip !== get_ip_client() || time() > $expire )
 
 
 /***********************************************/
-/*                 API-REST CLIENT             */
-/***********************************************/
-
-/* Accès api-rest */
-function mp_remote( $url, $token, $method ='GET', $options = array() ){
-
-
-    $url = esc_url_raw($url);
-
-    if( empty($url) || is_notin( $method, array('GET', 'POST', 'PUT', 'PATCH', 'DELETE') ) || is_same(strlen($token), 0 ) )
-        return false;
-
-    $context = array( 'http' => array('ignore_errors' => true, 'method' => 'GET' , 'header' => array('authorization: '.$token) ) );
-
-    if( is_in( $method, array('POST', 'PUT', 'PATCH', 'DELETE') ) )
-        $context['http']['method'] = 'POST';
-
-    if( is_in( $method, array('PUT', 'PATCH') ) ){
-        if( !empty($options) && is_array($options) ) $context['http']['content'] = $options;
-        else return false;
-    }
-
-    return $context;
-    $context  = stream_context_create( $context );
-    if( !file_get_contents( $url, false, $context ) ) return false;
-    return json_decode( $response );
-}
-
-
-
-/***********************************************/
 /*                 SESSION                     */
 /***********************************************/
 
@@ -99,8 +69,6 @@ function mp_session_destroy(){
     $_SESSION = array();
     $current_user = array();
 
-    // Si vous voulez détruire complètement la session, effacez également
-    // le cookie de session.
     // Note : cela détruira la session et pas seulement les données de session !
     if (isset($_COOKIE[session_name(SESSION_COOKIE)]))
         setcookie(session_name(SESSION_COOKIE), '', time()-42000, COOKIEPATH);
@@ -190,11 +158,7 @@ function mp_login( $user, $password, $remember = false ) {
 
     $auth_cookie = $user. '|' . $expiration . '|' . get_session('token') . '|' . $hash_user;
 
-    setcookie(AUTH_COOKIE, $auth_cookie, $expire, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
-
-    /*
-    bool setcookie ( string $name [, string $value [, int $expire = 0 [, string $path [, string $domain [, bool $secure = false [, bool $httponly = false ]]]]]] )
-    */
+    return setcookie(AUTH_COOKIE, $auth_cookie, $expire, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
 
 }
 

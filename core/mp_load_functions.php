@@ -575,8 +575,12 @@ function init_the_blog(){
         'api_key'=>random_salt(32),
         'api_keysalt'=>random_salt(32) );
 
+    $plugins = array(
+        'active_plugins'=>'~');
+
     add_option('blog', $blog);
     add_option('setting', $setting);
+    add_option('plugins', $plugins);
 
     add_option('security->firewall->active', 'true');
     add_option('security->firewall->bad_ips', '~');
