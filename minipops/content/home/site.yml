@@ -1,0 +1,27 @@
+# YAML - minipopS CMS.
+
+---
+site: 
+    blog: 
+        title: miniPops
+        subtitle: Un site sous miniPops
+        description: Un site sous miniPops
+        keywords: minipops, cms, minipopscms
+        author: stephen deletang
+        author_email: ~
+        copyright: @2015 -  Propulsé par miniPops
+        lang: fr
+        theme: default
+        robots: index
+    setting: 
+        urlrewrite: enable
+        timezone: Europe/London
+        date_format: F j, Y
+        time_format: g:i a
+        api_key: pi-@
+        api_keysalt: qSYX;m,Rj.6BuT^g1o-pOU7kEKx!F09@
+    plugins: 
+        active_plugins: ~
+    customize: 
+        primary_menu: ~
+...

@@ -1,0 +1,28 @@
+/* humanstxt.org/ */
+/* The humans responsible & technology minipops */
+
+                 
+/* TEAM */
+
+    Developer: Stephen Deletang
+	Twitter: @stephendltg
+	Contact: s.deletang(at)laposte.net
+	Location: Conquereuil, France
+
+
+/* THANKS */
+					
+    Graphic: Fabienne Deletang
+	Location: Conquereuil, France
+
+                               
+/* SITE */
+                         
+    Last update:  2016/08/25 
+                         
+    Standards: HTML5, CSS3, ...
+                     
+    Components: VanillaJs, PHP5, Yaml, markdown
+                      
+    Software: Sublimtext for the back-end, brackets for the front-end
+       

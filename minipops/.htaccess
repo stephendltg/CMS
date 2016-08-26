@@ -1,0 +1,30 @@
+# BEGIN MiniPops 
+# Set default charset utf-8
+AddDefaultCharset UTF-8
+
+# Format audio
+AddType audio/ogg  .ogg
+AddType audio/mp3  .mp3
+
+<IfModule mod_rewrite.c>
+
+RewriteEngine on
+
+# if you homepage is http://localhost/CMS-master/minipops
+# RewriteBase /CMS-master/minipops
+
+# block specify files in the cache folder from being accessed directly
+RewriteRule ^content/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]
+
+# block all files core folder from being accessed directly
+RewriteRule ^core/(.*) error [R=301,L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*) index.php [L]
+
+# Update code bellow for SEO improvements
+# Redirect 301 /index http://localhost/CMS-master/minipops/
+
+</IfModule>
+# END MiniPops
+
