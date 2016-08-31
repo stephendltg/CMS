@@ -21,11 +21,11 @@ function mp_init_constants() {
 	define('MP_VERSION', '1.0.0');
 
     // Definit les constantes pour les répertoires de stockage du site
-	if ( !defined('CONTENT_DIR') )
-        define( 'CONTENT_DIR', ABSPATH . 'content' );
-
-	define( 'CONTENT', CONTENT_DIR . '/home' );
-	define( 'THEMES_DIR', CONTENT_DIR . '/themes' );
+	if ( !defined('MP_CONTENT_DIR') )
+		define( 'MP_CONTENT_DIR', ABSPATH . 'mp_content' );
+        
+	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages' );
+	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
@@ -60,16 +60,19 @@ function mp_init_constants() {
  */
 function mp_plugin_directory_constants() {
 
-    // Definit la constante HOME : url du site de référence
-    if ( !defined('HOME') )
-		define( 'HOME', guess_url() );
+    // Definit la constante MP_HOME : url du site de référence
+    if ( !defined('MP_HOME') )
+		define( 'MP_HOME', guess_url() );
+
+	if ( !defined('MP_CONTENT_URL') )
+		define( 'MP_CONTENT_URL', guess_url() . '/mp_content' );
 
     // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
-	define( 'CONTENT_URL', rel2abs(str_replace(ABSPATH ,'' ,CONTENT) ) );
-	define( 'PLUGIN_DIR', CONTENT_DIR . '/plugins' );
-	define( 'PLUGIN_URL', rel2abs(str_replace(ABSPATH ,'' ,PLUGIN_DIR) ) );
-	define( 'MU_PLUGIN_DIR', CONTENT_DIR . '/mu-plugins' );
-	define( 'MU_PLUGIN_URL', rel2abs(str_replace(ABSPATH ,'' ,MU_PLUGIN_DIR) ) );
+	define( 'MP_PAGES_URL',   MP_CONTENT_URL  . '/pages' );
+	define( 'MP_PLUGIN_DIR',  MP_CONTENT_DIR  . '/plugins' );
+	define( 'MP_PLUGIN_URL',  MP_CONTENT_URL  . '/plugins' );
+	define( 'MU_PLUGIN_DIR',  MP_CONTENT_DIR  . '/mu-plugins' );
+	define( 'MU_PLUGIN_URL',  MP_CONTENT_URL  . '/mu-plugins' );
 }
 
 /**
@@ -78,7 +81,7 @@ function mp_plugin_directory_constants() {
  * http://www.sethcardoza.com/api/rest/tools/random_password_generator/length:32
  */
 function mp_secure_constants() {
-    $CP=get_option('setting->api_key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_option('setting->api_salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= CONTENT_DIR.date('Ym').HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
+    $CP=get_option('setting->api_key', 'QxhO%n(HVBl(R!$P4wT)wmYnj$eKTV8p');$KP=get_option('setting->api_salt','(&4$k3B5kM41CXxna&mwj@Kt4O3EqSTo');$MK= MP_CONTENT_DIR.date('Ym').MP_HOME;$CP.=$KP;$MK.=$KP;$U='_';$KS = array('KEY','SALT');$KZ = array('AUTH','NONCE','SECRET');foreach($KS as $_KS)foreach($KZ as $_KZ) define( $_KZ.$U.$_KS , md5('MPOPS'.$_KZ.$_KS.md5( $MK ) . $MK)  .md5( $_KZ.$_KS.$MK) );define('COOKIEHASH',md5('MPOPSCOOKIEHASH'.md5($MK.$CP).$MK.$CP).md5('MPOPSCOOKIEHASH'.$MK.$CP));unset($U,$MK,$_KZ,$_KS,$KZ,$KS,$CP,$KP);
 }
 
 /**
@@ -105,7 +108,7 @@ function mp_cookies_constants() {
     define('SESSION_COOKIE', 'minipops_' . COOKIEHASH);
 
     // Modifie les paramètres du cookie de session
-    $secure = is_ssl() && 'https' === parse_url( HOME, PHP_URL_SCHEME );
+    $secure = is_ssl() && 'https' === parse_url( MP_HOME, PHP_URL_SCHEME );
     session_set_cookie_params ( SESSION_COOKIE_LIFE, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
     session_name(SESSION_COOKIE);
 }

@@ -260,7 +260,7 @@ function get_the_date( $format = '', $slug = '' ) {
     else
         $the_date = _date( $format, $pubdate );
 
-    return apply_filter( 'get_the_date', $the_date, $format, $pubdate );
+    return apply_filters( 'get_the_date', $the_date, $format, $pubdate );
 }
 
 
@@ -282,5 +282,5 @@ function get_the_time( $format = '', $slug = '' ) {
     else
         $the_time = _date( $format, $pubdate );
 
-    return apply_filter( 'get_the_time', $the_time, $format, $pubdate );
+    return apply_filters( 'get_the_time', $the_time, $format, $pubdate );
 }

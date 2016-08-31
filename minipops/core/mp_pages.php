@@ -68,6 +68,9 @@ function sanitize_page($field, $value, $slug){
     return $value;
 }
 
+get_the_page('title');
+//_echo( get_the_page('title'),1 );
+
 /**
  * Charge un champ d'une page
  * @param  $field   nom du champ recherché
@@ -90,6 +93,7 @@ function get_the_page( $field, $slug = '' ){
         if( is_home() )  $slug = is_page('home') ? 'home' : '';
 
         if( is_404() )   $slug = is_page('error') ? 'error' : '';
+
     }
 
     if( !isset($page[$slug]) && !empty($slug) ){
@@ -97,20 +101,20 @@ function get_the_page( $field, $slug = '' ){
         do_action('do_before_get_the_page', array($field, $slug) );
 
         // Date d'edition de la page corresponds à la date de modification du fichier
-        $filemtime_page = filemtime( CONTENT .'/'. $slug .'/'. basename($slug) .'.md' );
+        $filemtime_page = filemtime( MP_PAGES_DIR .'/'. $slug .'/'. basename($slug) .'.md' );
 
         // On affecte la valeurs title au cas ou non renseigné
         $page[$slug]['title']  = basename($slug);
 
         // On lit le fichier
-        $page[$slug] = file_get_page( CONTENT .'/'. $slug .'/'. basename($slug) .'.md');
+        $page[$slug] = file_get_page( MP_PAGES_DIR .'/'. $slug .'/'. basename($slug) .'.md');
 
         // On affecte les données importante!
         $page[$slug]['edit_date']   = gmdate( 'Y-m-d H:i:s', $filemtime_page );
         $page[$slug]['pubdate']     = isset($page[$slug]['pubdate']) && is_date($page[$slug]['pubdate']) ? gmdate( 'Y-m-d H:i:s', strtotime($page[$slug]['pubdate']) ) : $page[$slug]['edit_date'];
         $page[$slug]['slug']        = $slug;
 
-        if( is_same($slug,'home') )         $page[$slug]['url'] = HOME;
+        if( is_same($slug,'home') )         $page[$slug]['url'] = MP_HOME;
         elseif( is_same($slug,'error') )    $page[$slug]['url'] = null;
         else                                $page[$slug]['url'] = get_permalink( $slug );
 
@@ -122,10 +126,10 @@ function get_the_page( $field, $slug = '' ){
         if( $field === 'slug' || $field === 'url' )
             return $page[$slug][$field];
         else
-            return apply_filter('get_the_page_'.$field, sanitize_page($field,$page[$slug][$field],$slug), $slug);
+            return apply_filters('get_the_page_'.$field, sanitize_page($field,$page[$slug][$field],$slug), $slug);
     }
     else
-        return apply_filter( 'default_page_'. $field, '', $field, $slug );
+        return apply_filters( 'default_page_'. $field, '', $field, $slug );
 
 }
 
@@ -162,7 +166,7 @@ function mp_set_the_page( $slug , $args = array() ) {
 
         do_action('do_before_edit_the_page', array($slug) );
 
-        $dir = CONTENT .'/'. $slug;
+        $dir = MP_PAGES_DIR .'/'. $slug;
         @mkdir( $dir , 0755 , true );
         if ( !file_put_page( $dir .'/'. basename($slug).'.md' , $args ) ) return false;
         @chmod( $dir .'/'. basename($slug).'.md' , 0644 );
@@ -187,7 +191,7 @@ function mp_delete_the_page( $slug ) {
 
     do_action('do_before_delete_the_page', array($slug) );
 
-    rrmdir(CONTENT .'/'. $slug);
+    rrmdir(MP_PAGES_DIR .'/'. $slug);
 
     do_action('do_after_delete_the_page', array($slug) );
 
@@ -204,13 +208,13 @@ function mp_hide_the_page( $slug ) {
 
     $slug = (string) $slug;
 
-    if( file_exists(CONTENT .'/'. $slug .'/@'.$slug.'.yml') ) return true;
+    if( file_exists(MP_PAGES_DIR .'/'. $slug .'/@'.$slug.'.yml') ) return true;
 
     if( !is_page($slug) ) return false;
 
     do_action('do_before_hide_the_page', array($slug) );
 
-    $hide_the_page = rename( CONTENT .'/'. $slug .'/'.$slug.'.txt' , CONTENT .'/'. $slug .'/@'.$slug.'.yml' );
+    $hide_the_page = rename( MP_PAGES_DIR .'/'. $slug .'/'.$slug.'.txt' , MP_PAGES_DIR .'/'. $slug .'/@'.$slug.'.yml' );
 
     do_action('do_after_hide_the_page', array($slug) );
 
@@ -231,7 +235,7 @@ function mp_visible_the_page( $slug ) {
 
     do_action('do_before_visible_the_page', array($slug) );
 
-    $visible_the_page = rename( CONTENT .'/'. $slug .'/@'.$slug.'.yml' , CONTENT .'/'. $slug .'/'.$slug.'.yml' );
+    $visible_the_page = rename( MP_PAGES_DIR .'/'. $slug .'/@'.$slug.'.yml' , MP_PAGES_DIR .'/'. $slug .'/'.$slug.'.yml' );
 
     do_action('do_after_visible_the_page', array($slug) );
 
@@ -269,8 +273,8 @@ function mp_rename_the_page( $slug , $new_slug ) {
 
     do_action('do_before_rename_the_page', array($slug, $newslug) );
 
-    if( rename( CONTENT .'/'. $slug .'/'.$slug_file.'.yml' , CONTENT .'/'. $slug .'/'.$new_slug_file.'.yml' ) )
-        $rename_the_page = rename( CONTENT .'/'. $slug , CONTENT .'/'. $new_slug );
+    if( rename( MP_PAGES_DIR .'/'. $slug .'/'.$slug_file.'.yml' , MP_PAGES_DIR .'/'. $slug .'/'.$new_slug_file.'.yml' ) )
+        $rename_the_page = rename( MP_PAGES_DIR .'/'. $slug , MP_PAGES_DIR .'/'. $new_slug );
 
     do_action('do_after_rename_the_page', array($slug, $newslug) );
 
@@ -288,14 +292,14 @@ function mp_rename_the_page( $slug , $new_slug ) {
  */
 function get_all_page(){
 
-    static $dir = CONTENT;
+    static $dir = MP_PAGES_DIR;
     static $all_pages = array();
 
     $dirs = glob($dir . '/*', GLOB_ONLYDIR);
 
     if( count($dirs)>0){
         foreach ($dirs as $d) {
-            $d = str_replace( CONTENT.'/' , '' , $d);
+            $d = str_replace( MP_PAGES_DIR.'/' , '' , $d);
             if( is_page($d) ) $all_pages[] = $d;
         }
     }
@@ -323,11 +327,11 @@ function get_parent_page( $slug = '' ) {
  */
 function get_childs_page( $slug = '' ) {
 
-    $childs = glob( str_replace( '//','/', CONTENT .'/'.$slug.'/*' ) , GLOB_ONLYDIR );
+    $childs = glob( str_replace( '//','/', MP_PAGES_DIR .'/'.$slug.'/*' ) , GLOB_ONLYDIR );
 
     if( count($childs)>0){
         foreach( $childs as $key => $child ){
-            $child = str_replace( CONTENT.'/' , '' , $child);
+            $child = str_replace( MP_PAGES_DIR.'/' , '' , $child);
             if( !is_page($child) ) unset($childs[$key]);
             else $childs[$key] = trim($child,'/');
         }
@@ -366,13 +370,13 @@ function the_loop( $args = array() ){
         'orderby' => 'pubdate'
         ) );
 
-    /* Validation "max" */
+    /* Nettoyage "max" */
     $args['max'] = (int) $args['max'];
 
     /* Nettoyage "order" */
     $args['order'] = strtoupper($args['order']);
 
-    /* Validation "orderby" */
+    /* Nettoyage "orderby" */
     $args['orderby'] = is_in( $args['orderby'], array('pubdate','author','tag') ) ? $args['orderby'] : 'pubdate';
 
 

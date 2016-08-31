@@ -22,6 +22,155 @@ $mp_style  = array();
 $mp_script = array();
 
 
+/*
+ * Register a CSS stylesheet.
+ * @param string           $handle (doit être unique)
+ * @param string           $src    Full ou path de la feuille de style
+ * @param array            $deps   Optional
+ * @param string|bool|null $ver    Optional. Numéro de version, if it has one, which is added to the URL
+ *                                 as a query string for cache busting purposes. If version is set to false, a version
+ *                                 number is automatically added equal to current installed WordPress version.
+ *                                 If set to null, no version is added.
+ * @param string           $media  Optional
+ *                                 Default 'all'. Accepts media types like 'all', 'print' and 'screen'
+ * @return bool
+ */
+function mp_register_style( $handle, $src = false, $deps = array(), $ver = false, $media = 'all' ) {
+
+    // On récupère la liste des style
+    $mp_register_style = mp_cache_data('mp_register_style');
+
+    // On ajoute notre style
+    if( !isset($mp_register_style[$handle]) )
+        $mp_register_style[$handle] = array('source'=>$src, 'dependencies'=>$deps, 'version'=>$ver, 'media'=>$media);
+    else 
+        return false;
+
+    // Mise à jour de la liste des style
+    $mp_register_style = mp_cache_data('mp_register_style', $mp_register_style);
+
+    return true;
+}
+
+
+/*
+ * add inline a CSS stylesheet.
+ * @param string           $handle (doit être unique)
+ * @param string           $data   donnée css
+ * @param array            $deps   Optional.
+ *
+ * @return bool
+ */
+function add_inline_style( $handle, $data, $deps = array() ){
+
+    if ( false !== stripos( $data, '</style>' ) ) {
+
+        _doing_it_wrong( __FUNCTION__, sprintf('Do not pass %1$s tags to %2$s.', '<code>&lt;style&gt;</code>','<code>wp_add_inline_style()</code>') );
+            $data = trim( preg_replace( '#<style[^>]*>(.*)</style>#is', '$1', $data ) );
+    }
+    
+    $deps = array_merge( $deps, array('data'=>$data) );
+
+    return mp_register_style( $handle, false , $deps );
+
+}
+
+
+/*
+ * remove a handle CSS stylesheet.
+ * @param string           $handle (doit être unique)
+ *
+ * @return bool
+ */
+function mp_deregister_style( $handle ) {
+
+    // On récupère la liste des style
+    $mp_deregister_style = mp_cache_data('mp_register_style');
+
+    // On supprimer le handle trouvé
+    if( isset($mp_deregister_style[$handle]) ){
+
+        // Suppression du handle
+        unset($mp_deregister_style[$handle]);
+        // Mise à jour de la liste des style
+        mp_cache_data('mp_register_style', $mp_deregister_style);
+        return true;
+    }
+
+    return false;
+}
+
+
+function enqueue_style( $handle ){
+
+    $enqueue_style = mp_cache_data('mp_register_style');
+
+    if( !isset($enqueue_style[$handle]) )
+        return false;
+
+    // On détermine si style embed
+    if( false === $enqueue_style[$handle]['source'] && !empty($enqueue_style[$handle]['dependencies']['data']) ){
+
+        $data = apply_filters('pre_style_embed_data', $enqueue_style[$handle]['dependencies']['data']);
+
+        if( strlen($data) === 0)
+            return false;
+
+        if( isset($enqueue_style[$handle]['dependencies']['after']) && true===$enqueue_style[$handle]['dependencies']['after'] )
+            $after = true;
+        else
+            $after = false;
+
+        return array('style'=>'embed', 'after'=>$after, 'data' =>'<style type="text/css">'. $data .'</style>'. PHP_EOL);
+
+    } else {
+
+        $source = $enqueue_style[$handle]['source'];
+        $url    = esc_url_raw( rel2abs($source, MP_TEMPLATE_URL) );
+
+        if( strlen($url) === 0 )
+            return false;
+
+        return array('style'=>'enqueue', 'after'=>true, 'source' => $url );
+
+
+    }
+
+}
+
+
+/*
+ * remove a handle CSS stylesheet.
+ * @param string           $after filtre optional pour style dans footer ou dans header
+ *
+ * @return bool
+ */
+function wmp_enqueue_styles( $after = false ){
+
+    $after = (bool) $after;
+
+    // Init vars
+    $inline = array();
+
+    // On récupère la liste des style
+    $enqueue_styles = mp_cache_data('mp_register_style');
+
+    if( is_null($enqueue_styles) || !is_array($enqueue_styles) )
+        return false;
+
+    foreach ($enqueue_styles as $handle => $value) {
+
+        $style = enqueue_style($handle);
+
+        _echo($style,1);
+
+    } 
+
+
+}
+
+
+
 /***********************************************/
 /*       Enqueue file script or style          */
 /***********************************************/
@@ -53,8 +202,8 @@ function mp_enqueue_style( $handled, $src , $array = array(), $media = null , $v
     if( $footer )   $where = 'footer';
     else            $where = 'header';
 
-    $source   = apply_filter('mp_enqueue_'.$type.'_src', esc_url_raw($src) );
-    $handled  = apply_filter('mp_enqueue_'.$type.'_handled', sanitize_file_name($handled) );
+    $source   = apply_filters('mp_enqueue_'.$type.'_src', esc_url_raw($src) );
+    $handled  = apply_filters('mp_enqueue_'.$type.'_handled', sanitize_file_name($handled) );
     $path     = $_SERVER['DOCUMENT_ROOT'].parse_url($source, PHP_URL_PATH);
 
     // Extension valid
@@ -74,7 +223,7 @@ function mp_enqueue_style( $handled, $src , $array = array(), $media = null , $v
         $before   = !empty( $array['conditional'] ) ? '<!--[if '.strip_all_tags( $array['conditional'] ).']>' : '';
         $after    = !empty( $before ) ? '<![endif]-->' : '';
 
-        $medias_types = apply_filter('mp_medias_types', array('all', 'screen', 'handheld', 'print','braille','embossed','projection','screen','speech','tty','tv') );
+        $medias_types = apply_filters('mp_medias_types', array('all', 'screen', 'handheld', 'print','braille','embossed','projection','screen','speech','tty','tv') );
 
         if( is_same($type, 'style') )
             $media = !empty($media) && is_in( $media, $medias_types ) ? array('media'=>$media) : array('media'=>'all');
@@ -125,8 +274,8 @@ function mp_add_inline_style( $handled, $data, $footer = false, $type = 'style' 
     if( $footer )   $where = 'footer';
     else            $where = 'header';
 
-    $handled  = apply_filter('mp_inline_'.$type.'_handled', sanitize_file_name($handled) );
-    $data     = apply_filter('mp_inline_'.$type.'_data', $data );
+    $handled  = apply_filters('mp_inline_'.$type.'_handled', sanitize_file_name($handled) );
+    $data     = apply_filters('mp_inline_'.$type.'_data', $data );
 
     if( is_sup($data,0)
         && is_sup($handled,0)
@@ -212,21 +361,21 @@ function mp_enqueue_styles( $footer = false, $type ='style' ){
             extract($data);
             if(is_same($type,'style')){
                 $scheme    = '<link rel="stylesheet" type="text/css" id="%1$s" href="%2$s" media="%3$s">'."\n";
-                $scheme    = apply_filter('mp_enqueue_style_scheme', $scheme);
+                $scheme    = apply_filters('mp_enqueue_style_scheme', $scheme);
                 $link      = $before.sprintf( $scheme, $handled, $source .'?ver='.substr( md5($version), -12, 10 ), $media ).$after;
-                $enqueue   = array_merge( $enqueue, apply_filter('mp_enqueue_style_link', array($handled=>$link), $data) );
+                $enqueue   = array_merge( $enqueue, apply_filters('mp_enqueue_style_link', array($handled=>$link), $data) );
             }
             else{
                 $scheme    = '<link rel="javascript" type="text/javascript" id="%1$s" href="%2$s">'."\n";
-                $scheme    = apply_filter('mp_enqueue_script_scheme', $scheme);
+                $scheme    = apply_filters('mp_enqueue_script_scheme', $scheme);
                 $link      = $before.sprintf( $scheme, $handled, $source .'?ver='.substr( md5($version), -12, 10 ) ).$after;
-                $enqueue   = array_merge( $enqueue, apply_filter('mp_enqueue_script_link', array($handled=>$link), $data) );
+                $enqueue   = array_merge( $enqueue, apply_filters('mp_enqueue_script_link', array($handled=>$link), $data) );
             }
         }
 
     }
 
-    $enqueue = apply_filter('mp_enqueue_'.$type.'s', $enqueue, $footer );
+    $enqueue = apply_filters('mp_enqueue_'.$type.'s', $enqueue, $footer );
 
     // On récupère les éléments en ligne
     if ( array_key_exists( 'inline' , $GLOBALS['mp_'.$type][$where] ) ) {
@@ -235,7 +384,7 @@ function mp_enqueue_styles( $footer = false, $type ='style' ){
         foreach ($GLOBALS['mp_'.$type][$where]['inline'] as $handled => $data )
             $inline_enqueue .= $data;
 
-        $inline_enqueue = apply_filter('mp_inline_'.$type.'s', $inline_enqueue, $footer );
+        $inline_enqueue = apply_filters('mp_inline_'.$type.'s', $inline_enqueue, $footer );
 
         if( strlen($inline_enqueue) > 0 ){
             if(is_same($type,'style'))

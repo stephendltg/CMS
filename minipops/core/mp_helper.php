@@ -9,35 +9,11 @@
  * @version 1
  */
 
-/***********************************************/
-/*               Fonctions                     */
-/***********************************************/
 
-/**
-* Detecte le type d'encodage d'une chaine
-* @param $string
-*/
-function detect_encoding( $string ) {
-    $string       = (string) $string;
-    if ( function_exists( 'mb_internal_encoding' ) ) {
-      return strtolower ( mb_detect_encoding( $string , 'UTF-8, ISO-8859-1, windows-1251') );
-    } else {
-      foreach( array('utf-8', 'iso-8859-1', 'windows-1251') as $item )
-        if( md5( iconv( $item , $item , $string ) ) == md5( $string ) ) return $item;
-      return false;
-    }
-}
 
-/**
-* Encode une chaine en utf-8
-* @param $string
-*/
-function encode_utf8( $string ){
-    $string       = (string) $string;
-    $encoding = detect_encoding( $string );
-    if( is_same( $encoding , 'utf-8') ) return $string;
-    return iconv( $encoding , 'utf-8' , $string );
-}
+/***********************************************/
+/*               Lang                          */
+/***********************************************/
 
 /**
 * Language du serveur
@@ -46,6 +22,11 @@ function lang(){
     $lang = explode(',' , $_SERVER['HTTP_ACCEPT_LANGUAGE']);
     return substr($lang[0],0,2);
 }
+
+
+/***********************************************/
+/*               Redirect                      */
+/***********************************************/
 
 /**
 * Redirection vers url
@@ -60,6 +41,12 @@ function redirect( $location , $status = 302 ){
     header("Location: $location", true, $status);
     return true;
 }
+
+
+/***********************************************/
+/*               Array                         */
+/***********************************************/
+
 
 /**
 * Convertit un tableau en objet
@@ -119,24 +106,11 @@ function map_deep( $value, $callback ) {
     return $value;
 }
 
-/**
-* Ajoute des slash dans une chaine
-* @param $string     chaine
-*/
-function backslashit( $string ) {
-    if ( isset( $string[0] ) && $string[0] >= '0' && $string[0] <= '9' )
-        $string = '\\\\' . $string;
-    return addcslashes( $string, 'A..Za..z' );
-}
 
 
-/**
-* Supprime les antislashs d'une chaîne et uniquement
-* @param $string     chaine
-*/
-function stripslashes_str( $value ) {
-    return is_string( $value ) ? stripslashes( $value ) : $value;
-}
+/***********************************************/
+/*               path                          */
+/***********************************************/
 
 /**
  * Convertir relative path en absolute url
@@ -160,7 +134,10 @@ function stripslashes_str( $value ) {
  */
 function rel2abs( $rel, $base = null ) {
 
-    if($base === null ) $base = HOME.'/';
+    if($base === null ) $base = guess_url();
+
+    if (substr($base, -1) != '/')
+        $base .= '/';
 
     if ( strpos( $rel,'//' ) === 0 )  return $scheme . ':' . $rel;
 
@@ -192,6 +169,203 @@ function rel2abs( $rel, $base = null ) {
     /* absolute URL is ready! */
     return $scheme . '://' . $abs;
 }
+
+
+/**
+* Créer lien relatif à partir d'un lien
+* @param   string      $link
+* @return  string
+*/
+function abs2rel( $link ) {
+    return preg_replace( '|^(https?:)?//[^/]+(/.*)|i', '$2', $link );
+}
+
+
+
+/***********************************************/
+/*               Cache data                    */
+/***********************************************/
+
+/**
+ * Enregistrer, récupérer ou supprimer une donnée statique.
+ * Get:   Mettre juste la clé recherche en parametre
+ * Set:   Mettre un second parametres avec la valeur de la clé
+ * Delete: Mettre la valeur : null en second paramètres pour supprimer la clé
+ *
+ * @param (string) $key clé d'identification. 
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_cache_data( $key ) {
+
+    static $data = array();
+
+    $func_get_args = func_get_args();
+
+    if ( array_key_exists( 1, $func_get_args ) ) {
+
+        if ( null === $func_get_args[1] )
+            unset( $data[ $key ] );
+        else
+            $data[ $key ] = $func_get_args[1];
+    }
+
+    return isset( $data[ $key ] ) ? $data[ $key ] : null;
+}
+
+
+/***********************************************/
+/*               Encoding                      */
+/***********************************************/
+
+/**
+* Detecte le type d'encodage d'une chaine
+* @param $string
+*/
+function detect_encoding( $string ) {
+    $string       = (string) $string;
+    if ( function_exists( 'mb_internal_encoding' ) ) {
+      return strtolower ( mb_detect_encoding( $string , 'UTF-8, ISO-8859-1, windows-1251') );
+    } else {
+      foreach( array('utf-8', 'iso-8859-1', 'windows-1251') as $item )
+        if( md5( iconv( $item , $item , $string ) ) == md5( $string ) ) return $item;
+      return false;
+    }
+}
+
+/**
+* Encode une chaine en utf-8
+* @param $string
+*/
+function encode_utf8( $string ){
+    $string       = (string) $string;
+    $encoding = detect_encoding( $string );
+    if( is_same( $encoding , 'utf-8') ) return $string;
+    return iconv( $encoding , 'utf-8' , $string );
+}
+
+
+/**
+ * Encode en base64 pour un usage embarque en data uri(css,html) si fichier sinon encodage seulement
+ * @param  $data : $file(chemin absolu) ou $string
+ * @return string
+ */
+function datauri_encode( $data ) {
+    $data = (string) $data;
+    if ( file_exists( $data ) && !is_dir( $data ) ){
+        $mime_type = mime_content_type( $data );
+        return 'data:' . $mime_type . ';base64,' . base64_encode( file_get_contents( $data ) );
+    }
+    return 'data:' . $mime_type . ';base64,' . base64_encode( $data );
+}
+
+
+/**
+* Encode in Base32 based
+* Requires 20% more space than base64 
+* Use padding false when encoding for urls
+*
+* @return base32 encoded string
+**/
+function base32_encode($input, $padding = true) {
+
+    if(empty($input)) return "";
+
+    $map = array(
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+      'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+      'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+      '='  // padding character
+    );
+      
+    $input = str_split($input);
+    $binaryString = "";
+      
+    for($i = 0; $i < count($input); $i++) {
+        $binaryString .= str_pad(base_convert(ord($input[$i]), 10, 2), 8, '0', STR_PAD_LEFT);
+    }
+      
+    $fiveBitBinaryArray = str_split($binaryString, 5);
+    $base32 = "";
+    $i=0;
+      
+    while($i < count($fiveBitBinaryArray)) {    
+        $base32 .= $map[base_convert(str_pad($fiveBitBinaryArray[$i], 5,'0'), 2, 10)];
+        $i++;
+    }
+      
+    if($padding && ($x = strlen($binaryString) % 40) != 0) {
+        if($x == 8) $base32 .= str_repeat($map[32], 6);
+        else if($x == 16) $base32 .= str_repeat($map[32], 4);
+        else if($x == 24) $base32 .= str_repeat($map[32], 3);
+        else if($x == 32) $base32 .= $map[32];
+    }
+      
+    return $base32;
+}
+    
+
+/**
+* Decode in Base32 based
+*
+* @return base32 decode string
+**/
+function base32_decode($input) {
+
+    if(empty($input)) return;
+
+    $map = array(
+      'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', //  7
+      'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', // 15
+      'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', // 23
+      'Y', 'Z', '2', '3', '4', '5', '6', '7', // 31
+      '='  // padding character
+    );
+    
+    $flippedMap = array(
+      'A'=>'0', 'B'=>'1', 'C'=>'2', 'D'=>'3', 'E'=>'4', 'F'=>'5', 'G'=>'6', 'H'=>'7',
+      'I'=>'8', 'J'=>'9', 'K'=>'10', 'L'=>'11', 'M'=>'12', 'N'=>'13', 'O'=>'14', 'P'=>'15',
+      'Q'=>'16', 'R'=>'17', 'S'=>'18', 'T'=>'19', 'U'=>'20', 'V'=>'21', 'W'=>'22', 'X'=>'23',
+      'Y'=>'24', 'Z'=>'25', '2'=>'26', '3'=>'27', '4'=>'28', '5'=>'29', '6'=>'30', '7'=>'31'
+    );
+
+      
+    $paddingCharCount = substr_count($input, $map[32]);
+    $allowedValues = array(6,4,3,1,0);
+      
+    if(!in_array($paddingCharCount, $allowedValues)) return false;
+      
+    for($i=0; $i<4; $i++){ 
+        if($paddingCharCount == $allowedValues[$i] && 
+            substr($input, -($allowedValues[$i])) != str_repeat($map[32], $allowedValues[$i])) return false;
+    }
+      
+    $input = str_replace('=','', $input);
+    $input = str_split($input);
+    $binaryString = "";
+      
+    for($i=0; $i < count($input); $i = $i+8) {
+    
+        $x = "";
+        
+        if(!in_array($input[$i], $map)) return false;
+        
+        for($j=0; $j < 8; $j++) {
+            $x .= str_pad(base_convert(@$flippedMap[@$input[$i + $j]], 10, 2), 5, '0', STR_PAD_LEFT);
+        }
+        
+        $eightBits = str_split($x, 8);
+        
+        for($z = 0; $z < count($eightBits); $z++) {
+            $binaryString .= ( ($y = chr(base_convert($eightBits[$z], 2, 10))) || ord($y) == 48 ) ? $y:"";
+        }
+
+    }
+      
+    return $binaryString;
+}
+
 
 
 /***********************************************/
@@ -274,152 +448,6 @@ function get_max_time_execution( $ForceMaxTimeExec = '' ) {
 }
 
 
-
-/***********************************************/
-/*                Fonctions file               */
-/***********************************************/
-
-/**
-* Function lecture d'un fichier
-* @param  string    $file     Chemin absolu du fichier
-* @return sring
-*/
-function file_get_content($file) {
-    return @file_get_contents($file);
-}
-
-/**
-* Function lecture d'un fichier stoker dans un tableau
-* @param  string    $file     Chemin absolu du fichier
-* @return array
-*/
-function file_get_content_array($file) {
-    return @file($file);
-}
-
-
-/**
-* Function enregistrement d'un fichier
-* @param  string    $file     Chemin absolu du fichier
-* @return array
-*/
-function file_put_content($file, $contents) {
-
-    $fp = @fopen( $file, 'wb' );
-    if ( ! $fp )
-        return false;
-
-    $contents = encode_utf8($contents);
-  
-    $data_length = strlen( $contents );
-  
-    $bytes_written = fwrite( $fp, $contents );
-  
-    fclose( $fp );
-  
-    if ( $data_length !== $bytes_written )
-        return false;
-  
-    @chmod( $file, 0644 );
-  
-    return true;
-}
-
-
-/**
-* Function remplace le contenu d'un fichier
-* @param  string    $file     Chemin absolu du fichier
-* @return array
-*/
-function file_replace_content($file, $old_content, $new_content) {
-    
-    if ( ! file_exists( $file ) )
-        return false;
-
-    $file_content  = get_contents( $file );
-
-    $new_content  = preg_replace( $old_content, $new_content, $file_content );
-    $replaced     = null !== $new_content && $new_content !== $file_content;
-    $put_contents = put_contents( $file, $new_content );
-
-    return $put_contents && $replaced;
-}
-
-/**
-* Modifie un contenu entre deux marker
-* @param  string    $file     Chemin absolu du fichier
-* @return array
-*/
-function file_marker_contents( $file, $new_content = '', $args = array() ) {
-
-
-    $args = parse_args( $args, array(
-        'marker'   => '',
-        'put'      => 'prepend',
-        'text'     => '',
-        'keep_old' => false,
-    ));
-
-
-    $file_content  = '';
-    $comment_char  = basename( $file ) !== 'php.ini' ? '#' : ';';
-
-    // Get the whole content of file and remove old marker content.
-    if ( file_exists( $file ) ) {
-
-        $pattern      = '/' . $comment_char . ' BEGIN MiniPops ' . $args['marker'] . '(.*)' . $comment_char . ' END MiniPops\s*?/isU';
-        $file_content = file_get_contents( $file );
-        if ( $args['keep_old'] )
-            preg_match( $pattern, $file_content, $keep_old );
-
-        $file_content = preg_replace( $pattern, '', $file_content );
-    }
-
-    if ( ! empty( $new_content ) ) {
-
-        $content  = $comment_char . ' BEGIN MiniPops ' . $args['marker'] . PHP_EOL;
-
-        if ( $args['keep_old'] && isset( $keep_old[1] ) )
-            $content .= trim( $keep_old[1] ) . "\n";
-
-        $content .= trim( $new_content ) . PHP_EOL;
-        $content .= $comment_char . ' END MiniPops' . PHP_EOL . PHP_EOL;
-
-        if ( '' !== $args['text'] && strpos( $file_content, $args['text'] ) !== false ) {
-
-            if ( 'append' === $args['put'] )
-                $content = str_replace( $args['text'], $args['text'] . PHP_EOL . $content, $file_content );
-            elseif ( 'prepend' === $args['put'] )
-                $content = str_replace( $args['text'], $content . PHP_EOL . $args['text'], $file_content );
-            
-        } else {
-
-            if ( 'append' === $args['put'] )
-                $content = $file_content . PHP_EOL . $content;
-            elseif ( 'prepend' === $args['put'] )
-                $content = $content . $file_content;
-        }
-
-        $file_content = $content;
-    }
-
-    return file_put_content( $file, $file_content );
-}
-
-
-
-/**
-* Supprimer un répertoire et son contenu
-* @param  string    $dir     Chemin absolu du répertoire
-*/
-function rrmdir( $dir ) {
-    foreach( glob($dir) as $file ){
-        if( is_dir($file) ){ rrmdir("$file/*"); rmdir($file); }
-        else unlink($file);
-    }
-}
-
-
 /***********************************************/
 /*                Fonctions salt               */
 /***********************************************/
@@ -440,19 +468,7 @@ function random_salt( $length = 8 ) {
 /*          Functions parser                   */
 /***********************************************/
 
-/**
- * Encode en base64 pour un usage embarque en data uri(css,html) si fichier sinon encodage seulement
- * @param  $data : $file(chemin absolu) ou $string
- * @return string
- */
-function datauri_encode( $data ) {
-    $data = (string) $data;
-    if ( file_exists( $data ) && !is_dir( $data ) ){
-        $mime_type = mime_content_type( $data );
-        return 'data:' . $mime_type . ';base64,' . base64_encode( file_get_contents( $data ) );
-    }
-    return 'data:' . $mime_type . ';base64,' . base64_encode( $data );
-}
+
 
 /**
 * Extrait d'une chaine
@@ -533,68 +549,4 @@ function parse_text( $text ){
     $text = str_replace('...', '&#8230;', $text);
 
     return $text;
-}
-
-
-/**
-* Parse un fichier au format yaml dans un tableau
-* @param  string    $path     Chemin absolu du fichier
-* @return array
-*/
-function file_get_page( $path ){
-
-    $path = (string) $path;
-
-    $yaml = array();
-
-    // function anonyme pour décoder les valeurs
-    $decode_value = function ( $value ){
-
-        $value = trim($value);
-        $value = json_decode($value, true) ?: $value;
-        if( $value === 'false' )      $value = false;
-        elseif( $value === '~' )      $value = null;
-        elseif( $value === 'null' )   $value = null;
-        elseif( is_array($value) )    $value = serialize($value);
-        return $value;
-    };
-
-    // On ouvre le fichier de la page, on l'encode en utf8 et on nettoie
-    $file = esc_attr( encode_utf8( file_get_contents( $path ) ) );
-
-    if( preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match ) ){
-        $match[1] = array_map( 'strtolower', $match[1] );
-        $yaml = array_combine($match[1], array_map($decode_value, $match[2]) );
-        unset($match);
-    }
-
-    return $yaml;
-}
-
-
-/**
-* Parse un tableau dans un fichier yaml
-* @param  string    $path     Chemin absolu du fichier
-* @return array
-*/
-function file_put_page( $path, $array ){
-
-    $path = (string) $path;
-
-    $text = '# generate by mini-pops'. PHP_EOL;
-
-    foreach( $array as $field => $value ){
-
-        if(     $value === true  )   $value = "true";
-        elseif( $value === false )   $value = "false";
-        elseif( $value === null  )   $value = "~";
-
-        if( !empty($value) )
-            $text .= PHP_EOL . sanitize_key($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
-    }
-
-    if( file_exists($path) && !is_writable($path) )     return false;
-    if( !file_put_contents( $path , $text , LOCK_EX ) ) return false;
-    @chmod( $path , 0644 );
-    return true;
 }

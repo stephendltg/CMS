@@ -7,11 +7,6 @@
  * @version 1
  */
 
-global $current_user;
-
-$current_user = array();
-
-
 /**
  * Chargement de la session active
  */
@@ -21,12 +16,12 @@ if( !parse_auth_cookie() )
     mp_cookies_destroy();
 
 // On init la session
-session_start(SESSION_COOKIE);
+session_start();
 
 if( !isset($_SESSION['expiration']) || !isset($_SESSION['ip']) || !isset($_SESSION['login']) || !isset($_SESSION['token']) ){
 
     // Expiration
-    $_SESSION['expiration'] = apply_filter( 'token_life', DAY_IN_SECONDS );
+    $_SESSION['expiration'] = apply_filters( 'token_life', DAY_IN_SECONDS );
     // IP address.
     $_SESSION['ip'] = get_ip_client();
     // User-agent.
@@ -39,17 +34,14 @@ if( !isset($_SESSION['expiration']) || !isset($_SESSION['ip']) || !isset($_SESSI
     session_regenerate_id();
 } 
 
-$ip = $_SESSION['ip'];
-$expire = $_SESSION['expiration'] + $_SESSION['login'];
-$current_user = $_SESSION;
+// Variable d'utilisateur courant
+mp_cache_data('mp_current_user', $_SESSION);
 
 // On ferme la session
 session_write_close();
 
-if( $ip !== get_ip_client() || time() > $expire )
+if( mp_cache_data('mp_current_user')['ip'] !== get_ip_client() || time() > ( mp_cache_data('mp_current_user')['expiration'] + mp_cache_data('mp_current_user')['login'] ) )
     mp_session_destroy();
-
-
 
 /***********************************************/
 /*                 SESSION                     */
@@ -60,14 +52,12 @@ if( $ip !== get_ip_client() || time() > $expire )
  */
 function mp_session_destroy(){
 
-    global $current_user;
-
     // Initialisation de la session.
     session_start();
 
     // Détruit toutes les variables de session
     $_SESSION = array();
-    $current_user = array();
+    mp_cache_data('mp_current_user', array());
 
     // Note : cela détruira la session et pas seulement les données de session !
     if (isset($_COOKIE[session_name(SESSION_COOKIE)]))
@@ -93,7 +83,7 @@ function get_session( $key ){
     if ( isset($cookies_user[$key]) )
         return $cookies_user[$key];
 
-    global $current_user;
+    $current_user = mp_cache_data('mp_current_user');
 
     $value = isset($current_user[$key]) ? $current_user[$key] : null;
 
@@ -147,7 +137,7 @@ function mp_login( $user, $password, $remember = false ) {
       $expire = 0;
     }
  
-    $secure = is_ssl() && 'https' === parse_url( HOME, PHP_URL_SCHEME );
+    $secure = is_ssl() && 'https' === parse_url( MP_HOME, PHP_URL_SCHEME );
     
     $algo = function_exists( 'hash' ) ? 'sha256' : 'sha1';
     $hash_user = hash_hmac( $algo, $password . '|' . $expiration . '|' . SECRET_KEY, SECRET_SALT );
@@ -207,7 +197,7 @@ function user_valid( $user, $hmac ){
 
 function mp_nonce_tick() {
 
-    $nonce_life = apply_filter( 'nonce_life', DAY_IN_SECONDS );
+    $nonce_life = apply_filters( 'nonce_life', DAY_IN_SECONDS );
 
     return ceil(time() / ( $nonce_life / 2 ));
 }

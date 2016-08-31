@@ -8,7 +8,7 @@
  * @version 1
  */
 
-//echo '<a href="webcal://'.HOME.'/ical.php">calendar</a>';
+//echo '<a href="webcal://'.MP_HOME.'/ical.php">calendar</a>';
 
 if ( 'HEAD' === $_SERVER['REQUEST_METHOD'] ) exit(); // shutdown
 
@@ -26,13 +26,12 @@ endif;
 if     ( is_404()            && $template = get_template('templates/404')     	) :
 elseif ( is_home()           && $template = get_template('templates/home')     	) :
 elseif ( is_page()           && $template = get_page_template()            		) :
-//elseif ( is_tag()            && $template = get_template('tag')           	) :
-//elseif ( is_author()         && $template = get_template('author')        	) :
+elseif ( is_tag()            && $template = get_template('templates/tag')       ) :
 else :
 	$template = get_template('index');
 endif;
 
-if ( $template = apply_filter( 'template_include', $template ) ){
+if ( $template = apply_filters( 'template_include', $template ) ){
 	do_action('TEMPLATE_REDIRECT');
     include( $template );
 }

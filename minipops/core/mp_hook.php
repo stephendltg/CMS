@@ -1,22 +1,13 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * AJOUT DES HOOK DO_ACTION, ADD_ACTION, APPLY_FILTER ET ADD_FILTER
+ * AJOUT DES HOOK DO_ACTION, ADD_ACTION, apply_filters ET ADD_FILTER
  *
  *
  * @package cms mini POPS
  * @subpackage Hook
  * @version 1
  */
-
-
-// On initialise les filtres global
-global $mp_hook_filter, $mp_hook_actions ;
-
-$mp_hook_filter = array();
-
-$mp_hook_actions = array();
-
 
 
 /**
@@ -59,10 +50,12 @@ $mp_hook_actions = array();
 
 function add_action( $action_name , $added_function = null , $priority = 10 , $args = array() ) {
 
-    global $mp_hook_actions;
-
+    //global $mp_hook_actions;
     $action_name     = (string) $action_name;
     $priority        = (int) $priority;
+
+    // On récupère la valeur du cache
+    $mp_hook_actions = mp_cache_data('mp_hook_actions');
 
     // On affecte l'action seulement si la fonction appellée existe
     if ( !empty($added_function) ) {
@@ -70,6 +63,8 @@ function add_action( $action_name , $added_function = null , $priority = 10 , $a
         $mp_hook_actions[$action_name][$priority][] = array('function' => $added_function , 'args' => $args);
         // On trie les hook par priorité ( 1 à ... )
         ksort( $mp_hook_actions[$action_name] );
+        // On stock la valeur dans le cache
+        mp_cache_data('mp_hook_actions', $mp_hook_actions);
     }
 }
 
@@ -88,16 +83,19 @@ function add_action( $action_name , $added_function = null , $priority = 10 , $a
  * @param  boolean $return      Retourne les données ou non. Default: false
  * @return mixed
  */
-
 function do_action( $action_name , $args = null , $return = false ) {
-
-    global $mp_hook_actions;
 
     $action_name = (string) $action_name;
     $return      = (bool) $return;
 
+    // On récupère la valeur du cache
+    $mp_hook_actions = mp_cache_data('mp_hook_actions');
 
-    if ( !array_key_exists( $action_name , $mp_hook_actions ) ) return false;
+    if( !is_array($mp_hook_actions) ) 
+        return false;
+
+    if ( !array_key_exists( $action_name , $mp_hook_actions ) )
+        return false;
 
     // On boucle pour ressortir les hooks à actionner
     foreach ( $mp_hook_actions[$action_name] as $priority=>$actions ) {
@@ -117,10 +115,10 @@ function do_action( $action_name , $args = null , $return = false ) {
 
 
 /**
- * apply_filter
+ * apply_filters
  *
  *  <code>
- *      apply_filter('content', $content, $arg );
+ *      apply_filters('content', $content, $arg );
  *  </code>
  *
  * @access  public
@@ -128,11 +126,14 @@ function do_action( $action_name , $args = null , $return = false ) {
  * @param  mixed  $value       Valeurs à filtrer passé à la fonction.
  * @return mixed
  */
-function apply_filter( $filter_name, $value ) {
+function apply_filters( $filter_name, $value ) {
 
-    global $mp_hook_filter;
+    //global $mp_hook_filter;
 
     $filter_name = (string) $filter_name;
+
+    // On récupère la valeur du cache
+    $mp_hook_filter = mp_cache_data('mp_hook_filters');
 
     $args = array_slice(func_get_args(), 2);
 
@@ -147,10 +148,10 @@ function apply_filter( $filter_name, $value ) {
                 $function_name = $function['function'];
                 $accepted_args = $function['accepted_args'];
 
-                if ( $accepted_args == 1 ) { $the_args = array($value);}
-                elseif ( $accepted_args > 1 ) { $the_args = array_slice($all_args, 0, $accepted_args); }
+                if ( $accepted_args == 1 )     { $the_args = array($value);}
+                elseif ( $accepted_args > 1 )  { $the_args = array_slice($all_args, 0, $accepted_args); }
                 elseif ( $accepted_args == 0 ) { $the_args = null; }
-                else { $the_args = $all_args; }
+                else                           { $the_args = $all_args; }
 
                 $value = call_user_func_array($function_name, $the_args);
             }
@@ -182,26 +183,29 @@ function apply_filter( $filter_name, $value ) {
 
 function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_args = 1 ) {
 
-    global $mp_hook_filter;
-
     $filter_name     = (string) $filter_name;
     $priority        = (int) $priority;
     $accepted_args   = (int) $accepted_args;
 
+    // On récupère la valeur du cache
+    $mp_hook_filter = mp_cache_data('mp_hook_filters');
+
     // On vérifie qu'il n'y a pas le même filtre avec la même priorité. Thanks to WP :)
     if ( isset ( $mp_hook_filter[$filter_name][$priority] ) ) {
         foreach ( $mp_hook_filter[$filter_name][$priority] as $filter ) {
-            if ( $filter['function'] == $function_to_add ) return true;
+            if ( $filter['function'] === $function_to_add ) return true;
         }
     }
+
     // On stocke le hook par nom d'action puis par priorité
     $mp_hook_filter[$filter_name][$priority][] = array( 'function' => $function_to_add, 'accepted_args' => $accepted_args );
     // On trie les hook par priorité ( 1 à ... )
     ksort( $mp_hook_filter[$filter_name] );
+    // On stock la valeur dans le cache
+    mp_cache_data('mp_hook_filters', $mp_hook_filter);
 
     return true;
 }
-
 
 
 
@@ -211,14 +215,20 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
  */
 function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'mp_hook_actions' ){
 
-    if( !empty($GLOBALS[$mp_hook][$tag]) ) {
+    $hook = mp_cache_data($mp_hook);
 
-        foreach ( $GLOBALS[$mp_hook][$tag][$priority] as $index => $value )
-            if( !empty($value['function']) && $function_to_remove === $value['function'] ) unset( $GLOBALS[$mp_hook][$tag][$priority][$index] );
+    if( !empty($hook[$tag][$priority]) ) {
 
-        if( empty($GLOBALS[$mp_hook][$tag][$priority]) ) unset($GLOBALS[$mp_hook][$tag][$priority]);
+        foreach ( $hook[$tag][$priority] as $index => $value ){
+            if( !empty($value['function']) && $function_to_remove === $value['function'] ) 
+                unset( $hook[$tag][$priority][$index] );
+        }
 
-        if( empty($GLOBALS[$mp_hook][$tag]) ) unset($GLOBALS[$mp_hook][$tag]);
+        if( empty($hook[$tag][$priority]) ) unset($hook[$tag][$priority]);
+
+        if( empty($hook[$tag]) ) unset($hook[$tag]);
+
+        mp_cache_data($mp_hook, $hook );
     }
 
 }
@@ -229,5 +239,5 @@ function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'm
  */
 function remove_filter( $tag, $function_to_remove, $priority = 10 ){
 
-    remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'mp_hook_filter' );
+    remove_action( $tag, $function_to_remove, $priority, $mp_hook = 'mp_hook_filters' );
 }

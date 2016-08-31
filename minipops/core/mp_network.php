@@ -73,17 +73,31 @@ function email( $params = null , $mode = 'plain' ){
  */
 function get_ip_client() {
 
-    // IP si internet partagé
-    if (isset($_SERVER['HTTP_CLIENT_IP'])) {
-       return $_SERVER['HTTP_CLIENT_IP'];
+    // Find the best order ////.
+    $keys = array(
+        'HTTP_CF_CONNECTING_IP', // CF = CloudFlare.
+        'HTTP_CLIENT_IP',
+        'HTTP_X_FORWARDED_FOR',
+        'HTTP_X_FORWARDED',
+        'HTTP_X_CLUSTER_CLIENT_IP',
+        'HTTP_X_REAL_IP',
+        'HTTP_FORWARDED_FOR',
+        'HTTP_FORWARDED',
+        'REMOTE_ADDR',
+    );
+
+    foreach ( $keys as $key ) {
+
+        if ( array_key_exists( $key, $_SERVER ) ) {
+            
+            $ip = explode( ',', $_SERVER[ $key ] );
+            $ip = end( $ip );
+
+            if ( is_ip($ip) )
+                return $ip;
+        }
     }
-    // IP derrière un proxy
-    elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-       return $_SERVER['HTTP_X_FORWARDED_FOR'];
-    }
-    // Sinon : IP normale
-    else {
-       return (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '');
-    }
+
+    return '0.0.0.0';
 }
 

@@ -88,8 +88,8 @@ function get_attached_media( $args = array() ) {
 
     /* On récupère la liste des fichiers en nettoyant les fichiers sensibles */
     foreach( $args['where'] as $slug ){
-        $medias = glob( str_replace( '//', '/', CONTENT .'/'. $slug .'/'. $search ) , GLOB_BRACE );
-        $medias = array_diff( $medias , array( CONTENT.'/site.yml', CONTENT.'/'.$slug.'/'.basename($slug).'.md') );
+        $medias = glob( str_replace( '//', '/', MP_PAGES_DIR .'/'. $slug .'/'. $search ) , GLOB_BRACE );
+        $medias = array_diff( $medias , array( MP_PAGES_DIR.'/site.yml', MP_PAGES_DIR.'/'.$slug.'/'.basename($slug).'.md') );
     }
 
     /* On filtre par "orderby" et "order" */
@@ -103,7 +103,7 @@ function get_attached_media( $args = array() ) {
                 $tmp = array_map( function($value){ return substr(strrchr($value,'.'),1);} , $medias );
                 break;
             case 'name':
-                $tmp = array_map( function($value){ return basename(str_replace(CONTENT.'/','',$value));} , $medias );
+                $tmp = array_map( function($value){ return basename(str_replace(MP_PAGES_DIR.'/','',$value));} , $medias );
                 break;
             default:
                 return array();
@@ -130,7 +130,7 @@ function get_attached_media( $args = array() ) {
     array_splice( $medias, $max );
 
     /* On renvoie le tableau sous forme de slug */
-    return array_map( function($value){ return str_replace(CONTENT.'/','',$value);} , $medias );
+    return array_map( function($value){ return str_replace(MP_PAGES_DIR.'/','',$value);} , $medias );
 }
 
 
@@ -152,10 +152,10 @@ function get_the_images( $name ='', $where = array(), $max = 10 ){
 
     do_action('do_before_get_the_images', $name, $where );
 
-    $types  = apply_filter('the_images_type' , 'jpg,jpeg,png,gif,svg' );
+    $types  = apply_filters('the_images_type' , 'jpg,jpeg,png,gif,svg' );
 
     $images = get_attached_media( array('where'=>$where, 'name'=>$name, 'type'=>$types, 'max'=>$max) );
-    $images = array_map( function($image){ return CONTENT_URL.'/'.$image;} , $images );
+    $images = array_map( function($image){ return MP_PAGES_URL.'/'.$image;} , $images );
 
     do_action('do_after_get_the_images', $name, $where );
 
@@ -173,7 +173,7 @@ function get_the_image( $name = '', $url = true ){
 
     do_action('do_before_get_the_image', $name );
 
-    $types  = apply_filter('the_image_type' , 'jpg,jpeg,png,gif,svg' );
+    $types  = apply_filters('the_image_type' , 'jpg,jpeg,png,gif,svg' );
 
     $image = implode( get_attached_media( array('name' => $name, 'type' => $types, 'max'=> 1) ) );
 
@@ -181,7 +181,7 @@ function get_the_image( $name = '', $url = true ){
 
     if( !$image ) return;
 
-    return $url ? CONTENT_URL.'/'.$image : CONTENT.'/'.$image;
+    return $url ? MP_PAGES_URL.'/'.$image : MP_PAGES_DIR.'/'.$image;
 }
 
 
@@ -227,13 +227,13 @@ function mp_image_compress( $src, $dest = null, $mode = 'normal' ) {
         switch ($file_mime) {
             case 'jpeg':
                 $image   = imagecreatefromjpeg($src);
-                $quality = apply_filter('mode_jpeg_compress', array('normal'=>85, 'hard'=>80, 'ultra'=>75) );
+                $quality = apply_filters('mode_jpeg_compress', array('normal'=>85, 'hard'=>80, 'ultra'=>75) );
                 $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 85;
                 $created = imagejpeg( $image, $dest , $quality );
                 break;
             case 'png':
                 $image   = imagecreatefrompng($src);
-                $quality = apply_filter('mode_png_compress', array('normal'=>1, 'hard'=>2, 'ultra'=>3) );
+                $quality = apply_filters('mode_png_compress', array('normal'=>1, 'hard'=>2, 'ultra'=>3) );
                 $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 1;
                 $created = imagepng($image, $dest , $quality );
                 break;

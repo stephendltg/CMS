@@ -10,14 +10,6 @@ Author URI:
 
 
 // Déclaration des feuilles de style
-
-$knacss = file_get_contents(TEMPLATEPATH.'/assets/css/knacss.css');
-$style  = file_get_contents(TEMPLATEPATH.'/assets/css/style.css');
-
-mp_add_inline_style('knacss', $knacss);
-mp_add_inline_style('style', $style);
-
-$test = 'email=s.deletang@laposte.net';
-
-
+mp_add_inline_style('knacss', file_get_content(MP_TEMPLATE_DIR.'/assets/css/knacss.css') );
+mp_add_inline_style('style', file_get_content(MP_TEMPLATE_DIR.'/assets/css/style.css') );
 

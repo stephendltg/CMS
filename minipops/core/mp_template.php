@@ -55,7 +55,7 @@ function the_args( $field, $before = '', $after = '' ) {
     $before = (string) $before;
     $after  = (string) $after;
 
-    $value = apply_filter( 'the_args_'.$field, get_the_args( $field ) );
+    $value = apply_filters( 'the_args_'.$field, get_the_args( $field ) );
     if ( is_array($value) || strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
@@ -67,10 +67,10 @@ function the_args( $field, $before = '', $after = '' ) {
  */
 function snippet( $snippet ){
     $snippet = (string) $snippet;
-    $snippets = glob( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
+    $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
     if( !empty($snippets) ){
-        $GLOBALS['__args'] = yaml_parse_file( TEMPLATEPATH . '/snippets/' . $snippet .'.yml', 0, null, true );
-        include( TEMPLATEPATH . '/snippets/' . $snippet .'.php' );
+        $GLOBALS['__args'] = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
+        include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
         unset($GLOBALS['__args']); // On décharge les arguments du snippet
     }
     return;
@@ -90,9 +90,9 @@ function get_page_template() {
 
 function get_template( $template_name ) {
 
-    $template = glob( TEMPLATEPATH . '/' . $template_name .'.php' );
+    $template = glob( MP_TEMPLATE_DIR . '/' . $template_name .'.php' );
     if( !empty($template) )
-        return TEMPLATEPATH . '/' . $template_name .'.php';
+        return MP_TEMPLATE_DIR . '/' . $template_name .'.php';
     else return '';
 }
 
@@ -107,7 +107,7 @@ function the_blog( $field,  $before = '', $after = '' ) {
     $before = (string) $before;
     $after  = (string) $after;
 
-    $value = apply_filter( 'the_blog_'.$field, get_the_blog($field) );
+    $value = apply_filters( 'the_blog_'.$field, get_the_blog($field) );
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
@@ -117,7 +117,7 @@ function the_lang( $before = '', $after = '' ) {
     $before = (string) $before;
     $after = (string) $after;
 
-    $value = apply_filter('the_lang', get_the_lang() );
+    $value = apply_filters('the_lang', get_the_lang() );
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
@@ -132,33 +132,33 @@ function mp_meta_charset(){
 }
 
 function mp_meta_title(){
-    $title = apply_filter('meta_title', get_the_blog('title') );
+    $title = apply_filters('meta_title', get_the_blog('title') );
     $title = excerpt( $title, 65);
     if ( strlen($title) == 0 )  return;
     echo '<title>'.$title.'</title>'."\n";
 }
 
 function mp_meta_description(){
-    $description = excerpt( apply_filter('meta_description', get_the_blog('description') ) );
+    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
     echo '<meta name="description" content="'.$description.'">'."\n";
 }
 
 function mp_meta_keywords(){
-    $keywords = apply_filter('meta_keywords', get_the_blog('keywords') );
+    $keywords = apply_filters('meta_keywords', get_the_blog('keywords') );
     if ( strlen($keywords) == 0 )  return;
     echo '<meta name="keywords" content="'.$keywords.'">'."\n";
 }
 
 function mp_meta_author(){
-    $author = apply_filter('meta_author', get_the_blog('author') );
+    $author = apply_filters('meta_author', get_the_blog('author') );
     if ( strlen($author) == 0 )  return;
     echo '<meta name="author" content="'.$author.'">'."\n";
 }
 
 function mp_meta_robots(){
-    $robots = apply_filter('meta_robots', get_the_blog('robots') );
-    $robots_authorized = apply_filter('meta_robots_authorized', array(
+    $robots = apply_filters('meta_robots', get_the_blog('robots') );
+    $robots_authorized = apply_filters('meta_robots_authorized', array(
                                             'noindex',
                                             'nofollow',
                                             'noindex,nofollow',
@@ -197,19 +197,19 @@ function mp_meta_favicon(){
 
     $meta_favicon = '';
 
-    $favicon_path = apply_filter( 'mp_meta_favicon_path', 'favicon.ico' );
+    $favicon_path = apply_filters( 'mp_meta_favicon_path', 'favicon.ico' );
     if( glob($favicon_path) ){
         // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
         $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon_path.'" type="image/x-icon">'."\n";
     }
 
-    $apple_icon_touch_path = apply_filter( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
+    $apple_icon_touch_path = apply_filters( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
     if( glob($apple_icon_touch_path) ){
         // <!-- Apple icon: no error 404 for safari and ios -->
         $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch_path.'" type= "text/plain">'."\n";
     }
 
-    $humans_path = apply_filter( 'mp_meta_humans_path', 'humans.txt' );
+    $humans_path = apply_filters( 'mp_meta_humans_path', 'humans.txt' );
     if( glob($humans_path) ){
         // <!-- Because the humans is important! -->
         $meta_favicon .= '<link rel="author" href="'.$humans_path.'">'."\n";
@@ -223,7 +223,7 @@ function mp_meta_favicon(){
 function mp_ie_rendering(){
 
     $ie_rendering = '<!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->'."\n";
-    echo apply_filter('mp_meta_ie_rendering', $ie_rendering );
+    echo apply_filters('mp_meta_ie_rendering', $ie_rendering );
 }
 
 
@@ -236,13 +236,13 @@ function mp_meta_viewport(){
     maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width (wrong for most sites)
     */
     $viewport = '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no">'."\n";
-    echo apply_filter('mp_meta_viewport', $viewport);
+    echo apply_filters('mp_meta_viewport', $viewport);
 }
 
 function mp_meta_google_site_verification(){
 
     // Don't forget to set your site up: http://google.com/webmasters
-    $google_check = apply_filter('mp_meta_google_check', '');
+    $google_check = apply_filters('mp_meta_google_check', '');
     if ( strlen($google_check) == 0 )  return;
     echo '<meta name="google-site-verification" content="'.$google_check.'" />'."\n";
 }
@@ -252,10 +252,10 @@ function mp_meta_opengraph(){
     if( is_404() )
         return;
 
-    $description = excerpt( apply_filter('meta_description', get_the_blog('description') ) );
+    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
 
-    $title = excerpt( apply_filter('meta_title', get_the_blog('title') ) , 65);
+    $title = excerpt( apply_filters('meta_title', get_the_blog('title') ) , 65);
     if ( strlen($title) == 0 )  return;
 
     global $query;
@@ -368,7 +368,7 @@ function the_page( $field,  $before = '', $after = '' ) {
     $field = (string) $field;
     $before = (string) $before;
     $after = (string) $after;
-    $value = apply_filter( 'the_page_'.$field, get_the_page( $field ) );
+    $value = apply_filters( 'the_page_'.$field, get_the_page( $field ) );
     if ( strlen($value) == 0 )  return;
     echo $before . $value . $after;
 }
@@ -380,7 +380,7 @@ function the_page( $field,  $before = '', $after = '' ) {
 function the_date( $format = '',  $before = '', $after = '', $echo = true ) {
     $before = (string) $before;
     $after = (string) $after;
-    $value = apply_filter( 'the_date', get_the_date( $format ) );
+    $value = apply_filters( 'the_date', get_the_date( $format ) );
     if ( strlen($value) == 0 )  return;
     if($echo)
         echo $before . $value . $after;
@@ -391,7 +391,7 @@ function the_date( $format = '',  $before = '', $after = '', $echo = true ) {
 function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
     $before = (string) $before;
     $after = (string) $after;
-    $value = apply_filter( 'the_time', get_the_time( $format ) );
+    $value = apply_filters( 'the_time', get_the_time( $format ) );
     if ( strlen($value) == 0 )  return;
     if($echo)
         echo $before . $value . $after;
@@ -419,7 +419,7 @@ function the_images( $name ='' , $where = array(), $max = 10, $image_schema = '<
     $images = get_the_images( $name, $where, $max );
     if ( is_size($images, 0) )  return;
     $images = array_map( function($image)use($image_schema){
-        $image_alt    = sanitize_words( apply_filter('the_image_alt' , substr( basename($image), 0, strpos(basename($image),'.') ), $image ) );
+        $image_alt    = sanitize_words( apply_filters('the_image_alt' , substr( basename($image), 0, strpos(basename($image),'.') ), $image ) );
         return sprintf($image_schema, $image, $image_alt );} , $images );
     echo implode($images);
 }
@@ -459,13 +459,12 @@ function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</u
     if ( is_size($menu, 0) )  return;
 
     array_walk( $menu, function(&$slug, $title) use ($menu_item){
-
+        
         $title  = is_string($title) ? $title: basename($slug);
         $active = is_same($slug, $GLOBALS['query'] ) ? ' active' : '';
         $slug   = sprintf( $menu_item, get_permalink($slug), $title, $active );
 
     } );
-
     echo $before.implode($menu).$after;
 }
 
@@ -481,18 +480,18 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
     $after     = (string) $after;
     $breadcrumb       = '';
     $breadcrumb_begin = '<nav role="navigation" aria-label="'. __('You are here') .' : " id="breadcrumb" class="breadcrumb">';
-    $breadcrumb_begin = apply_filter('breadcrumb_begin', $breadcrumb_begin);
-    $breadcrumb_end   = apply_filter('breadcrumb_end', '</nav>');
-    $breadcrumb_schema_separator = sprintf( apply_filter('breadcrumb_schema_separator' , '<span aria-hidden="true">%s</span>' ) , $separator );
+    $breadcrumb_begin = apply_filters('breadcrumb_begin', $breadcrumb_begin);
+    $breadcrumb_end   = apply_filters('breadcrumb_end', '</nav>');
+    $breadcrumb_schema_separator = sprintf( apply_filters('breadcrumb_schema_separator' , '<span aria-hidden="true">%s</span>' ) , $separator );
     $breadcrumb_schema = '<span itemscope itemtype="http://data-vocabulary.org/Breadcrumb"><a itemprop="url" title="%1$s" href="%2$s"><span itemprop="title">%1$s</span></a></span>';
-    $breadcrumb_schema = apply_filter('breadcrumb_schema' , $breadcrumb_schema );
+    $breadcrumb_schema = apply_filters('breadcrumb_schema' , $breadcrumb_schema );
 
     if( is_page() ){
         $queries = get_the_page('slug');
         do {
             $slug = substr( $queries , 0 , strpos($queries,'/') );
             if( $slug === '' )
-                $breadcrumb = sprintf( $breadcrumb_schema ,  get_the_blog('title')  , HOME ) . $breadcrumb_schema_separator . $breadcrumb;
+                $breadcrumb = sprintf( $breadcrumb_schema ,  get_the_blog('title')  , MP_HOME ) . $breadcrumb_schema_separator . $breadcrumb;
             else
                 $breadcrumb = ( is_page($slug) ) ? sprintf( $breadcrumb_schema , basename($slug) , get_permalink($slug) ) . $breadcrumb_schema_separator : '';
             $queries = str_replace( $slug.'/' , '', $queries );
@@ -504,7 +503,7 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
         $breadcrumb = get_the_blog('title');
 
     if( is_404() )
-        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , HOME ) . $breadcrumb_schema_separator . '404';
+        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , MP_HOME ) . $breadcrumb_schema_separator . '404';
 
     echo $breadcrumb_begin . $before . $breadcrumb . $after . $breadcrumb_end;
 }

@@ -11,9 +11,6 @@
  * @version 1
  */
 
-// Start this plugin once all other plugins are fully loaded
-global $MP_YAML; $MP_YAML = new YAML();
-
 
 /***********************************************/
 /*       Fonction d'appel yaml                 */
@@ -26,8 +23,8 @@ global $MP_YAML; $MP_YAML = new YAML();
 */
 if (!function_exists('yaml_parse')) {
     function yaml_parse( $string, $pos = 0, $ndocs = null ){
-        global $MP_YAML;
-        return $MP_YAML->parse($string, $pos, $ndocs);
+        $yaml_parse = new YAML();
+        return $yaml_parse->parse($string, $pos, $ndocs);
     }
 }
 
@@ -39,8 +36,8 @@ if (!function_exists('yaml_parse')) {
 */
 if (!function_exists('yaml_parse_file')) {
     function yaml_parse_file( $path, $pos = 0, $ndocs = null, $cached = false ){
-        global $MP_YAML;
-        return $MP_YAML->parse_file( $path, $pos, $ndocs, $cached );
+        $yaml_parse = new YAML();
+        return $yaml_parse->parse_file( $path, $pos, $ndocs, $cached );
     }
 }
 
@@ -52,8 +49,8 @@ if (!function_exists('yaml_parse_file')) {
 */
 if (!function_exists('yaml_emit')) {
     function yaml_emit( $data ){
-        global $MP_YAML;
-        return $MP_YAML->emit( $data );
+        $yaml_parse = new YAML();
+        return $yaml_parse->emit( $data );
     }
 }
 
@@ -65,8 +62,8 @@ if (!function_exists('yaml_emit')) {
 */
 if (!function_exists('yaml_emit_file')) {
     function yaml_emit_file( $path, $data ){
-        global $MP_YAML;
-        return $MP_YAML->emit_file($path, $data);
+        $yaml_parse = new YAML();
+        return $yaml_parse->emit_file($path, $data);
     }
 }
 

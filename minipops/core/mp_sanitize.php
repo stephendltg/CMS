@@ -15,6 +15,24 @@
 /***********************************************/
 
 
+/**
+* Ajoute des slash dans une chaine
+* @param $string     chaine
+*/
+function backslashit( $string ) {
+    if ( isset( $string[0] ) && $string[0] >= '0' && $string[0] <= '9' )
+        $string = '\\\\' . $string;
+    return addcslashes( $string, 'A..Za..z' );
+}
+
+
+/**
+* Supprime les antislashs d'une chaîne et uniquement
+* @param $string     chaine
+*/
+function stripslashes_str( $value ) {
+    return is_string( $value ) ? stripslashes( $value ) : $value;
+}
 
 
 /**
@@ -48,12 +66,60 @@ function remove_accent( $string ){
 function sanitize_allspecialschars( $string ) {
     $string       = (string) $string;
     $special_chars = array( "[", "]", "/", "\\", "<", ">", "\"", "{", "}", chr(0) );
-    $special_chars = apply_filter( 'sanitize_allspecialschars_char' , $special_chars );
+    $special_chars = apply_filters( 'sanitize_allspecialschars_char' , $special_chars );
     $special_chars = preg_replace( "#\x{00a0}#siu", ' ', $special_chars );
     $string = str_replace( $special_chars, '', $string );
     $string = str_replace( '%20', ' ', $string );
     $string = preg_replace( '/[\r\n\t]+/', ' ', $string );
     return $string;
+}
+
+/**
+ * Nettoie une liste d'éléments
+ */
+function sanitize_list( $list, $separator = ', ' ) {
+
+    if ( empty( $list ) )
+        return '';
+
+    $trimed_sep = trim( $separator );
+    $double_sep = $trimed_sep . $trimed_sep;
+    $list = preg_replace( '/\s*' . $trimed_sep . '\s*/', $trimed_sep, $list );
+    $list = trim( $list, $trimed_sep . ' ' );
+
+    while ( false !== strpos( $list, $double_sep ) )
+        $list = str_replace( $double_sep, $trimed_sep, $list );
+
+    return str_replace( $trimed_sep, $separator, $list );
+}
+
+
+/**
+ * Apply `array_unique()` and `natcasesort()` on a list.
+ *
+ * @param (string|array) $list      liste de donnée à trier dont les valeurs et clés seront unique
+ * @param (string|bool)  $separator Le séparateur. If not false, the function will explode and implode the list.
+ *
+ * @return (string|array) The list.
+ */
+function unique_sorted_list( $list, $separator = false ) {
+    
+    if ( array() === $list || '' === $list ) {
+        return $list;
+    }
+
+    if ( false !== $separator ) {
+        $list = explode( $separator, $list );
+    }
+
+    $list = array_flip( array_flip( $list ) );
+    natcasesort( $list );
+
+    if ( false !== $separator ) {
+        $list = implode( $separator, $list );
+    }
+
+    return $list;
 }
 
 
@@ -133,7 +199,7 @@ function sanitize_file_name( $filename ) {
     $filename       = (string) $filename;
     //thanks wordpress
     $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", chr(0) );
-    $filename = apply_filter( 'sanitize_file_name_char' , $filename );
+    $filename = apply_filters( 'sanitize_file_name_char' , $filename );
     $filename = preg_replace( "#\x{00a0}#siu", ' ', $filename );
     $filename = str_replace( $special_chars, '', $filename );
     $filename = str_replace( array( '%20', '+' ), '-', $filename );
@@ -150,7 +216,7 @@ function sanitize_words( $words ) {
     $words       = (string) $words;
     //thanks wordpress
     $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", ".", "_", "-", chr(0) );
-    $words = apply_filter( 'sanitize_words_char' , $words );
+    $words = apply_filters( 'sanitize_words_char' , $words );
     $words = preg_replace( "#\x{00a0}#siu", ' ', $words );
     $words = str_replace( $special_chars, '', $words );
     $words = str_replace( array( '%20', '+' ), ' ', $words );
@@ -240,7 +306,7 @@ function sanitize_svg( $svg ){
         $svg .= $content;
     }
 
-    if( apply_filter( 'do_optimize_svg', true ) ){
+    if( apply_filters( 'do_optimize_svg', true ) ){
 
         // On supprime les espaces vide, tabulation, retour chariot, ...
         $svg = str_replace(' />', '/>', $svg);

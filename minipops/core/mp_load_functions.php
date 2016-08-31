@@ -71,7 +71,7 @@ if (!function_exists('http_response_code')) {
             case 504: $text = 'Gateway Time-out'; break;
             case 505: $text = 'HTTP Version not supported'; break;
             default:
-                trigger_error('Unknown http status code ' . $code, E_USER_ERROR); 
+                _doing_it_wrong( __FUNCTION__, 'Unknown http status code ' . $code);
                 // exit('Unknown http status code "' . htmlentities($code) . '"');
                 return $prev_code;
         }
@@ -144,7 +144,7 @@ function mp_debug_mode() {
 
         if ( DEBUG_LOG ) {
             @ini_set( 'log_errors', 1 );
-            @ini_set( 'error_log', CONTENT_DIR . '/debug.log' );
+            @ini_set( 'error_log', MP_CONTENT_DIR . '/debug.log' );
         }
     } else {
         error_reporting( E_CORE_ERROR | E_CORE_WARNING | E_COMPILE_ERROR | E_ERROR | E_WARNING | E_PARSE | E_USER_ERROR | E_USER_WARNING | E_RECOVERABLE_ERROR );
@@ -167,25 +167,43 @@ function _echo( $var, $var_dump = 0 ){
 
 }
 
+/* Afficahge d'inforamtions si une erreur survient (mode debug doit être actif
+* __FILE__, __DIR__, __FUNCTION__, __CLASS__, __METHOD__, __LINE__, __NAMESPACE__, __TRAIT__
+* @param string $function The function that was called.
+* @param string $message  A message explaining what has been done incorrectly.
+*/
+function _doing_it_wrong( $function, $message ) {
+ 
+    if ( DEBUG ) {
+
+        if ( function_exists( '__' ) ) {
+            trigger_error( sprintf( __( '%1$s was called <strong>incorrectly</strong>. %2$s' ), $function, $message ) );
+        } else {
+            trigger_error( sprintf( '%1$s was called <strong>incorrectly</strong>. %2$s', $function, $message ) );
+        }
+    }
+}
+
 /**
  * On créé les repertoires si cms non installé et on verifie les droits en ecriture.
  */
 function cms_not_installed() {
 
+
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
-    if ( !is_writable( realpath( ABSPATH ) ) ) 
+    if ( !is_writable( ABSPATH ) ) 
         cms_maintenance( 'Error directory permissions !' );
 
-    @mkdir( CONTENT_DIR , 0755 , true );
-    if ( !is_writable( CONTENT_DIR ) ) 
-        cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT_DIR ) .' !' );
+    @mkdir( MP_CONTENT_DIR , 0755 , true );
+    if ( !is_writable( MP_CONTENT_DIR ) ) 
+        cms_maintenance( 'Error directory permissions : '.  MP_CONTENT_DIR .' !' );
 
-    @mkdir( CONTENT , 0755 , true );
-    if ( !is_writable( CONTENT ) ) 
-        cms_maintenance( 'Error directory permissions : '. str_replace( ABSPATH , "" , CONTENT ) .' !' );
+    @mkdir( MP_PAGES_DIR , 0755 , true );
+    if ( !is_writable( MP_PAGES_DIR ) ) 
+        cms_maintenance( 'Error directory permissions : '. MP_PAGES_DIR .' !' );
 
-    @mkdir( THEMES_DIR , 0755 , true );
+    @mkdir( MP_THEMES_DIR , 0755 , true );
 }
 
 
@@ -225,15 +243,15 @@ function mp_rewrite_rules(){
         $rewrite = 'enable';
 
         // On definit le repertoire root
-        $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , HOME ) ;
+        $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
         if ( empty( $root ) ) $root = '/';
 
         $rules .= '<IfModule mod_rewrite.c>'. PHP_EOL . PHP_EOL;
         $rules .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
-        $rules .= '# if you homepage is '. HOME . PHP_EOL;
+        $rules .= '# if you homepage is '. MP_HOME . PHP_EOL;
         $rules .= '# RewriteBase '. $root . PHP_EOL. PHP_EOL;
         $rules .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
-        $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , CONTENT_DIR ) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+        $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
         $rules .= '# block all files core folder from being accessed directly'. PHP_EOL;
         $rules .= 'RewriteRule ^core/(.*) error [R=301,L]'. PHP_EOL;
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -243,7 +261,7 @@ function mp_rewrite_rules(){
         $rules .= 'RewriteCond %{REQUEST_FILENAME} !-d'. PHP_EOL;
         $rules .= 'RewriteRule ^(.*) index.php [L]'. PHP_EOL . PHP_EOL;
         $rules .= '# Update code bellow for SEO improvements'. PHP_EOL;
-        $rules .= '# Redirect 301 /index ' . HOME . '/' . PHP_EOL. PHP_EOL;
+        $rules .= '# Redirect 301 /index ' . MP_HOME . '/' . PHP_EOL. PHP_EOL;
         $rules .= '</IfModule>';
 
 
@@ -428,7 +446,7 @@ function guess_url() {
 
     global $is_rewrite_rules;
 
-	if ( defined('HOME') && '' != HOME ) { $url = HOME; }
+	if ( defined('MP_HOME') && '' != MP_HOME ) { $url = MP_HOME; }
     else {
 		$abspath_fix = str_replace( '\\', '/', ABSPATH );
 		$script_filename_dir = dirname( $_SERVER['SCRIPT_FILENAME'] );
@@ -474,15 +492,20 @@ function get_template_directory(){
     if( get_the_blog('theme') ){
         
         // On liste les thèmes présents dans le repertoire
-        $themes = glob( THEMES_DIR .'/*', GLOB_ONLYDIR );
+        $themes = glob( MP_THEMES_DIR .'/*', GLOB_ONLYDIR );
         if( is_sup($themes, 0) ){
             foreach( $themes as $theme )
-                if( is_same( $theme, THEMES_DIR . '/' . get_the_blog('theme') ) )
-                    return $theme .'/';
+                if( is_same( $theme, MP_THEMES_DIR . '/' . get_the_blog('theme') ) )
+                    return get_the_blog('theme');
         }
     }
 
-    return ABSPATH . INC . '/theme';
+    // On définit MP_TEMPLATE_DIR
+    define( 'MP_TEMPLATE_DIR', ABSPATH . INC . '/theme');
+    define( 'MP_TEMPLATE_URL', MP_HOME . '/'. INC . '/theme');
+
+    // On retourne le path
+    return INC . '/theme';
 }
 
 
@@ -510,7 +533,7 @@ function get_the_blog( $field, $default = false ){
             $value = esc_url_raw( get_permalink('rss', 'feed') );
             break;
         case 'template_url':
-            $value = esc_url_raw( TEMPLATEURL );
+            $value = esc_url_raw( MP_TEMPLATE_URL );
             break;
         case 'charset':
             $value = CHARSET;
@@ -522,7 +545,7 @@ function get_the_blog( $field, $default = false ){
             $value = get_the_lang();
             break;
         case 'logo':
-            $path = apply_filter('mp_path_logo', CONTENT.'/logo');
+            $path = apply_filters('mp_path_logo', MP_PAGES_DIR.'/logo');
             $logos = glob($path.'.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
             if( isset($logos[0]) )
                 $value = '<img src="'.rel2abs( str_replace(ABSPATH, '', $logos[0]) ).'" class="site-logo" alt="logo - '.get_the_blog('title').'" title="'.get_the_blog('title').'" >';
@@ -533,7 +556,7 @@ function get_the_blog( $field, $default = false ){
             $value = get_option('blog->'.$field, $default);
             break;
     }
-    return apply_filter( 'get_the_blog_'. $field, $value, $field );
+    return apply_filters( 'get_the_blog_'. $field, $value, $field );
 }
 
 

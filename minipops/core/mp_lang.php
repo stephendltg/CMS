@@ -20,7 +20,7 @@ function get_the_lang()
 
     $lang = get_the_blog('lang');
 
-    if ( !$lang || !is_readable(TEMPLATEPATH .'/lang/en_'. strtolower($lang) .'.yml') )
+    if ( !$lang || !is_readable(MP_TEMPLATE_DIR .'/lang/en_'. strtolower($lang) .'.yml') )
         $lang = 'en';
 
     return strtolower($lang);
@@ -64,15 +64,15 @@ function __( $text, $domain = null ){
 
         if( is_same($domain, null) ){
             // Traduction du thème
-            $path   = TEMPLATEPATH . '/lang/en_'. $local_lang .'.yml';
-            $name = basename(TEMPLATEPATH);
+            $path   = MP_TEMPLATE_DIR . '/lang/en_'. $local_lang .'.yml';
+            $name = basename(MP_TEMPLATE_DIR);
 
         } else {
 
             // Traduction d'un plugins
-            if( glob(PLUGIN_DIR.'/'.$domain.'/lang/en_'.$local_lang.'.yml')
+            if( glob(MP_PLUGIN_DIR.'/'.$domain.'/lang/en_'.$local_lang.'.yml')
                 && is_in($domain, get_option('active_plugins'))
-            ) $path = PLUGIN_DIR.'/'.$domain.'/lang/en_'. $local_lang .'.yml';
+            ) $path = MP_PLUGIN_DIR.'/'.$domain.'/lang/en_'. $local_lang .'.yml';
 
             else
                 return $text;

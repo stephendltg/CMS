@@ -25,7 +25,7 @@ function mp_pops( $content , $slug = '' ){
 
     // Liste shortcode
     $pops = array('link','email','tel','image','file','twitter','youtube','audio', 'map');
-    $pops = apply_filter('pops_shortcode' , $pops );
+    $pops = apply_filters('pops_shortcode' , $pops );
 
     // On boucle sur la recherche des shortcode et on affecte à la fonction associé si elle existe en lui passant les paramètres du shortcode
     foreach ( $pops as $name ) {
@@ -96,10 +96,10 @@ function pops_audio( $args ){
             'class' => 'my_audio'
             ));
 
-    // On réucpère la liste des fichiers
-    $audio = explode( ',' , $args['audio'] );
+    // On récupère la liste des fichiers
+    $audio = explode( ',' , sanitize_list($args['audio']) );
 
-    $path = str_replace('//', '/', CONTENT.'/'.$args['slug'].'/');
+    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
     $url  = rel2abs(str_replace(ABSPATH, '', $path) );
 
     // On vérifie que le premier fichier est un mp3 valide
@@ -117,7 +117,7 @@ function pops_audio( $args ){
     $class = ' class="'. sanitize_html_class($args['class']) .'"';
 
     // Scheme du shortcode
-    $schema = apply_filter('pops_audio_schema' ,'<figure%5$s><audio controls="controls"><source src=%1$s type="audio/mp3">%3$s<a href=%1$s download=%2$s>$mp3</a></audio>%4$s</figure>');
+    $schema = apply_filters('pops_audio_schema' ,'<figure%5$s><audio controls="controls"><source src=%1$s type="audio/mp3">%3$s<a href=%1$s download=%2$s>$mp3</a></audio>%4$s</figure>');
 
     return sprintf( $schema, $link_mp3, $url.$mp3, $ogg, $text, $class );
 }
@@ -158,8 +158,8 @@ function pops_email( $args ){
     $email  = str_replace('@', '(at)', $email);
 
     // Scheme du shortcode
-    $schema_with_rel = apply_filter('pops_email_schema_with_rel','<address%3$s><a href="mailto:?to=%1$s"%4$s>%2$s</a></address>');
-    $schema_no_rel   = apply_filter('pops_email_schema_no_rel','<a href="mailto:%1$s"%3$s%4$s>%2$s</a>');
+    $schema_with_rel = apply_filters('pops_email_schema_with_rel','<address%3$s><a href="mailto:?to=%1$s"%4$s>%2$s</a></address>');
+    $schema_no_rel   = apply_filters('pops_email_schema_no_rel','<a href="mailto:%1$s"%3$s%4$s>%2$s</a>');
     $schema          = !empty($rel) ? $schema_with_rel : $schema_no_rel;
 
     return sprintf( $schema, $email, $text, $class, $rel );
@@ -188,7 +188,7 @@ function pops_file( $args ){
             'class' => 'my_file'
             ));
 
-    $path = str_replace('//', '/', CONTENT.'/'.$args['slug'].'/');
+    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
     $url  = rel2abs(str_replace(ABSPATH, '', $path) );
 
     // On verifie si le fichier est valid et autorisé au téléchargement
@@ -206,7 +206,7 @@ function pops_file( $args ){
     $class      = ' class="'. sanitize_html_class($array['class']) .'"';
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
+    $schema   = apply_filters('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
 
     return sprintf( $schema, $file, $link_file, $class, $text );
 }
@@ -235,7 +235,7 @@ function pops_image( $args ){
         'class' => 'my_image'
         ));
 
-    $path = str_replace('//', '/', CONTENT.'/'.$args['slug'].'/');
+    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
     $url  = rel2abs(str_replace(ABSPATH, '', $path) );
 
     // On verifie si l'image est valide
@@ -268,7 +268,7 @@ function pops_image( $args ){
     }
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_image_schema', '<figure%4$s><img src="%1$s"%5$s%6$s alt="%2$s"/>%3$s</figure>');
+    $schema   = apply_filters('pops_image_schema', '<figure%4$s><img src="%1$s"%5$s%6$s alt="%2$s"/>%3$s</figure>');
 
     return sprintf( $schema, $url, $alt, $text, $class, $width, $height );
 }
@@ -316,7 +316,7 @@ function pops_link( $args ){
     $rel        = !empty($args['rel']) && is_in($args['rel'] , array('me','nofollow')) ? ' rel="'. $args['rel'] .'"' : '';
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_link_schema', '<a href="%1$s"%2$s%3$s%4$s>%5$s</a>');
+    $schema   = apply_filters('pops_link_schema', '<a href="%1$s"%2$s%3$s%4$s>%5$s</a>');
 
     return sprintf( $schema, $link, $title, $class, $rel, $text );
 }
@@ -355,7 +355,7 @@ function pops_map( $args ){
     $size       = !empty( $args) && !empty($width) ? '&size='.$array['width'].'x'.$args['height'] : '&size=640x640';
     $class      = ' class="'. sanitize_html_class($args['class']) .'"';
 
-    $key_api    = apply_filter('pops_map_google_key_api', 'AIzaSyCKyegO4Pf19zi7yUjrQF8CuXBl85Ic3dI'); //https://console.developers.google.com
+    $key_api    = apply_filters('pops_map_google_key_api', 'AIzaSyCKyegO4Pf19zi7yUjrQF8CuXBl85Ic3dI'); //https://console.developers.google.com
 
     return "<figure$class><a href='https://www.google.fr/maps/place/$map'><img src='http://maps.googleapis.com/maps/api/staticmap?center=$map$zoom$size&key=$key_api'$width$height/></a>$text</figure>";
 }
@@ -389,7 +389,7 @@ function pops_tel( $args ){
     $class      = ' class="'. sanitize_html_class($args['class']) .'"';
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_tel_schema', '<a href="tel:%1$s"%3$s>%2$s</a>');
+    $schema   = apply_filters('pops_tel_schema', '<a href="tel:%1$s"%3$s>%2$s</a>');
 
     return sprintf( $schema, $tel, $text, $class );
 }
@@ -426,7 +426,7 @@ function pops_twitter( $args ){
     $rel      = !empty($args['rel']) && is_same($args['rel'] , 'me') ? ' rel="'. $args['rel'] .'"' : '';
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
+    $schema   = apply_filters('pops_twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
 
     return sprintf( $schema, $twitter, $text, $class, $rel );
 }
@@ -460,7 +460,7 @@ function pops_youtube( $args ){
     $class       = 'class="'. sanitize_html_class($args['class']) .'"';
 
     // Scheme du shortcode
-    $schema   = apply_filter('pops_youtube_schema', '<figure%3$s><iframe src="//youtube.com/embed/%1$s" width=560 height=315 frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>%2$s</figure>');
+    $schema   = apply_filters('pops_youtube_schema', '<figure%3$s><iframe src="//youtube.com/embed/%1$s" width=560 height=315 frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>%2$s</figure>');
 
     return sprintf( $schema, $youtube, $text, $class );
 }

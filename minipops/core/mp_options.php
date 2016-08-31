@@ -12,6 +12,7 @@
 // On charge la classe
 global $MP_OPTIONS; $MP_OPTIONS = new OPTIONS();
 
+
 // Les fonctions d'utilisations de la classe
 function get_option( $option, $default = null, $domain = null ){
     global $MP_OPTIONS;
@@ -53,9 +54,10 @@ function sanitize_option($option, $value){
         case 'site_plugins_active_plugins':
             $plugins = array();
             if( is_array($value) ){
+                $value = array_flip(array_flip($value)); // On élimine les doublons
                 foreach ($value as $plugin) {
                     if( !is_validate_file($plugin) // $plugin must validate as file
-                        && file_exists(PLUGIN_DIR .'/'. $plugin .'/'. $plugin .'.php') // $plugin must exist
+                        && file_exists(MP_PLUGIN_DIR .'/'. $plugin .'/'. $plugin .'.php') // $plugin must exist
                     ) $plugins[] = $plugin;
                 }
             }
@@ -63,6 +65,7 @@ function sanitize_option($option, $value){
             break;
         case 'site_blog_keywords':
         case 'site_blog_robots':
+            $value = sanitize_list($value);
             $value = remove_accent($value);
             $value = sanitize_words($value);
             $value = str_replace(' ', ',', $value);
@@ -122,7 +125,7 @@ class options {
     function __construct(){
 
         // On charge la table option dans la variable static
-        $options = yaml_parse_file(CONTENT. '/site.yml', 0, null, true);
+        $options = yaml_parse_file(MP_PAGES_DIR. '/site.yml', 0, null, true);
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
@@ -135,9 +138,9 @@ class options {
     */
     public function save(){
         if( self::$_flag ){
-            if( ! yaml_emit_file(CONTENT. '/site.yml', self::$_options) )
-                trigger_error('MPopS: Error saving file configuration: site.yaml!');
-            @chmod(CONTENT. '/site.yml', 0644);
+            if( ! yaml_emit_file(MP_PAGES_DIR. '/site.yml', self::$_options) )
+                _doing_it_wrong( __CLASS__, 'Error saving file configuration: site.yaml!');
+            @chmod(MP_PAGES_DIR. '/site.yml', 0644);
         }
         self::$_flag = null;
     }
@@ -235,7 +238,7 @@ class options {
         $_option = implode('_', $node);
 
         // On court-circuit le résultat
-        $pre = apply_filter( 'pre_option_' . $_option, false, $_option );
+        $pre = apply_filters( 'pre_option_' . $_option, false, $_option );
         if ( false !== $pre ) return $pre;
 
         // On récupère la variable selon le noeud
@@ -251,11 +254,11 @@ class options {
         $type = 'is_'.$type;
         if( function_exists($type) ){
             if( $type($value) )
-                return apply_filter( 'option_' . $_option, $value, $_option );
+                return apply_filters( 'option_' . $_option, $value, $_option );
             else return $default;
         }
 
-        return apply_filter( 'option_' . $_option, $value, $_option );
+        return apply_filters( 'option_' . $_option, $value, $_option );
     }
 
     /**
@@ -279,8 +282,8 @@ class options {
         $_option = implode('_', $node);
 
         // On ajoute des filtres
-        $value = apply_filter( 'pre_add_option_' . $_option, $value, $_option );
-        $value = apply_filter( 'pre_add_option', $value, $_option );
+        $value = apply_filters( 'pre_add_option_' . $_option, $value, $_option );
+        $value = apply_filters( 'pre_add_option', $value, $_option );
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
@@ -328,8 +331,8 @@ class options {
         $_option = implode('_', $node);
 
         // On ajoute des filtres
-        $value = apply_filter( 'pre_update_option_' . $_option, $value, $old_value, $_option );
-        $value = apply_filter( 'pre_update_option', $value, $_option, $old_value );
+        $value = apply_filters( 'pre_update_option_' . $_option, $value, $old_value, $_option );
+        $value = apply_filters( 'pre_update_option', $value, $_option, $old_value );
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
@@ -373,7 +376,7 @@ class options {
         $_option = implode('_', $node);
 
         // On court-circuit le résultat
-        $pre = apply_filter( 'pre_delete_option_' . $_option, null, $_option, $domain );
+        $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain );
         if ( null !== $pre ) return $pre;
 
         $delete = update_option( $option , null, $domain );

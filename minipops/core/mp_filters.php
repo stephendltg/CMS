@@ -138,10 +138,10 @@ function mp_doing_robots(){
         $robots    .= "User-agent: Mediapartners-Google\n";
         $robots    .= "Disallow:\n";
         // Sitemap: Google : href="http://www.google.fr/webmasters/ | Yahoo & Bing: href="http://www.bing.com/toolbox/webmaster
-        $robots    .= 'Sitemap: '.HOME.'/sitemap.xml';
+        $robots    .= 'Sitemap: '.MP_HOME.'/sitemap.xml';
     }
 
-    echo apply_filter( 'the_robots', $robots);
+    echo apply_filters( 'the_robots', $robots);
     exit();
 }
 
@@ -154,13 +154,13 @@ function mp_doing_sitemap(){
 
     $sitemap    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
     $sitemap   .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
-    $sitemap   .= "\t<url>\n\t\t<loc>".HOME."</loc>\n\t\t<priority>0.9</priority>\n\t</url>\n";
-    $pages      = apply_filter('sitemap_pages', get_all_page() );
+    $sitemap   .= "\t<url>\n\t\t<loc>".MP_HOME."</loc>\n\t\t<priority>0.9</priority>\n\t</url>\n";
+    $pages      = apply_filters('sitemap_pages', get_all_page() );
     foreach( $pages as $url )
         $sitemap .= "\t<url>\n\t\t<loc>".get_permalink($url)."</loc>\n\t</url>\n";
     $sitemap   .= '</urlset>';
 
-    echo apply_filter( 'the_sitemap', $sitemap );
+    echo apply_filters( 'the_sitemap', $sitemap );
     exit();
 }
 
@@ -190,7 +190,7 @@ function mp_doing_feed(){
     $feed   .= "\t</channel>\n";
     $feed   .= '</rss>';
 
-    echo apply_filter( 'the_feed' , $feed );
+    echo apply_filters( 'the_feed' , $feed );
     exit();
 
 /*

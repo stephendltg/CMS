@@ -28,7 +28,7 @@ session_start(SESSION_COOKIE);
 if( !isset($_SESSION['expiration']) || !isset($_SESSION['ip']) || !isset($_SESSION['login']) || !isset($_SESSION['token']) ){
 
     // Expiration
-    $_SESSION['expiration'] = apply_filter( 'token_life', DAY_IN_SECONDS );
+    $_SESSION['expiration'] = apply_filters( 'token_life', DAY_IN_SECONDS );
     // IP address.
     $_SESSION['ip'] = get_ip_client();
     // User-agent.
@@ -41,15 +41,13 @@ if( !isset($_SESSION['expiration']) || !isset($_SESSION['ip']) || !isset($_SESSI
     session_regenerate_id();
 } 
 
-$ip = $_SESSION['ip'];
-$expire = $_SESSION['expiration'] + $_SESSION['login'];
-$current_user = apply_filter( mp_current_user_load, $_SESSION );
+$current_user = apply_filters( mp_current_user_load, $_SESSION );
 
 // On ferme la session
 session_write_close();
 
 // On check si la session est toujours active et qu'il n'y a pas d'usuroation d'identité
-if( $ip !== get_ip_client() || time() > $expire )
+if( $_SESSION['ip'] !== get_ip_client() || time() > ($_SESSION['expiration'] + $_SESSION['login']) )
     mp_session_destroy();
 
 do_action( 'mp_after_session_load' );
@@ -153,7 +151,7 @@ function mp_login( $user, $password, $remember = false ) {
       $expire = 0;
     }
  
-    $secure = is_ssl() && 'https' === parse_url( HOME, PHP_URL_SCHEME );
+    $secure = is_ssl() && 'https' === parse_url( MP_HOME, PHP_URL_SCHEME );
     
     $algo = function_exists( 'hash' ) ? 'sha256' : 'sha1';
     $hash_user = hash_hmac( $algo, $password . '|' . $expiration . '|' . SECRET_KEY, SECRET_SALT );
@@ -217,7 +215,7 @@ function user_valid( $user, $hmac ){
 
 function mp_nonce_tick() {
 
-    $nonce_life = apply_filter( 'nonce_life', DAY_IN_SECONDS );
+    $nonce_life = apply_filters( 'nonce_life', DAY_IN_SECONDS );
 
     return ceil(time() / ( $nonce_life / 2 ));
 }

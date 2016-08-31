@@ -6,7 +6,6 @@
  * @subpackage Rhythmicon
  * @version 1
  */
-
 ?>
 <?php snippet('header'); ?>
 
