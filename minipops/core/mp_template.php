@@ -21,10 +21,10 @@ function get_the_args( $field, $type = null ) {
 
     $field = (string) $field;
 
-    global $__args;
+    $__args = mp_cache_data('__args');
 
     // Si pas d'arguments return
-    if( $__args === false ) return;
+    if( $__args === null || !is_array($__args) || empty($__args) ) return;
 
     // On créer le noeuds de recherche
     $array_keys = explode('->', $field);
@@ -69,9 +69,10 @@ function snippet( $snippet ){
     $snippet = (string) $snippet;
     $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
     if( !empty($snippets) ){
-        $GLOBALS['__args'] = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
+        $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
+        mp_cache_data('__args', $__args);
         include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
-        unset($GLOBALS['__args']); // On décharge les arguments du snippet
+        mp_cache_data('__args', null); // On décharge les arguments du snippet
     }
     return;
 }
@@ -365,11 +366,14 @@ function body_class( $class = '' ){
 /***********************************************/
 
 function the_page( $field,  $before = '', $after = '' ) {
+
     $field = (string) $field;
     $before = (string) $before;
     $after = (string) $after;
+
     $value = apply_filters( 'the_page_'.$field, get_the_page( $field ) );
     if ( strlen($value) == 0 )  return;
+
     echo $before . $value . $after;
 }
 
@@ -378,9 +382,12 @@ function the_page( $field,  $before = '', $after = '' ) {
 /***********************************************/
 
 function the_date( $format = '',  $before = '', $after = '', $echo = true ) {
+
     $before = (string) $before;
     $after = (string) $after;
+
     $value = apply_filters( 'the_date', get_the_date( $format ) );
+
     if ( strlen($value) == 0 )  return;
     if($echo)
         echo $before . $value . $after;
@@ -389,10 +396,14 @@ function the_date( $format = '',  $before = '', $after = '', $echo = true ) {
 }
 
 function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
+
     $before = (string) $before;
     $after = (string) $after;
+
     $value = apply_filters( 'the_time', get_the_time( $format ) );
+
     if ( strlen($value) == 0 )  return;
+    
     if($echo)
         echo $before . $value . $after;
     else
@@ -413,14 +424,19 @@ function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
  * @return array    retourne les résultats sous forme de tableau
  */
 function the_images( $name ='' , $where = array(), $max = 10, $image_schema = '<img src="%1$s" alt="%2$s"/>'){
+
     $max = (integer) $max;
     $name = (string) $name;
     $image_schema = (string) $image_schema;
+
     $images = get_the_images( $name, $where, $max );
+
     if ( is_size($images, 0) )  return;
+
     $images = array_map( function($image)use($image_schema){
         $image_alt    = sanitize_words( apply_filters('the_image_alt' , substr( basename($image), 0, strpos(basename($image),'.') ), $image ) );
         return sprintf($image_schema, $image, $image_alt );} , $images );
+
     echo implode($images);
 }
 

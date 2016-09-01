@@ -64,6 +64,7 @@ function mp_plugin_directory_constants() {
     if ( !defined('MP_HOME') )
 		define( 'MP_HOME', guess_url() );
 
+	// A l'heure actuel MP_CONTENT_URL n'accepte pas les sous domaines
 	if ( !defined('MP_CONTENT_URL') )
 		define( 'MP_CONTENT_URL', guess_url() . '/mp_content' );
 

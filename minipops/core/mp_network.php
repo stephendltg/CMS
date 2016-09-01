@@ -101,3 +101,17 @@ function get_ip_client() {
     return '0.0.0.0';
 }
 
+
+/***********************************************/
+/*               test url                      */
+/***********************************************/
+/**
+ * Recupère le code l'url ciblé, voir http_response_code pour les codes de retour
+ * @param  string    url à vérifier
+ * @return integer   code de retour de l'url 200: ok, etc ...
+ */
+function get_http_response_code( $url ) {
+    $headers = get_headers($url);
+    return intval( substr($headers[0], 9, 3) );
+}
+

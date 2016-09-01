@@ -250,8 +250,27 @@ function mp_rewrite_rules(){
         $rules .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
         $rules .= '# if you homepage is '. MP_HOME . PHP_EOL;
         $rules .= '# RewriteBase '. $root . PHP_EOL. PHP_EOL;
-        $rules .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
-        $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+
+        /*
+        Si le repertoire MP_CONTENT_DIR est un cran au dessus d'ABSPATH 
+        il faudra manuellement déclarer un htaccess pour protéger les accès au répertoire
+        */
+        if( MP_CONTENT_DIR !== str_replace( ABSPATH, '', MP_CONTENT_DIR) ){
+
+            $rules .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
+            $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+        } else{
+
+            $rules_content = '<IfModule mod_rewrite.c>'. PHP_EOL . PHP_EOL;
+            $rules_content .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
+            $rules_content .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
+            $rules_content .= 'RewriteRule ^'. basename(MP_CONTENT_DIR) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+            $rules_content .= '</IfModule>';
+
+            // On tente de proteger les fichiers
+            @file_marker_contents( dirname(MP_CONTENT_DIR) . '/.htaccess', $rules_content);
+        }
+
         $rules .= '# block all files core folder from being accessed directly'. PHP_EOL;
         $rules .= 'RewriteRule ^core/(.*) error [R=301,L]'. PHP_EOL;
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -548,7 +567,7 @@ function get_the_blog( $field, $default = false ){
             $path = apply_filters('mp_path_logo', MP_PAGES_DIR.'/logo');
             $logos = glob($path.'.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
             if( isset($logos[0]) )
-                $value = '<img src="'.rel2abs( str_replace(ABSPATH, '', $logos[0]) ).'" class="site-logo" alt="logo - '.get_the_blog('title').'" title="'.get_the_blog('title').'" >';
+                $value = '<img src="'. MP_PAGES_URL .'/'. $logos[0].'" class="site-logo" alt="logo - '.get_the_blog('title').'" title="'.get_the_blog('title').'" >';
             else
                 $value = null;
             break;   

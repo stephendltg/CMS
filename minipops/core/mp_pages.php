@@ -53,7 +53,6 @@ function sanitize_page($field, $value, $slug){
             $value = esc_html($value);
             $value = mp_pops($value, $slug);
             break;
-            
         case 'excerpt':
             $value = esc_html($value);
             $value = excerpt( $value, 140, 'words' );
@@ -93,6 +92,8 @@ function get_the_page( $field, $slug = '' ){
         if( is_home() )  $slug = is_page('home') ? 'home' : '';
 
         if( is_404() )   $slug = is_page('error') ? 'error' : '';
+
+        if(!is_page() )  return;
 
     }
 

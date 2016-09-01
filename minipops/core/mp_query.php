@@ -94,7 +94,7 @@ function get_url_queries(){
 
         foreach ( $query_rules as $rule ) {
             if( is_same($rule, $key) )
-                return $rule.'='. trim( $value , '/' );
+                return trim( $rule .'/'. $value , '/' );
         }
     }
 
@@ -172,23 +172,24 @@ function is_page( $page = '' ){
 
     if ( strlen($page) >0 ) {
 
-        $url = $page;
+        $slug = $page;
 
     } else {
 
         if( !isset($query) )
             return false;
-        $url = $query;
+
+        $slug = $query;
 
     }
 
-    if( !is_filename( str_replace('/','',$url) ) ) return false;
+    if( !is_filename( str_replace('/', '', $slug) ) ) return false;
 
-    $page = glob( MP_PAGES_DIR .'/'. $url , GLOB_MARK|GLOB_ONLYDIR );
+    $page = glob( MP_PAGES_DIR .'/'. $slug , GLOB_MARK|GLOB_ONLYDIR );
 
     if( empty($page) ) return false;
 
-    $page = glob( $page[0] . basename($url) .'.md' );
+    $page = glob( $page[0] . basename($slug) .'.md' );
 
     if( empty($page) ) return false;
 
@@ -259,16 +260,14 @@ function is_sitemap(){
  */
 function is_tag(){
 
-    global $query, $is_rewrite_rules;
+    global $query;
 
     if( !isset($query) )
         return false;
 
-    $args = $is_rewrite_rules ? str_replace('/', '=', $query) : $query;
+    $args = explode('/', $query);
 
-    $args = parse_args($args);
-
-    if(!empty($args['tag']))
+    if( $args[0] === 'tag' && !empty($args[1]) )
         return true;
 
     return false;

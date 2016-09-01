@@ -57,6 +57,7 @@
 
     <?php snippet('footer'); ?>
 
+
 <?php mp_footer(); ?>
 </body>
 </html>

@@ -93,22 +93,42 @@ function mp_pops( $content , $slug = '' ){
 function pops_audio( $args ){
 
     $args = parse_args( $args, array(
-            'class' => 'my_audio'
+            'class' => 'my_audio',
+            'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
             ));
+
+    // On nettoie le slug
+    $args['slug'] = trim( $args['slug'], '/');
 
     // On récupère la liste des fichiers
     $audio = explode( ',' , sanitize_list($args['audio']) );
 
-    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
-    $url  = rel2abs(str_replace(ABSPATH, '', $path) );
+    // On définit l'url
+    $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $audio[0];
+    $path = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $audio[0];
 
     // On vérifie que le premier fichier est un mp3 valide
-    if( is_match($audio[0] , '([^\s]+(\.(?i)(mp3))$)') && file_exists($path.$audio[0]) )
+    if( is_match($audio[0], '([^\s]+(\.(?i)(mp3))$)') )
         $mp3 = $audio[0];
     else return;
 
-    // On vérifie que le deuxième fichier s'il existe qu'il soit du format ogg
-    $ogg  = !empty($audio[1]) && is_match($audio[1] , '([^\s]+(\.(?i)(ogg))$)') ? '<source src="'. $url . $audio[1] .'" type="audio/ogg">' : '' ;
+    // On verifie si l'url reponds
+    if( !file_exists($path) )
+        return;
+
+    // Par défaut pas de fichier ogg
+    $ogg = '';
+
+    if( !empty($audio[1]) ){
+
+        // on définit la deuxième url pour le fichier ogg
+        $url2  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $audio[1];
+        $path2 = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $audio[1];
+
+        // On verifie que le ficier est ogg et que le chemin est bon
+        if( is_match($audio[1] , '([^\s]+(\.(?i)(ogg))$)') && file_exists($path2) )
+            $ogg = '<source src="'. $url2 .'" type="audio/ogg">';
+    }
 
     // On associe la description
     $text  = !empty($args['text']) ? '<figcaption>'. $args['text'] .'</figcaption>' : '';
@@ -119,7 +139,7 @@ function pops_audio( $args ){
     // Scheme du shortcode
     $schema = apply_filters('pops_audio_schema' ,'<figure%5$s><audio controls="controls"><source src=%1$s type="audio/mp3">%3$s<a href=%1$s download=%2$s>$mp3</a></audio>%4$s</figure>');
 
-    return sprintf( $schema, $link_mp3, $url.$mp3, $ogg, $text, $class );
+    return sprintf( $schema, $url, $mp3, $ogg, $text, $class );
 }
 
 
@@ -185,30 +205,33 @@ function pops_email( $args ){
 function pops_file( $args ){
 
     $args = parse_args( $args, array(
-            'class' => 'my_file'
+            'class' => 'my_file',
+            'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
             ));
 
-    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
-    $url  = rel2abs(str_replace(ABSPATH, '', $path) );
+    // On nettoie le slug
+    $args['slug'] = trim( $args['slug'], '/');
+
+    // On définit l'url
+    $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $args['file'];
+    $path = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $args['file'];
 
     // On verifie si le fichier est valid et autorisé au téléchargement
-    if(
-        is_match($args['file'], '([^\s]+(\.(?i)(jpe?g|png|gif|bmp|pdf|zip|mp4|webm|ogv|txt))$)')
-        && file_exists($path.$args['file'])
-    )
-        $file  = $args['file'];
-    else
+    if( !is_match($args['file'], '([^\s]+(\.(?i)(jpe?g|png|gif|bmp|pdf|zip|mp4|webm|ogv|txt))$)') )
+        return;
+
+    // On verifie si l'url reponds
+    if( !file_exists($path) )
         return;
 
     // On associe le texte, class et link_file
-    $link_file  = $url . $file;
     $text       = !empty($args['text']) ? $args['text'] : $file;
     $class      = ' class="'. sanitize_html_class($array['class']) .'"';
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
 
-    return sprintf( $schema, $file, $link_file, $class, $text );
+    return sprintf( $schema, $file, $url, $class, $text );
 }
 
 
@@ -232,23 +255,26 @@ function pops_file( $args ){
 function pops_image( $args ){
 
     $args = parse_args( $args, array(
-        'class' => 'my_image'
+        'class' => 'my_image',
+        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
         ));
 
-    $path = str_replace('//', '/', MP_PAGES_DIR.'/'.$args['slug'].'/');
-    $url  = rel2abs(str_replace(ABSPATH, '', $path) );
+    // On nettoie le slug
+    $args['slug'] = trim( $args['slug'], '/');
+
+    // On définit l'url
+    $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $args['image'];
+    $path = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $args['image'];
 
     // On verifie si l'image est valide
-    if(
-        is_match( $args['image'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp))$)' )
-        && file_exists($path.$args['image'])
-    )
-        $image = $args['image'];
-    else return;
+    if( !is_match( $args['image'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp))$)' ) )
+        return;
+
+    // On verifie si l'url reponds
+    if( !file_exists($path) )
+        return;
 
     // On associe le texte, alt, class, path et url
-    $url        = $url . $image;
-    $path       = $path . $image;
     $alt        = !empty( $args['alt'] ) ? $array['alt'] : ' ';
     $text       = !empty( $args['text'] ) ? '<figcaption>'. $args['text'] .'</figcaption>' : '';
     $class      = ' class="'. sanitize_html_class($args['class']) .'"';
