@@ -121,14 +121,10 @@ require( ABSPATH . INC . '/mp_auth.php' );
 // Hook theme activé
 do_action( 'setup_theme' );
 
-// On definit le chemin pour le thème actif.
-define( 'MP_TEMPLATE_PATH', get_template_directory() );
-
 // On définit les constantes si un thème valide sinon on charge le thème du core
-if( !defined('MP_TEMPLATE_DIR') ){
-	define( 'MP_TEMPLATE_DIR' , MP_THEMES_DIR . '/'. MP_TEMPLATE_PATH );
-	define( 'MP_TEMPLATE_URL' , rel2abs( MP_TEMPLATE_PATH, MP_CONTENT_URL.'/themes' ) );
-}
+define( 'MP_TEMPLATE_PATH', get_template_directory('path') );
+define( 'MP_TEMPLATE_DIR' , get_template_directory() );
+define( 'MP_TEMPLATE_URL' , get_template_directory('url') );
 
 // On charge le fichier fonction.php du thème actif
 if ( glob( MP_TEMPLATE_DIR . '/functions.php' ) )

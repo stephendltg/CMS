@@ -216,61 +216,78 @@ function mp_rewrite_rules(){
 
     global $is_apache, $is_mod_rewrite, $is_rewrite_rules;
 
+    // Constante pour reforcer la réécriture d'url
+    if( FORCE_RELOCATE )
+        delete_option('setting->urlrewrite');
+
+    // On affecte l'état du toggle de réécriture selon l'état du mod rewrite
     $is_rewrite_rules = $is_mod_rewrite;
 
+    // On récupère la variable dans option
     $rewrite = get_option('setting->urlrewrite', true);
 
+    // Si mod rewrite déjà activé on arrête la fonction
     if ($rewrite === 'enable')
         return;
 
+    // Si mod rewrite a déjà été testé invalide désactive le toggle de réécriture et on arrête la fonciton
     if($rewrite === 'disable'){
+
         $is_rewrite_rules = false;
         return;
     }
 
+    // Si pas un serveur apache et pas de mod rewrite actif on affecte la variable stocker dans option à false
     if( !$is_apache || !$is_mod_rewrite )
         $rewrite = false;
 
-    $rules  = '# Set default charset utf-8'. PHP_EOL;
-    $rules .= 'AddDefaultCharset UTF-8'. PHP_EOL . PHP_EOL;
-    $rules .= '# Format audio'. PHP_EOL;
-    $rules .= 'AddType audio/ogg  .ogg'. PHP_EOL;
-    $rules .= 'AddType audio/mp3  .mp3'. PHP_EOL . PHP_EOL;
+    // Entête à tout document htaccess
+    $header  = '# Set default charset utf-8'. PHP_EOL;
+    $header .= 'AddDefaultCharset UTF-8'. PHP_EOL . PHP_EOL;
+    $header .= '# Format audio'. PHP_EOL;
+    $header .= 'AddType audio/ogg  .ogg'. PHP_EOL;
+    $header .= 'AddType audio/mp3  .mp3'. PHP_EOL . PHP_EOL;
+
+    // On affecte le header au règle apache pour le domaine
+    $rules   = $header;
 
     // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
     if ( $rewrite === true ) {
 
+        // On affecte la variable qui sera stocker dans la table option
         $rewrite = 'enable';
 
         // On definit le repertoire root
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
         if ( empty( $root ) ) $root = '/';
 
-        $rules .= '<IfModule mod_rewrite.c>'. PHP_EOL . PHP_EOL;
+        // Le premier bloc pour les règles principales
+        $rules .= '<IfModule mod_rewrite.c>'. PHP_EOL;
         $rules .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
         $rules .= '# if you homepage is '. MP_HOME . PHP_EOL;
         $rules .= '# RewriteBase '. $root . PHP_EOL. PHP_EOL;
 
-        /*
-        Si le repertoire MP_CONTENT_DIR est un cran au dessus d'ABSPATH 
-        il faudra manuellement déclarer un htaccess pour protéger les accès au répertoire
-        */
-        if( MP_CONTENT_DIR !== str_replace( ABSPATH, '', MP_CONTENT_DIR) ){
+
+        if( 0 === strpos( MP_CONTENT_DIR, ABSPATH) ){
 
             $rules .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
             $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
-        } else{
 
-            $rules_content = '<IfModule mod_rewrite.c>'. PHP_EOL . PHP_EOL;
+        } else {
+            
+            // Règles apache si MP_CONTENT_DIR est en dehors du répertoire ABSPATH
+            $rules_content  = $header;
+            $rules_content .= '<IfModule mod_rewrite.c>'. PHP_EOL;
             $rules_content .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
             $rules_content .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
-            $rules_content .= 'RewriteRule ^'. basename(MP_CONTENT_DIR) .'/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+            $rules_content .= 'RewriteRule ^/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
             $rules_content .= '</IfModule>';
 
             // On tente de proteger les fichiers
-            @file_marker_contents( dirname(MP_CONTENT_DIR) . '/.htaccess', $rules_content);
+            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content);
         }
 
+        // Suite du bloc principale
         $rules .= '# block all files core folder from being accessed directly'. PHP_EOL;
         $rules .= 'RewriteRule ^core/(.*) error [R=301,L]'. PHP_EOL;
         //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
@@ -290,10 +307,11 @@ function mp_rewrite_rules(){
         $is_rewrite_rules = false;
     }
 
-
+    // On tent d'écrire les règles principale 
     if( !file_marker_contents(ABSPATH . '.htaccess', $rules) )
-        cms_maintenance( 'Error file permissions !' );
-
+         _doing_it_wrong( __FUNCTION__, 'Error file permission .htaccess.' );
+    
+    // On stock la valeur de réécriture dans option
     update_option('setting->urlrewrite', $rewrite);
 
 }
@@ -504,27 +522,39 @@ function guess_url() {
  *
  * @access private
  */
-function get_template_directory(){
+function get_template_directory( $mode = 'directory' ){
 
-    static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
+    static $path = 1;
 
-    if( get_the_blog('theme') ){
+    if( get_the_blog('theme') && $path === 1 ){
         
         // On liste les thèmes présents dans le repertoire
         $themes = glob( MP_THEMES_DIR .'/*', GLOB_ONLYDIR );
         if( is_sup($themes, 0) ){
             foreach( $themes as $theme )
                 if( is_same( $theme, MP_THEMES_DIR . '/' . get_the_blog('theme') ) )
-                    return get_the_blog('theme');
+                    $path = get_the_blog('theme');
         }
     }
 
-    // On définit MP_TEMPLATE_DIR
-    define( 'MP_TEMPLATE_DIR', ABSPATH . INC . '/theme');
-    define( 'MP_TEMPLATE_URL', MP_HOME . '/'. INC . '/theme');
+    // On évite de boucler sur la recherche du thème
+    if( $path === 1 )
+        $path = false;
 
-    // On retourne le path
-    return INC . '/theme';
+    // On charge le thème du core par défaut
+    switch ($mode) {
+
+        case 'url':
+            return !$path ? MP_HOME . '/'. INC . '/theme' : MP_CONTENT_URL .'/themes/'. $path;
+            break;
+        case 'path':
+            return !$path ? INC . '/theme' : $path;
+            break;
+        default:
+            return !$path ? ABSPATH . INC . '/theme' : MP_THEMES_DIR . '/'. $path;
+            break;
+    }
+
 }
 
 

@@ -23,29 +23,37 @@
  */
 function email( $params = null , $mode = 'plain' ){
 
+    $params = parse_args( $params );
+
     if( is_array( $params ) and !empty( $params ) ) {
 
-        if( isset( $params['to'] ) )                                        $to      = $params['to'];
-        if( isset( $params['from'] )    && is_email( $params['from'] ) )    $from    = $params['from'];
-        if( isset( $params['replyTo'] ) && is_email( $params['replyTo'] ) ) $replyTo = $params['replyTo'];
-        if( isset( $params['subject'] ) )                                   $subject = esc_attr( $params['subject'] );
-        if( isset( $params['body'] ) )                                      $body    = esc_attr( $params['body'] );
+        if( isset($params['to']) )                                      $to      = $params['to'];
+        if( isset($params['from'])    && is_email($params['from']) )    $from    = $params['from'];
+        if( isset($params['replyTo']) && is_email($params['replyTo']) ) $replyTo = $params['replyTo'];
+        if( isset($params['subject']) )                                 $subject = esc_attr($params['subject']);
+        if( isset( $params['body'] ) )                                  $body    = esc_attr($params['body']);
 
-        foreach ( explode( ',' , trim( $to ) ) as $addr_mail )
-            if( !is_email( $addr_mail ) ) return false;
+        foreach ( explode( ',', trim($to) ) as $addr_mail )
+            if( !is_email($addr_mail) ) return false;
 
-        if( empty( $to ) || empty( $subject ) || empty( $body ) ) return false;
+        if( empty($to) || empty($subject) || empty($body) ) 
+            return false;
 
-        if( empty( $from ) ) {
-            $sitename = strtolower( $_SERVER['SERVER_NAME'] );
+        if( empty($from) ) {
+
+            $sitename = strtolower($_SERVER['SERVER_NAME']);
+
             if ( substr( $sitename, 0, 4 ) == 'www.' )
-             $sitename = substr( $sitename, 4 );
+                $sitename = substr( $sitename, 4 );
+
             $from = 'miniPOPS@' . $sitename;
         }
 
-        if( empty( $replyTo ) ) $replyTo = $from;
+        if( empty($replyTo) ) 
+            $replyTo = $from;
 
-        if( is_notin( $mode , array('plain','html') ) ) return false;
+        if( is_notin( $mode , array('plain','html') ) ) 
+            return false;
 
         $headers = array(
             'From: ' . $from,
@@ -111,6 +119,7 @@ function get_ip_client() {
  * @return integer   code de retour de l'url 200: ok, etc ...
  */
 function get_http_response_code( $url ) {
+
     $headers = get_headers($url);
     return intval( substr($headers[0], 9, 3) );
 }

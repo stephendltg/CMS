@@ -129,7 +129,7 @@ function the_lang( $before = '', $after = '' ) {
 /***********************************************/
 
 function mp_meta_charset(){
-    echo '<meta charset="'.strtolower(CHARSET).'">'."\n";
+    echo '<meta charset="'.strtolower(CHARSET).'">'. PHP_EOL;
 }
 
 function mp_meta_title(){
@@ -423,7 +423,7 @@ function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
  * @param  $image_schema    string  : Schema de retour affiché
  * @return array    retourne les résultats sous forme de tableau
  */
-function the_images( $name ='' , $where = array(), $max = 10, $image_schema = '<img src="%1$s" alt="%2$s"/>'){
+function the_images( $name = '*' , $where = null, $max = 10, $image_schema = '<img src="%1$s" alt="%2$s"/>'){
 
     $max = (integer) $max;
     $name = (string) $name;

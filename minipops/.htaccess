@@ -7,14 +7,10 @@ AddType audio/ogg  .ogg
 AddType audio/mp3  .mp3
 
 <IfModule mod_rewrite.c>
-
 RewriteEngine on
 
 # if you homepage is http://minipops.local
 # RewriteBase /
-
-# block specify files in the cache folder from being accessed directly
-RewriteRule ^/Users/Sites/www/mp_content/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]
 
 # block all files core folder from being accessed directly
 RewriteRule ^core/(.*) error [R=301,L]

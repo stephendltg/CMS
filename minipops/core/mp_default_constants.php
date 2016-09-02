@@ -23,6 +23,9 @@ function mp_init_constants() {
     // Definit les constantes pour les répertoires de stockage du site
 	if ( !defined('MP_CONTENT_DIR') )
 		define( 'MP_CONTENT_DIR', ABSPATH . 'mp_content' );
+
+	if ( !defined('FORCE_RELOCATE') )
+		define( 'FORCE_RELOCATE', false );
         
 	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages' );
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );

@@ -29,6 +29,16 @@ function get_attached_media( $args = array() ) {
 
     global $query;
 
+    $args = parse_args( $args, array(
+            'where' => $query,
+            'max'   => 10,
+            'order' => 'ASC',
+            'orderby' => '',
+            'name'    => '*',
+            'type'    => '*'
+        ));
+
+
     /* Table d'extension valid */
     $extension = array(
         'jpg','jpeg','png','gif','svg','bmp','tiff',
@@ -48,47 +58,35 @@ function get_attached_media( $args = array() ) {
         'html','htm'
     );
 
-    /* Init "where" */
-    if( empty($args['where']) ) $args['where'][] = $query;
 
-     /* Init et validation "max" */
-    $max = !empty($args['max']) && is_intgr($args['max']) ? $args['max'] : 10;
+    /* validation "where" */
+    $args['where'] = sanitize_list( $args['where'], ',');
+    $args['where'] = explode( ',', $args['where'] );
 
     /* Init et nettoyage "order" */
-    $args['order'] = !empty($args['order']) ? strtoupper($args['order']) : 'ASC';
+    $args['order'] = strtoupper($args['order']);
 
-    /* Init et validation "orderby" */
-    $args['orderby'] = !empty($args['orderby']) && is_in( $args['orderby'], array('date','name','type') ) ? $args['orderby'] : '';
+    /* Validation "orderby" */
+    $args['orderby'] = is_in( $args['orderby'], array('date','name','type') ) ? $args['orderby'] : '';
 
-    /* Init et validation "name" */
-    if( !empty($args['name']) ){
+    /* Validation "type" */
+    $args['type'] = strtolower( sanitize_list($args['type'], ',') );
+    $args['type'] = explode( ',', $args['type'] );
+    $types = '';
+    foreach( $args['type'] as $type )
+        $types .= is_in( $type, $extension ) ? $type.',' : '';
+    $types = '{'. rtrim($types,',') .'}';
 
-        $args['name']= explode(',', $args['name']);
-        $names = '';
-        foreach( $args['name'] as $name )
-            $names .= sanitize_file_name($name) ? sanitize_file_name($name).',' :'';
-        $names = '{'. rtrim($names,',') .'}';
-
-    } else $names = '*';
-
-    /* Init et validation "type" */
-    if( !empty($args['type']) ) {
-
-        $args['type'] = explode( ',', strtolower($args['type']) );
-        $types = '';
-        foreach( $args['type'] as $type )
-            $types .= is_in( $type, $extension ) ? $type.',' : '';
-        $types = '{'. rtrim($types,',') .'}';
-
-    } else $types = '*';
-
+    /* On prépare la liste des nom recherché */
+    $names = '{'. sanitize_list( $args['name'], ',' ) .'}';
 
     /* On créer la recherche */
     $search = $names.'.'.$types;
 
     /* On récupère la liste des fichiers en nettoyant les fichiers sensibles */
     foreach( $args['where'] as $slug ){
-        $medias = glob( str_replace( '//', '/', MP_PAGES_DIR .'/'. $slug .'/'. $search ) , GLOB_BRACE );
+
+        $medias = glob( MP_PAGES_DIR .'/'. $slug .'/'. $search, GLOB_BRACE );
         $medias = array_diff( $medias , array( MP_PAGES_DIR.'/site.yml', MP_PAGES_DIR.'/'.$slug.'/'.basename($slug).'.md') );
     }
 
@@ -111,14 +109,14 @@ function get_attached_media( $args = array() ) {
         }
 
         $medias = array_combine( $medias , $tmp );
-        if( is_same($args['order'], 'ASC') ) asort($medias);
+        if( is_same($args['order'], 'ASC') )  asort($medias);
         if( is_same($args['order'], 'DESC') ) arsort($medias);
         $medias = array_keys($medias);
 
     } else {
 
         /* On filtre par "order" uniquement */
-        if( is_same($args['order'], 'ASC') ) sort($medias);
+        if( is_same($args['order'], 'ASC') )  sort($medias);
         if( is_same($args['order'], 'DESC') ) rsort($medias);
 
     }
@@ -127,7 +125,7 @@ function get_attached_media( $args = array() ) {
     if( is_same($args['order'], 'SHUFFLE') ) shuffle($medias);
 
     /* Limite de resultat */
-    array_splice( $medias, $max );
+    array_splice( $medias, intval($args['max']) );
 
     /* On renvoie le tableau sous forme de slug */
     return array_map( function($value){ return str_replace(MP_PAGES_DIR.'/','',$value);} , $medias );
@@ -145,7 +143,7 @@ function get_attached_media( $args = array() ) {
  * @param  $max             integer : Nombre de résultat par défaut : 10
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_the_images( $name ='', $where = array(), $max = 10 ){
+function get_the_images( $name = '*', $where = null, $max = 10 ){
 
     $max    = (integer) $max;
     $name   = (string) $name;
@@ -167,7 +165,7 @@ function get_the_images( $name ='', $where = array(), $max = 10 ){
  * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_the_image( $name = '', $url = true ){
+function get_the_image( $name = '*', $url = true ){
 
     $name   = (string) $name;
 
