@@ -174,8 +174,8 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
         if( isset($enqueue_script[$handle]['dependencies']['conditional']) ){
 
             $conditional = preg_replace( '/[^ltegtIE0-9 !()&|]/', '', $enqueue_script[$handle]['dependencies']['conditional'] );
-            $before      = '<!--[if '. $conditional .']>' . PHP_EOL;
-            $after       = PHP_EOL .'<![endif]-->';
+            $before      = "<!--[if '. $conditional .']>\n";
+            $after       = "<![endif]-->\n";
         }
 
         // On supprime le handle de la liste
