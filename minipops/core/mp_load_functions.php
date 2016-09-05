@@ -218,7 +218,7 @@ function mp_rewrite_rules(){
 
     // Constante pour reforcer la réécriture d'url
     if( FORCE_RELOCATE )
-        delete_option('setting->urlrewrite');
+        update_option('setting->urlrewrite', true);
 
     // On affecte l'état du toggle de réécriture selon l'état du mod rewrite
     $is_rewrite_rules = $is_mod_rewrite;
@@ -242,11 +242,20 @@ function mp_rewrite_rules(){
         $rewrite = false;
 
     // Entête à tout document htaccess
-    $header  = '# Set default charset utf-8'. PHP_EOL;
+    $header  = '# htaccess protect'. PHP_EOL;
+    $header .= '<Files .htaccess>'. PHP_EOL;
+    $header .= 'order allow,deny'. PHP_EOL;
+    $header .= 'deny from all'. PHP_EOL;
+    $header .= '</Files>'. PHP_EOL . PHP_EOL;
+    $header .= '# block listing files'. PHP_EOL;
+    $header .= 'Options -Indexes'. PHP_EOL . PHP_EOL;
+    $header .= '# Set default charset utf-8'. PHP_EOL;
     $header .= 'AddDefaultCharset UTF-8'. PHP_EOL . PHP_EOL;
     $header .= '# Format audio'. PHP_EOL;
     $header .= 'AddType audio/ogg  .ogg'. PHP_EOL;
-    $header .= 'AddType audio/mp3  .mp3'. PHP_EOL . PHP_EOL;
+    $header .= 'AddType audio/mp3  .mp3'. PHP_EOL;
+    $header .= 'AddEncoding gzip svgz'. PHP_EOL;
+    $header .= 'AddType image/svg+xml svg svgz'. PHP_EOL . PHP_EOL;
 
     // On affecte le header au règle apache pour le domaine
     $rules   = $header;
@@ -262,6 +271,13 @@ function mp_rewrite_rules(){
         if ( empty( $root ) ) $root = '/';
 
         // Le premier bloc pour les règles principales
+        $rules .= '# Force index.php the others are blocked' . PHP_EOL;
+        $rules .= 'DirectoryIndex index.php'. PHP_EOL. PHP_EOL;
+        $rules .= '# block all files begin by index' . PHP_EOL;
+        $rules .= '<Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">'. PHP_EOL;
+        $rules .= 'order allow,deny'. PHP_EOL;
+        $rules .= 'deny from all'. PHP_EOL;
+        $rules .= '</Files>'. PHP_EOL. PHP_EOL;
         $rules .= '<IfModule mod_rewrite.c>'. PHP_EOL;
         $rules .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
         $rules .= '# if you homepage is '. MP_HOME . PHP_EOL;
@@ -276,15 +292,16 @@ function mp_rewrite_rules(){
         } else {
             
             // Règles apache si MP_CONTENT_DIR est en dehors du répertoire ABSPATH
-            $rules_content  = $header;
-            $rules_content .= '<IfModule mod_rewrite.c>'. PHP_EOL;
-            $rules_content .= 'RewriteEngine on'. PHP_EOL . PHP_EOL;
-            $rules_content .= '# block specify files in the cache folder from being accessed directly'. PHP_EOL;
-            $rules_content .= 'RewriteRule ^/(.*)\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$ error [R=301,L]'. PHP_EOL . PHP_EOL;
-            $rules_content .= '</IfModule>';
+            $rules_content_dir  = $header;
+            $rules_content_dir .= '# disable ExecCGI'. PHP_EOL;
+            $rules_content_dir .= 'OPTIONS -ExecCGI  -Indexes'. PHP_EOL . PHP_EOL;
+            $rules_content_dir .= '<Files ~ "\.(pl|php|php3|php4|php5|cgi|spl|scgi|fcgi|shtm|shtml|xhtm|xhtml|htm|xml|yml|yaml|md|mdown|gz)$">'. PHP_EOL;
+            $rules_content_dir .= 'Deny from all'. PHP_EOL;
+            $rules_content_dir .= '</Files>'. PHP_EOL;
+
 
             // On tente de proteger les fichiers
-            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content);
+            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content_dir);
         }
 
         // Suite du bloc principale

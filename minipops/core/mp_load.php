@@ -93,7 +93,8 @@ unset( $mu_plugin );
 do_action( 'muplugins_loaded' );
 
 // On charge la gestion des script et style
-require( ABSPATH . INC . '/mp_enqueue.php' );
+require( ABSPATH . INC . '/mp_script.php' );
+require( ABSPATH . INC . '/mp_style.php' );
 // On charge les fonctions gérant la traduction
 require( ABSPATH . INC . '/mp_lang.php' );
 

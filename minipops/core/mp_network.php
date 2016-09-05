@@ -111,8 +111,9 @@ function get_ip_client() {
 
 
 /***********************************************/
-/*               test url                      */
+/*                    url                      */
 /***********************************************/
+
 /**
  * Recupère le code l'url ciblé, voir http_response_code pour les codes de retour
  * @param  string    url à vérifier
@@ -124,3 +125,60 @@ function get_http_response_code( $url ) {
     return intval( substr($headers[0], 9, 3) );
 }
 
+/**
+ * Recupère le contenu d'une url
+ * @param  string    url
+ * @param  bool      code = true : retourne le code erreur générer par l'url
+ * @return integer   code de retour de l'url 200: ok, etc ...
+ */
+function url_get_content($url, $code = false) {
+
+    $content = file_get_content($url);
+
+    if( !$code )
+        return $content;
+
+    if( $content === false )
+        return intval( substr($http_response_header[0], 9, 3) );
+}
+
+
+/***********************************************/
+/*                 API-REST CLIENT             */
+/***********************************************/
+
+/**
+ * Requete api rest
+ * @param  string    url
+ * @param  string    token
+ * @param  string    method
+ * @param  array     options
+ * @return string    json
+ */
+function mp_remote( $url, $token, $method ='GET', $options = array() ){
+
+
+    $url = esc_url_raw($url);
+
+    if( empty($url) || is_notin( $method, array('GET', 'POST', 'PUT', 'PATCH', 'DELETE') ) || is_same(strlen($token), 0 ) )
+        return false;
+
+    $context = array( 'http' => array('ignore_errors' => true, 'method' => 'GET' , 'header' => array('authorization: '.$token) ) );
+
+    if( is_in( $method, array('POST', 'PUT', 'PATCH', 'DELETE') ) )
+        $context['http']['method'] = 'POST';
+
+    if( is_in( $method, array('PUT', 'PATCH') ) ){
+        
+        if( !empty($options) && is_array($options) ) 
+            $context['http']['content'] = $options;
+        else return false;
+    }
+
+    $context  = stream_context_create( $context );
+
+    if( !file_get_contents( $url, false, $context ) ) 
+        return false;
+
+    return json_decode( $response );
+}

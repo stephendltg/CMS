@@ -6,8 +6,6 @@
  * @subpackage Rhythmicon
  * @version 1
  */
-
-_echo( get_attached_media() );
 ?>
 <?php snippet('header'); ?>
 

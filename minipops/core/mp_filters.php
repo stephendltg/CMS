@@ -22,6 +22,19 @@ add_action('shutdown', function() {
 
 
 /***********************************************/
+/*        Filter for the style                 */
+/***********************************************/
+add_action('enqueue_styles','mp_load_default_style');
+
+function mp_load_default_style(){
+
+    // On charge le fichier style.css du thème actif
+    if ( glob( MP_TEMPLATE_DIR . '/style.css' ) )
+        mp_enqueue_style('my-style', 'style.css');
+}
+
+
+/***********************************************/
 /*        Filter for the meta                  */
 /***********************************************/
 

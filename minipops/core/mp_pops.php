@@ -101,7 +101,7 @@ function pops_audio( $args ){
     $args['slug'] = trim( $args['slug'], '/');
 
     // On récupère la liste des fichiers
-    $audio = explode( ',' , sanitize_list($args['audio']) );
+    $audio = explode( ',' , sanitize_list($args['audio'], ',') );
 
     // On définit l'url
     $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $audio[0];
@@ -112,7 +112,7 @@ function pops_audio( $args ){
         $mp3 = $audio[0];
     else return;
 
-    // On verifie si l'url reponds
+    // On verifie si le fichier existe
     if( !file_exists($path) )
         return;
 
@@ -220,7 +220,7 @@ function pops_file( $args ){
     if( !is_match($args['file'], '([^\s]+(\.(?i)(jpe?g|png|gif|bmp|pdf|zip|mp4|webm|ogv|txt))$)') )
         return;
 
-    // On verifie si l'url reponds
+    // On verifie si le fichier existe
     if( !file_exists($path) )
         return;
 
@@ -270,12 +270,12 @@ function pops_image( $args ){
     if( !is_match( $args['image'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp))$)' ) )
         return;
 
-    // On verifie si l'url reponds
+    // On verifie si le fichier existe
     if( !file_exists($path) )
         return;
 
     // On associe le texte, alt, class, path et url
-    $alt        = !empty( $args['alt'] ) ? $array['alt'] : ' ';
+    $alt        = !empty( $args['alt'] ) ? $args['alt'] : ' ';
     $text       = !empty( $args['text'] ) ? '<figcaption>'. $args['text'] .'</figcaption>' : '';
     $class      = ' class="'. sanitize_html_class($args['class']) .'"';
 

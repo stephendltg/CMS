@@ -65,7 +65,6 @@ function sanitize_option($option, $value){
             break;
         case 'site_blog_keywords':
         case 'site_blog_robots':
-            $value = sanitize_list($value);
             $value = remove_accent($value);
             $value = sanitize_words($value);
             $value = str_replace(' ', ',', $value);

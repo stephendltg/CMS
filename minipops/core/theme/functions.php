@@ -10,6 +10,14 @@ Author URI:
 
 
 // Déclaration des feuilles de style
-mp_add_inline_style('knacss', file_get_content(MP_TEMPLATE_DIR.'/assets/css/knacss.css') );
-mp_add_inline_style('style', file_get_content(MP_TEMPLATE_DIR.'/assets/css/style.css') );
+add_inline_style('knacss', file_get_content(MP_TEMPLATE_DIR.'/assets/css/knacss.css' ) );
+add_inline_style('style', file_get_content(MP_TEMPLATE_DIR.'/assets/css/style.css' ) );
+
+add_action('enqueue_styles','load_theme_style');
+
+function load_theme_style(){
+
+    mp_enqueue_style('knacss');
+    mp_enqueue_style('style');
+}
 
