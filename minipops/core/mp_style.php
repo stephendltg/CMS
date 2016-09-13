@@ -121,11 +121,11 @@ function mp_enqueue_style( $handle , $src = false, $deps = array(), $ver = false
 
         $data = apply_filters('pre_style_embed_data', $enqueue_style[$handle]['dependencies']['data'], $enqueue_style[$handle]['dependencies'] );
 
-        if( strlen($data) === 0)
-            return false;
-
         // On supprime le handle de la liste
         mp_deregister_style($handle);
+
+        if( strlen($data) === 0)
+            return;
 
         printf("<style id='%s-inline-css' type='text/css'>\n%s\n</style>\n", esc_attr($handle), $data);
 
@@ -136,16 +136,31 @@ function mp_enqueue_style( $handle , $src = false, $deps = array(), $ver = false
         $url = apply_filters('pre_style', $url, $enqueue_style[$handle]['dependencies']);
         $url = esc_url_raw( explode('?', $url)[0] );
 
-        if( strlen($url) === 0 )
-            return;
+        if( strlen($url) === 0 ){
 
-        // Prevent css extension.
-        if( 'css' !== substr(strrchr($url,'.'), 1) )
+            // On supprime le handle de la liste
+            mp_deregister_style($handle);
+
+            _doing_it_wrong( __FUNCTION__, 'error url!' );
+
             return;
+        }
+
+        /* PREVENT EXTENSION */
+        if( 'css' !== substr(strrchr($url,'.'), 1) ){
+
+            // On supprime le handle de la liste
+            mp_deregister_style($handle);
+
+            _doing_it_wrong( __FUNCTION__, 'error extension file !' );
+
+            return;
+        }
+
 
         /* VERSIONING */
         if( false === $enqueue_style[$handle]['version'] )
-            $version = date('Ym');
+            $version = date('Ym'); // equivaut à un cache d'un mois des naviguateurs
         else
             $version = sanitize_allspecialschars($enqueue_style[$handle]['version']);
         
@@ -158,13 +173,18 @@ function mp_enqueue_style( $handle , $src = false, $deps = array(), $ver = false
         $media = $enqueue_style[$handle]['media'];
 
         if( is_notin( $media, $medias_types ) ){
+
+            // On supprime le handle de la liste
+            mp_deregister_style($handle);
+
             _doing_it_wrong( __FUNCTION__, sprintf('Error of media type : only this '. implode(', ', $medias_types) ) );
+
             return;
         }
 
 
         /* REL */
-        $rel = isset($enqueue_style[$handle]['dependencies']['alt']) && $enqueue_style[$handle]['dependencies']['alt'] ? 'alternate stylesheet' : 'stylesheet';
+        $rel   = isset($enqueue_style[$handle]['dependencies']['alt']) && $enqueue_style[$handle]['dependencies']['alt'] ? 'alternate stylesheet' : 'stylesheet';
         $title = isset($enqueue_style[$handle]['dependencies']['title']) ? 'title ="'. esc_attr($enqueue_style[$handle]['dependencies']['title']) . '"' : '';
 
         /* CONDITIONNAL
@@ -192,6 +212,29 @@ function mp_enqueue_style( $handle , $src = false, $deps = array(), $ver = false
 
         printf( "%s<link rel='%s' %s id='%s-css' type='text/css' href='%s' media='%s'>\n%s", $before, $rel, $title, esc_attr($handle), $url, $media, $after );
 
+    }
+
+}
+
+
+/*
+ * enqueue every styles register
+ *
+ * @return
+ */
+function mp_enqueue_styles(){
+
+    // Action pour shunter mp_register_style
+    do_action('enqueue_styles');
+
+    // On charge les registers
+    $enqueue_registers = mp_cache_data('mp_register_style');
+
+    if( !empty($enqueue_registers) ){
+
+        // On charge les registers
+        foreach ($enqueue_registers as $handle => $args)
+            mp_enqueue_style($handle);
     }
 
 }

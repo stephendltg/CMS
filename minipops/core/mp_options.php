@@ -10,31 +10,34 @@
  */
 
 // On charge la classe
-global $MP_OPTIONS; $MP_OPTIONS = new OPTIONS();
+mp_cache_data('mp_options', new OPTIONS() );
+
+//_echo(mp_cache_data('mp_options') );
 
 
 // Les fonctions d'utilisations de la classe
 function get_option( $option, $default = null, $domain = null ){
-    global $MP_OPTIONS;
-    return $MP_OPTIONS->get($option, $default, $domain);
+
+    return mp_cache_data('mp_options')->get($option, $default, $domain);
 }
 
 function add_option( $option, $value = null, $domain = null ){
-    global $MP_OPTIONS;
-    return $MP_OPTIONS->add($option, $value, $domain);
+
+    return mp_cache_data('mp_options')->add($option, $value, $domain);
 }
 
 function update_option( $option, $value = null, $domain = null ){
-    global $MP_OPTIONS;
-    return $MP_OPTIONS->update($option, $value, $domain);
+
+    return mp_cache_data('mp_options')->update($option, $value, $domain);
 }
 
 function delete_option( $option, $domain = null ){
-    global $MP_OPTIONS;
-    return $MP_OPTIONS->delete($option, $domain);
+
+    return mp_cache_data('mp_options')->delete($option, $domain);
 }
 
 function form_option( $option, $domain = null ){
+    
     $value = get_option($option, null, $domain);
     if( is_array($value) ) return;
     echo sanitize_allspecialschars($value);
@@ -128,7 +131,7 @@ class options {
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
-        add_action('loaded', function (){ global $MP_OPTIONS; $MP_OPTIONS->save(); });
+        add_action('loaded', function (){ mp_cache_data('mp_options')->save(); });
     }
 
     /**

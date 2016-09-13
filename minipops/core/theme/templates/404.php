@@ -15,9 +15,9 @@
             <td rowspan="2" class="main small-visible large-w66">
 
                 <main id="main" role="main">
-                     <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
-                        <?php the_breadcrumb(' / ') ?>
-                    </nav>
+
+                    <?php the_breadcrumb() ?>
+                    
                     <article class="article" >
 
                         <header class="header" >

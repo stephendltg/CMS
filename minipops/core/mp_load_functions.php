@@ -214,26 +214,24 @@ function mp_rewrite_rules(){
 
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
-    global $is_apache, $is_mod_rewrite, $is_rewrite_rules;
+    global $is_apache, $is_mod_rewrite;
 
     // Constante pour reforcer la réécriture d'url
     if( FORCE_RELOCATE )
         update_option('setting->urlrewrite', true);
 
-    // On affecte l'état du toggle de réécriture selon l'état du mod rewrite
-    $is_rewrite_rules = $is_mod_rewrite;
-
     // On récupère la variable dans option
     $rewrite = get_option('setting->urlrewrite', true);
 
-    // Si mod rewrite déjà activé on arrête la fonction
-    if ($rewrite === 'enable')
+    // Si mod rewrite déjà activé on arrête la fonction et on définit la constante IS_REWRITE_RULES
+    if ( $rewrite === 'enable' ){
+        define('IS_REWRITE_RULES', true);
         return;
+    }
 
-    // Si mod rewrite a déjà été testé invalide désactive le toggle de réécriture et on arrête la fonciton
+    // Si mod rewrite a déjà été testé invalide désactive le toggle de réécriture et on arrête la fonction. on passe la constante IS_REWRITE_RULES
     if($rewrite === 'disable'){
-
-        $is_rewrite_rules = false;
+        define('IS_REWRITE_RULES', false);
         return;
     }
 
@@ -264,7 +262,7 @@ function mp_rewrite_rules(){
     if ( $rewrite === true ) {
 
         // On affecte la variable qui sera stocker dans la table option
-        $rewrite = 'enable';
+        define('IS_REWRITE_RULES', true);
 
         // On definit le repertoire root
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
@@ -318,10 +316,10 @@ function mp_rewrite_rules(){
         $rules .= '</IfModule>';
 
 
+
     } else {
 
-        $rewrite = 'disable';
-        $is_rewrite_rules = false;
+        define('IS_REWRITE_RULES', false);
     }
 
     // On tent d'écrire les règles principale 
@@ -329,7 +327,7 @@ function mp_rewrite_rules(){
          _doing_it_wrong( __FUNCTION__, 'Error file permission .htaccess.' );
     
     // On stock la valeur de réécriture dans option
-    update_option('setting->urlrewrite', $rewrite);
+    update_option('setting->urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );
 
 }
 
@@ -498,7 +496,6 @@ function is_ssl() {
  */
 function guess_url() {
 
-    global $is_rewrite_rules;
 
 	if ( defined('MP_HOME') && '' != MP_HOME ) { $url = MP_HOME; }
     else {
@@ -520,11 +517,6 @@ function guess_url() {
 				$path = $_SERVER['REQUEST_URI'];
 			}
 		}
-
-        if ( !$is_rewrite_rules ) { 
-
-            $path = str_replace( array('index.php','index'),'', $_SERVER['PHP_SELF']); 
-        }
 
         $schema = is_ssl() ? 'https://' : 'http://';
 		$url = $schema . $_SERVER['HTTP_HOST'] . $path;
@@ -611,11 +603,24 @@ function get_the_blog( $field, $default = false ){
             $value = get_the_lang();
             break;
         case 'logo':
-            $path = apply_filters('mp_path_logo', MP_PAGES_DIR.'/logo');
-            $logos = glob($path.'.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
-            if( isset($logos[0]) )
-                $value = '<img src="'. MP_PAGES_URL .'/'. $logos[0].'" class="site-logo" alt="logo - '.get_the_blog('title').'" title="'.get_the_blog('title').'" >';
-            else
+
+            $logos = glob( MP_PAGES_DIR. '/logo.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
+            $logos = array_map( function($logo){ return ltrim( str_replace(MP_PAGES_DIR, '', $logo), '/' ); }, $logos);
+ 
+            if( isset($logos[0]) && 'logo.svg' !== $logos[0] ){
+
+                $attr = '';
+
+                if( is_in('logo.svg', $logos) ){
+
+                    $attr = 'onerror="this.removeAttribute(\'onerror\'); this.src=\''.MP_PAGES_URL. '/'.$logos[0].'\'"';
+                    $logos[0] = 'logo.svg';
+                }
+
+                $scheme = apply_filters('mp_logo_scheme', '<a href="%s" title="%s"><img class="logo" src="%s" alt="logo %s" %s></a>' );
+                $value = sprintf( $scheme, get_the_blog('home'), get_the_blog('title'), MP_PAGES_URL .'/'. $logos[0], get_the_blog('title'), $attr );
+
+            } else
                 $value = null;
             break;   
         default:

@@ -128,7 +128,7 @@ function get_attached_media( $args = array() ) {
     array_splice( $medias, intval($args['max']) );
 
     /* On renvoie le tableau sous forme de slug */
-    return array_map( function($value){ return str_replace(MP_PAGES_DIR.'/','',$value);} , $medias );
+    return array_map( function($value){ return ltrim( str_replace(MP_PAGES_DIR.'/','',$value), '/');} , $medias );
 }
 
 

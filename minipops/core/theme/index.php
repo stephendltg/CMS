@@ -7,6 +7,7 @@
  * @version 1
  */
 ?>
+
 <?php snippet('header'); ?>
 
     <table role="presentation">
@@ -16,9 +17,7 @@
 
                 <main id="main" role="main">
 
-                    <nav role="navigation" aria-label="Vous êtes ici : " id="breadcrumb" class="info mbl"><span>//</span>
-                        <?php the_breadcrumb(' / ') ?>
-                    </nav>
+                     <?php the_breadcrumb() ?>
 
                     <article class="article mtl" >
 

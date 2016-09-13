@@ -301,10 +301,8 @@ add_action('mp_head', 'mp_meta_feed_link', 11);
 add_action('mp_head', 'mp_meta_sitemap_link', 12);
 add_action('mp_head', 'mp_meta_canonical_link', 13);
 add_action('mp_head', 'mp_meta_opengraph', 14);
-// enqueue all handles CSS stylesheet.
-add_action('mp_head', function(){do_action('enqueue_styles');}, 15 );
-// enqueue all handles script.
-add_action('mp_head', function(){do_action('enqueue_scripts');}, 16 );
+add_action('mp_head', 'mp_enqueue_styles', 15 );
+add_action('mp_head', 'mp_enqueue_scripts', 16 );
 
 /***********************************************/
 /*        Fonctions mpops_header               */

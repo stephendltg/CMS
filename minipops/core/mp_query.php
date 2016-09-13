@@ -69,10 +69,7 @@ function get_query_vars(){
  */
 function get_url_queries(){
 
-    global $is_rewrite_rules;
-
-
-    if ( $is_rewrite_rules ){
+    if ( IS_REWRITE_RULES ){
 
         return get_current_url('uri');
 
@@ -112,19 +109,17 @@ function get_permalink( $slug ='' , $type ='page' ){
     $type = (string) $type;
     $slug = (string) $slug;
 
-    global $is_rewrite_rules;
-
     if( is_same($type , 'page') && empty($slug) )
         return MP_HOME;
 
     if( is_same($type , 'page') &&  is_page($slug) )
-        $link = ( $is_rewrite_rules ) ? MP_HOME .'/'. $slug : MP_HOME .'/index.php?page='.$slug;
+        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. $slug : MP_HOME .'/index.php?page='.$slug;
     if( is_same($type, 'feed') && is_same($slug , 'rss') )
-        $link = ( $is_rewrite_rules ) ? MP_HOME .'/'. 'feed' : MP_HOME .'/index.php?page='. 'feed';
+        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. 'feed' : MP_HOME .'/index.php?page='. 'feed';
     if( is_same($type , 'page') &&  is_same($slug , 'sitemap') )
-        $link = ( $is_rewrite_rules ) ? MP_HOME .'/sitemap.xml' : MP_HOME .'/index.php?page=sitemap.xml';
+        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/sitemap.xml' : MP_HOME .'/index.php?page=sitemap.xml';
     if( is_same($type , 'tag') &&  is_tag($slug) )
-        $link = ( $is_rewrite_rules ) ? MP_HOME .'/tag/'.$slug : MP_HOME .'/index.php?tag='.$slug;
+        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/tag/'.$slug : MP_HOME .'/index.php?tag='.$slug;
 
     if(!empty($link) ) return $link;
     else return false;

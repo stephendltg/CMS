@@ -119,11 +119,11 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
 
         $data = apply_filters('pre_script_embed_data', $enqueue_script[$handle]['dependencies']['data'], $enqueue_script[$handle]['dependencies'] );
 
-        if( strlen($data) === 0)
-            return false;
-
         // On supprime le handle de la liste
         mp_deregister_script($handle);
+
+        if( strlen($data) === 0)
+            return false;
 
         printf("<script id='%s-inline-js' type='text/javascript'>\n%s\n</script>\n", esc_attr($handle), $data);
 
@@ -134,29 +134,45 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
         $url = apply_filters('pre_script', $url, $enqueue_script[$handle]['dependencies']);
         $url = esc_url_raw( explode('?', $url)[0] );
 
-        if( strlen($url) === 0 )
-            return;
+        if( strlen($url) === 0 ){
 
-        // Prevent css extension.
-        if( 'js' !== substr(strrchr($url,'.'), 1) )
+            // On supprime le handle de la liste
+            mp_deregister_style($handle);
+
+            _doing_it_wrong( __FUNCTION__, 'error url!' );
+
             return;
+        }
+
+        /* PREVENT EXTENSION */
+        if( 'js' !== substr(strrchr($url,'.'), 1) ){
+
+            // On supprime le handle de la liste
+            mp_deregister_style($handle);
+
+            _doing_it_wrong( __FUNCTION__, 'error extension file !' );
+
+            return;
+        }
+
 
         /* VERSIONING */
         if( false === $enqueue_script[$handle]['version'] )
-            $version = date('Ym');
+            $version = date('Ym'); // equivaut à un cache d'un mois des naviguateurs
         else
             $version = sanitize_allspecialschars($enqueue_script[$handle]['version']);
         
         $url = $url . ( strlen($version) === 0  ? '' : '?' . $version );
 
 
-        /* Attributs */
+        /* ATTRIBUTS */
         $script_attributs = apply_filters('script_attributs', array('async', 'defer') );
 
         if( !isset($enqueue_script[$handle]['dependencies']['attributs']) || is_notin( $enqueue_script[$handle]['dependencies']['attributs'], $script_attributs ) )
             $attributs = '';
         else
             $attributs = $enqueue_script[$handle]['dependencies']['attributs'];
+
 
         /* CONDITIONNAL
         *
@@ -183,6 +199,28 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
 
         printf( "%s<script id='%s-js' type='text/javascript' href='%s'>\n</script>%s", $before, esc_attr($handle), $url, $after );
 
+    }
+
+}
+
+/*
+ * enqueue every script register
+ *
+ * @return
+ */
+function mp_enqueue_scripts(){
+
+    // Action pour shunter mp_register_style
+    do_action('enqueue_scripts');
+
+    // On charge les registers
+    $enqueue_registers = mp_cache_data('mp_register_script');
+
+    if( !empty($enqueue_registers) ){
+
+        // On charge les registers
+        foreach ($enqueue_registers as $handle => $args)
+            mp_enqueue_style($handle);
     }
 
 }
