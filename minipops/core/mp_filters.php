@@ -194,7 +194,7 @@ function mp_doing_sitemap(){
 function mp_doing_feed(){
 
     // on déclarerle bon header
-    header( 'Content-Type: text/plain; charset='.CHARSET );
+    header( 'Content-Type: text/xml; charset='.CHARSET );
 
     // Boucle pour flux rss
     the_loop('max=5', 'my_feed'); 
