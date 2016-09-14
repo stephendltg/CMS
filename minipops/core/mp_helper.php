@@ -482,8 +482,6 @@ function excerpt( $text , $length = 140 , $mode = 'chars' ) {
     $length = (int) $length;
     $mode   = (string) $mode;
 
-    $text = strip_all_tags($text);
-
     if( is_same( strtolower($mode) , 'words' ) ){
         if( str_word_count($text , 0) > $length ) {
             $words = str_word_count($text, 2);
@@ -549,4 +547,110 @@ function parse_text( $text ){
     $text = str_replace('...', '&#8230;', $text);
 
     return $text;
+}
+
+
+/**
+* Editeur d'image
+* @param  $image     image à editer
+*/
+function mp_photo( $args ){
+
+    // En cours de construction
+
+    return;
+
+    $args = parse_args( $args, array(
+        'path' => '',
+
+        ));
+
+    try {
+        $img = new abeautifulsite\SimpleImage($image);
+        $img->flip('x')->thumbnail(100, 75)->save('flipped.jpg');
+
+    } catch(Exception $e) {
+        _doing_it_wrong( __FUNCTION__, $e->getMessage() );
+    }
+}
+
+/***********************************************/
+/*                  js/css Minify              */
+/***********************************************/
+// Minifie js et css simplement
+function mp_easy_minify( $str, $comments = true ){
+
+    $str = apply_filters('pre_mp_easy_minify', $str);
+
+    // On enlève les commentaires
+    if($comments)
+        $str = preg_replace( '!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $str );
+
+    /* remove tabs, spaces, newlines, etc. */
+    $str = str_replace(array("\r\n", "\r", "\n", "\t"), '', $str);
+    while ( stristr($str, '  ') )
+        $str = str_replace('  ', ' ', $str);
+
+    return apply_filters('mp_easy_minify', $str);
+}
+
+
+/***********************************************/
+/*                  html Minify                */
+/***********************************************/
+
+function mp_minify_html($html){
+
+    $html = apply_filters('pre_mp_minify_html', $html);
+
+    // On recherche tous les tag ainsi que leur contenu ( tag => <p style="color:red">, text => "mon texte", tag => </p> )
+    preg_match_all( '/<(?<tag>[\/\w.:-]*)(?:".*?"|\'.*?\'|[^\'">]+)*>|(?<text>((<[^!\/\w.:-])?[^<]*)+)|/si', $html, $matches, PREG_SET_ORDER );
+    // On init le toogle tag
+    $raw_tag = false;
+    // On init le résultat
+    $html    = '';
+
+    // On boucle sur tous les éléments tag ou text trouvés
+    foreach( $matches as $token ){
+
+        // On normalise la variable tag
+        $tag     = isset( $token['tag'] ) ? strtolower( $token['tag'] ) : null;
+        // On associe le contenu
+        $content = $token[0];
+
+        if( is_null($tag) ){
+            // On supprimer les commentaires seulement s'il ne sont pas dans un textaera
+            if($raw_tag != 'textarea')
+                $content = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $content);
+
+        }
+        else {
+
+            // On minifie le contenu seulement s'il n'appartient pas à pre ou textaera
+            if( $tag == 'pre' || $tag == 'textarea' )
+                $raw_tag = $tag;
+            else if( $tag == '/pre' || $tag == '/textarea' )
+                $raw_tag = false;
+            else {
+
+                if ( $raw_tag )
+                    $strip = false;
+                else {
+                    $strip   = true;
+                    $content = preg_replace('/(\s+)(\w++(?<!\baction|\balt|\bcontent|\bsrc)="")/', '$1', $content);
+                    $content = str_replace(' />', '/>', $content);
+                }
+            }
+        }
+
+        // On supprimer les espaces inutiles
+        if ($strip)
+            $content = mp_easy_minify($content, false);
+
+        $html .= $content;
+    }
+
+    do_action('mp_minify_html');
+
+    return apply_filters('mp_minify_html', $html);
 }

@@ -16,7 +16,7 @@
 add_action('shutdown', function() {
     $levels = ob_get_level();
     for ($i=0; $i<$levels; $i++)
-        ob_end_flush();
+        @ob_end_flush();
 }, 1 );
 
 
@@ -32,6 +32,19 @@ function mp_load_default_style(){
     if ( glob( MP_TEMPLATE_DIR . '/style.css' ) )
         mp_enqueue_style('my-style', 'style.css');
 }
+
+
+/***********************************************/
+/*        Filter fsi extrait d'une page vide    */
+/***********************************************/
+add_filter('the_page_excerpt', function($value){ 
+    if( strlen($value) === 0 ) {
+        $value = excerpt( get_the_page('content'), 140, 'words' );
+        return mp_minify_html($value);
+    }
+    return $value; 
+} );
+
 
 
 /***********************************************/
@@ -180,55 +193,52 @@ function mp_doing_sitemap(){
 // On génére le flux rss
 function mp_doing_feed(){
 
-/*
-     mp_set_the_page('colletions', array('title'=>'Accueil', 'content' => 'test') );
-     mp_set_the_page('demon', array('title'=>'Accueil', 'content' => 'test') );
-     mp_set_the_page('collections/Contact', array('title'=>'Accueil', 'content' => 'test') );
-     mp_set_the_page('demon/Contact', array('title'=>'Accueil', 'content' => 'test') );
-*/
-    _echo( the_loop( array('filter'=>'pubdate', 'order'=>'desc' ) ) );
-
     // on déclarerle bon header
-    //header( 'Content-Type: text/plain; charset='.CHARSET );
+    header( 'Content-Type: text/plain; charset='.CHARSET );
 
-    $feed    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-    $feed   .= '<rss version="2.0"
+    // Boucle pour flux rss
+    the_loop('max=5', 'my_feed'); 
+
+    echo '<?xml version="1.0" encoding="UTF-8" ?>';
+?>
+    
+    <rss version="2.0"
     xmlns:content="http://purl.org/rss/1.0/modules/content/"
-    xmlns:wfw="http://wellformedweb.org/CommentAPI/" xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
     xmlns:atom="http://www.w3.org/2005/Atom"
     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
-    xmlns:slash="http://purl.org/rss/1.0/modules/slash/">'."\n\n";
-    $feed   .= "\t<channel>\n";
+    xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+    >
 
-    $feed   .= "\t</channel>\n";
-    $feed   .= '</rss>';
+    <channel>
 
-    echo apply_filters( 'the_feed' , $feed );
-    exit();
+        <title><?php the_blog('title') ?></title>
+        <atom:link href="<?php echo get_permalink('rss','feed') ?>" rel="self" type="application/rss+xml" />
+        <link><?php the_blog('home') ?></link>
+        <description><?php the_blog('description') ?></description>
+        <lastBuildDate><?php echo _date('D, d M y H:i:s O') ?></lastBuildDate>
+        <language><?php the_blog('lang') ?></language>
+        <sy:updatePeriod>hourly</sy:updatePeriod>
+        <sy:updateFrequency>1</sy:updateFrequency>
 
-/*
-    <title>BoiteAWeb.fr</title>
-    <atom:link href="http://boiteaweb.fr/feed" rel="self" type="application/rss+xml" />
-    <link>http://boiteaweb.fr</link>
-    <description>Sécurité Web et Développement WordPress</description>
-    <lastBuildDate>Fri, 20 Nov 2015 14:27:04 +0000</lastBuildDate>
-    <language>fr-FR</language>
-    <sy:updatePeriod>hourly</sy:updatePeriod>
-    <sy:updateFrequency>1</sy:updateFrequency>
-    <generator>http://wordpress.org/?v=4.3.1</generator>
+    <?php while( have_pages('my_feed') ):?>
+
     <item>
-        <title>WordPress + Technique = WPTech ! : Version 2015</title>
-        <link>http://boiteaweb.fr/wordpress-technique-wptech-version-2015-9881.html</link>
-        <comments>http://boiteaweb.fr/wordpress-technique-wptech-version-2015-9881.html#comments</comments>
-        <pubDate>Fri, 20 Nov 2015 14:27:04 +0000</pubDate>
-        <dc:creator><![CDATA[Julio Potier]]></dc:creator>
-                <category><![CDATA[WordCamps]]></category>
-
-        <guid isPermaLink="false">http://boiteaweb.fr/?p=9881</guid>
-        <description><![CDATA[Le WPTech à Nantes c'est 10 conférences autour de WordPress, du fun, une dcoding room et ... vous ?]]></description>
-        <wfw:commentRss>http://boiteaweb.fr/wordpress-technique-wptech-version-2015-9881.html/feed</wfw:commentRss>
-        <slash:comments>0</slash:comments>
+            <title><?php the_page('title') ?></title>
+            <link><?php the_page('url') ?></link>
+            <pubDate><?php the_date('D, d M y H:i:s O') ?></pubDate>
+            <dc:creator><?php the_page('author','<![CDATA[', ']]>') ?></dc:creator>
+            <category><?php the_page('caterogy','<![CDATA[', ']]>') ?></category>
+            <guid isPermaLink="false"><?php the_page('url') ?></guid>
+            <description><?php the_page('excerpt','<![CDATA[', ']]>') ?></description>
         </item>
-*/
+    <?php endwhile; ?>
 
+    </channel>
+</rss>
+
+<?php
+
+    exit();
 }

@@ -134,13 +134,13 @@ function mp_meta_charset(){
 
 function mp_meta_title(){
     $title = apply_filters('meta_title', get_the_blog('title') );
-    $title = excerpt( $title, 65);
+    $title = excerpt( strip_all_tags($title), 65);
     if ( strlen($title) == 0 )  return;
     echo '<title>'.$title.'</title>'."\n";
 }
 
 function mp_meta_description(){
-    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
+    $description = excerpt( apply_filters('meta_description', strip_all_tags(get_the_blog('description') ) ) );
     if ( strlen($description) == 0 )  return;
     echo '<meta name="description" content="'.$description.'">'."\n";
 }
@@ -253,10 +253,10 @@ function mp_meta_opengraph(){
     if( is_404() )
         return;
 
-    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
+    $description = excerpt( apply_filters('meta_description', strip_all_tags( get_the_blog('description') ) ) );
     if ( strlen($description) == 0 )  return;
 
-    $title = excerpt( apply_filters('meta_title', get_the_blog('title') ) , 65);
+    $title = excerpt( apply_filters('meta_title', strip_all_tags(get_the_blog('title') ) ) , 65);
     if ( strlen($title) == 0 )  return;
 
     global $query;

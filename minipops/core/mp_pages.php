@@ -55,20 +55,16 @@ function sanitize_page($field, $value, $slug){
             break;
         case 'excerpt':
             $value = esc_html($value);
+            $value = strip_all_tags($value);
             $value = excerpt( $value, 140, 'words' );
-            if( '' === $value )
-                excerpt( get_the_page('content', $slug ), 140, 'words' );
             break;
         default:
-            if( empty( $GLOBALS['mp_hook_filter']['get_the_page_'.$field] ) )
+            if( empty( mp_cache_data('mp_hook_filters')['get_the_page_'.$field] ) )
                 $value = sanitize_allspecialschars($value);
             break;
     }
     return $value;
 }
-
-get_the_page('title');
-//_echo( get_the_page('title'),1 );
 
 /**
  * Charge un champ d'une page
@@ -366,145 +362,4 @@ function get_childs_page( $slug = '' ) {
  */
 function get_adjacent_page( $slug = '' ) {
     return array_diff( get_childs_page(get_parent_page($slug)) , array($slug) );
-}
-
-
-function  is_all( $value, $compare){
-
-    //_echo( $value . ':'. $compare, 1);
-
-    return true;
-}
-
-/**
- * Boucle pages
- * @param  $args    array
- *                  'where'   array() : Listes des slugs de pages où chercher sous forme de tableau si vide recherche dans toutes les pages
- *                  'filter'  string  : Listes des champs recherchés séparer par des virgules ex: title,pubdate
- *                  'max'     integer : Nombre de résultat par défaut : 10
- *                  'order'   string  : Mode de tri "ASC" ( par défaut ), "DESC" ou "SHUFFLE"
- *                  'orderby' string  : Trier par "date" ( par défaut ), "auteur", "tag", tout champs valide dans le document
- *
- * ex: the_loop('filter[author]=denis,jean,michel&order=asc&orderby=title');
- * @return array    retourne les résultats sous forme de tableau
- */
-function the_loop( $args = array() ){
-
-
-    $args = parse_args( $args, array(
-        'where'   => get_all_page(),
-        'max'     => 10,
-        'order'   => 'ASC',
-        'orderby' => 'pubdate'
-        ) );
-
-    /* Nettoyage "max" */
-    $max = (int) $args['max'];
-    unset($args['max']);
-
-    /* Nettoyage "order" */
-    $order = strtoupper($args['order']);
-    unset($args['order']);
-
-    /* Nettoyage "orderby" */
-    $orderby = is_in( $args['orderby'], array('pubdate','author','tag') ) ? $args['orderby'] : 'pubdate';
-    unset($args['orderby']);
-
-    /* Nettoyage "where" */
-    $where = array_flip($args['where']);
-    unset($args['where']);
-
-    /* Table de data mit de côté*/
-    $next   = array();
-
-    /* Préparation du filtre */
-    foreach ($args as $filter => $query) {
-
-        $filter = sanitize_key($filter);
-
-        preg_match('/^(is_.*?)\((.*?)\)/', $query, $match ); // On cherche si une requete de recherche
-
-        // Si requête particulière ( requête sur tableau, comparaison, intervalle, etat)
-        if( !empty($match[0]) && function_exists($match[1]) ){
-
-            if( is_in( $match[1], array('is_in','is_notin') ) ){
-
-                $args[$filter] = array( '', explode(',', sanitize_list($match[2],',') ) );
-
-            } elseif( is_in( $match[1], array('is_same','is_match','is_different','is_low','is_max','is_size','is_sup') ) ){
-                
-                $args[$filter] = array( '', trim($match[2]) );
-
-            } elseif( is_same( $match[1], 'is_between' ) ){
-
-                $args[$filter] = explode(',', sanitize_list($match[2],',') );
-                $args[$filter] = array( '', $args[$filter][0], $args[$filter][1] );
-
-            } else {
-
-                $args[$filter] = null;
-            }
-
-            add_action( $filter.'_search', $match[1] );  // Ajout du hook pour chaque filtre
-        
-        } else {
-
-            $query = trim($query);
-
-            if( $query === '!'){
-                // Requête qui test si la valeur n'est null
-                $args[$filter] = array();
-                add_action( $filter.'_search', function($value){ return strlen($value) === 0 ? false:true;} );  // Ajout du hook pour chaque filtre;
-
-            } else {
-                // Requête simple 
-                $args[$filter] = array('', '|'.trim($query).'|' );
-                add_action( $filter.'_search', 'is_match' );  // Ajout du hook pour chaque filtre
-            }
-
-        }
-    }
-
-
-    /* Boucle principal de recherche */
-    foreach ($where as $page => $key){
-
-
-        foreach ($args as $filter => $compare) {
-        
-            /* On ajoute la réference au mask du filtre */
-           $compare[0] = get_the_page($filter, $page);
-
-            /* On applique le filtre */
-            if( false === do_action($filter.'_search', $compare, true) )
-                unset($where[$page]);
-        }
-
-        /* on prépare le trie si la table existe toujours */
-        if( isset($where[$page]) ){
-
-            /* on commence par décharger la table */
-            unset($where[$page]);
-
-            /* On filtre par "orderby" */
-            $order_by = get_the_page($orderby, $page);
-            if( strlen($order_by) === 0 )    $next[] = $page;
-            else                             $where[$page] = $order_by;
-
-        }
-    }
-
-  
-    /* On filtre par "order" uniquement */
-    if( is_same($order, 'ASC' ) ) asort($where);
-    if( is_same($order, 'DESC') ) arsort($where);
-
-    /* On supprimer les valeurs qui ont servit au trie puis on ajoute les données mit de côté*/
-    $where = array_keys( $where );
-    $where = array_merge( $where, $next );
-
-    /* Limite de resultat */
-    array_splice( $where, $max );
-
-    return $where;
 }

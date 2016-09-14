@@ -78,9 +78,11 @@ register_shutdown_function( 'shutdown_action_hook' );
 //require( ABSPATH . INC . '/cron.php' );
 require( ABSPATH . INC . '/mp_query.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
+require( ABSPATH . INC . '/mp_the_loop.php' );
 require( ABSPATH . INC . '/mp_attachment.php' );
 require( ABSPATH . INC . '/mp_pops.php' );
-require( ABSPATH . INC . '/parsedown.php' );
+require( ABSPATH . INC . '/vendors/parsedown.php' );
+require( ABSPATH . INC . '/vendors/SimpleImage.php' );
 // On charge les fonctions gérant la date
 require( ABSPATH . INC . '/mp_datei18n.php' );
 
