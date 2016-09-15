@@ -32,7 +32,7 @@ function sanitize_page($field, $value, $slug){
         case 'description':
             $value = esc_html($value);
             break;
-        case 'keywords':
+        case 'tag':
         case 'robots':
             $value = remove_accent($value);
             $value = sanitize_words($value);
@@ -49,13 +49,13 @@ function sanitize_page($field, $value, $slug){
             $value = mp_pops($value, $slug);
             $value = parse_markdown( $value);
             break;
-        case 'image':
+        case 'thumbnail':
             $value = esc_html($value);
-            $value = mp_pops($value, $slug);
+            $value = http_build_query( array('image'=>$value, 'slug'=>$slug, 'alt'=>get_the_page('description'), 'class'=>'thumbnail' ) );
+            $value = pops_image($value);
             break;
         case 'excerpt':
             $value = esc_html($value);
-            $value = strip_all_tags($value);
             $value = excerpt( $value, 140, 'words' );
             break;
         default:

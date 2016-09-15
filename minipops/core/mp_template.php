@@ -134,13 +134,13 @@ function mp_meta_charset(){
 
 function mp_meta_title(){
     $title = apply_filters('meta_title', get_the_blog('title') );
-    $title = excerpt( strip_all_tags($title), 65);
+    $title = excerpt( $title, 65);
     if ( strlen($title) == 0 )  return;
     echo '<title>'.$title.'</title>'."\n";
 }
 
 function mp_meta_description(){
-    $description = excerpt( apply_filters('meta_description', strip_all_tags(get_the_blog('description') ) ) );
+    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
     echo '<meta name="description" content="'.$description.'">'."\n";
 }
@@ -198,23 +198,20 @@ function mp_meta_favicon(){
 
     $meta_favicon = '';
 
-    $favicon_path = apply_filters( 'mp_meta_favicon_path', 'favicon.ico' );
-    if( glob($favicon_path) ){
-        // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
-        $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon_path.'" type="image/x-icon">'."\n";
-    }
+    // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
+    $favicon = apply_filters( 'mp_meta_favicon_path', 'favicon.ico' );
+    if ( strlen($favicon) != 0 )
+        $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon.'" type="image/x-icon">'."\n";
 
-    $apple_icon_touch_path = apply_filters( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
-    if( glob($apple_icon_touch_path) ){
-        // <!-- Apple icon: no error 404 for safari and ios -->
-        $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch_path.'" type= "text/plain">'."\n";
-    }
+    // <!-- Apple icon: no error 404 for safari and ios -->
+    $apple_icon_touch = apply_filters( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
+    if ( strlen($apple_icon_touch) != 0 )
+        $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch.'" type= "text/plain">'."\n";
 
-    $humans_path = apply_filters( 'mp_meta_humans_path', 'humans.txt' );
-    if( glob($humans_path) ){
-        // <!-- Because the humans is important! -->
-        $meta_favicon .= '<link rel="author" href="'.$humans_path.'">'."\n";
-    }
+    // <!-- Because the humans is important! -->
+    $humans = apply_filters( 'mp_meta_humans_path', 'humans.txt' );
+    if ( strlen($humans) != 0 )
+        $meta_favicon .= '<link rel="author" href="'.$humans.'">'."\n";
 
     echo $meta_favicon;
 
@@ -253,7 +250,7 @@ function mp_meta_opengraph(){
     if( is_404() )
         return;
 
-    $description = excerpt( apply_filters('meta_description', strip_all_tags( get_the_blog('description') ) ) );
+    $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
 
     $title = excerpt( apply_filters('meta_title', strip_all_tags(get_the_blog('title') ) ) , 65);

@@ -482,6 +482,8 @@ function excerpt( $text , $length = 140 , $mode = 'chars' ) {
     $length = (int) $length;
     $mode   = (string) $mode;
 
+    $text = strip_all_tags($text);
+
     if( is_same( strtolower($mode) , 'words' ) ){
         if( str_word_count($text , 0) > $length ) {
             $words = str_word_count($text, 2);
@@ -550,30 +552,6 @@ function parse_text( $text ){
 }
 
 
-/**
-* Editeur d'image
-* @param  $image     image à editer
-*/
-function mp_photo( $args ){
-
-    // En cours de construction
-
-    return;
-
-    $args = parse_args( $args, array(
-        'path' => '',
-
-        ));
-
-    try {
-        $img = new abeautifulsite\SimpleImage($image);
-        $img->flip('x')->thumbnail(100, 75)->save('flipped.jpg');
-
-    } catch(Exception $e) {
-        _doing_it_wrong( __FUNCTION__, $e->getMessage() );
-    }
-}
-
 /***********************************************/
 /*                  js/css Minify              */
 /***********************************************/
@@ -619,23 +597,21 @@ function mp_minify_html($html){
         $content = $token[0];
 
         if( is_null($tag) ){
-            // On supprimer les commentaires seulement s'il ne sont pas dans un textaera
+            // On supprime les commentaires seulement s'il ne sont pas dans un textaera
             if($raw_tag != 'textarea')
                 $content = preg_replace('/<!--(?!\s*(?:\[if [^\]]+]|<!|>))(?:(?!-->).)*-->/s', '', $content);
-
-        }
-        else {
+        
+        } else {
 
             // On minifie le contenu seulement s'il n'appartient pas à pre ou textaera
-            if( $tag == 'pre' || $tag == 'textarea' )
+            if( $tag == 'pre' || $tag == 'textarea' ){
                 $raw_tag = $tag;
-            else if( $tag == '/pre' || $tag == '/textarea' )
+            } else if( $tag == '/pre' || $tag == '/textarea' ){
                 $raw_tag = false;
-            else {
-
-                if ( $raw_tag )
+            } else {
+                if ( $raw_tag ){
                     $strip = false;
-                else {
+                } else {
                     $strip   = true;
                     $content = preg_replace('/(\s+)(\w++(?<!\baction|\balt|\bcontent|\bsrc)="")/', '$1', $content);
                     $content = str_replace(' />', '/>', $content);

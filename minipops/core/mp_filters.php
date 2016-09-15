@@ -20,7 +20,6 @@ add_action('shutdown', function() {
 }, 1 );
 
 
-
 /***********************************************/
 /*        Filter for the style                 */
 /***********************************************/
@@ -35,16 +34,40 @@ function mp_load_default_style(){
 
 
 /***********************************************/
-/*        Filter fsi extrait d'une page vide    */
+/*        Filter pour extrait d'une page vide    */
 /***********************************************/
 add_filter('the_page_excerpt', function($value){ 
-    if( strlen($value) === 0 ) {
-        $value = excerpt( get_the_page('content'), 140, 'words' );
-        return mp_minify_html($value);
-    }
+
+    if( strlen($value) === 0 )
+        return mp_easy_minify( excerpt( get_the_page('content'), 140, 'words' ), false );
     return $value; 
 } );
 
+
+/***********************************************/
+/*        Filter pour logo                     */
+/***********************************************/
+
+add_filter('the_blog_logo', function($value){
+
+    if(strlen($value) == 0 ) return;
+
+    $logos = explode(',', $value);
+
+    if( isset($logos[0]) && 'logo.svg' !== $logos[0] ){
+
+        $attr = '';
+
+        if( is_in('logo.svg', $logos) ){
+
+            $attr = 'onerror="this.removeAttribute(\'onerror\'); this.src=\''.MP_PAGES_URL. '/'.$logos[0].'\'"';
+            $logos[0] = 'logo.svg';
+        }
+        $scheme = apply_filters('mp_logo_scheme', '<a href="%s" title="%s"><img class="logo" src="%s" alt="logo %s" %s></a>' );
+        return sprintf( $scheme, get_the_blog('home'), get_the_blog('title'), MP_PAGES_URL .'/'. $logos[0], get_the_blog('title'), $attr );
+    }
+    return;
+});
 
 
 /***********************************************/
@@ -87,10 +110,10 @@ function mp_load_meta_filter(){
             add_filter('meta_description', function(){ return get_the_page('description'); } );
 
         // On modifie la meta keywords
-        if ( strlen( get_the_page('keywords') ) == 0 )
+        if ( strlen( get_the_page('tag') ) == 0 )
             add_filter('meta_keywords', function(){ return null; } );
         else
-            add_filter('meta_keywords', function(){ return get_the_page('keywords'); } );
+            add_filter('meta_keywords', function(){ return get_the_page('tag'); } );
 
         // On modifie la meta robots
         if ( strlen( get_the_page('robots') ) > 0 )
@@ -199,6 +222,7 @@ function mp_doing_feed(){
     // Boucle pour flux rss
     the_loop('max=5', 'my_feed'); 
 
+    // Déclaration du document
     echo '<?xml version="1.0" encoding="UTF-8" ?>';
 ?>
     
@@ -210,9 +234,7 @@ function mp_doing_feed(){
     xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
     xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
     >
-
     <channel>
-
         <title><?php the_blog('title') ?></title>
         <atom:link href="<?php echo get_permalink('rss','feed') ?>" rel="self" type="application/rss+xml" />
         <link><?php the_blog('home') ?></link>
@@ -221,20 +243,23 @@ function mp_doing_feed(){
         <language><?php the_blog('lang') ?></language>
         <sy:updatePeriod>hourly</sy:updatePeriod>
         <sy:updateFrequency>1</sy:updateFrequency>
-
-    <?php while( have_pages('my_feed') ):?>
-
-    <item>
+<?php while( have_pages('my_feed') ):?>
+        <item>
             <title><?php the_page('title') ?></title>
             <link><?php the_page('url') ?></link>
             <pubDate><?php the_date('D, d M y H:i:s O') ?></pubDate>
             <dc:creator><?php the_page('author','<![CDATA[', ']]>') ?></dc:creator>
-            <category><?php the_page('caterogy','<![CDATA[', ']]>') ?></category>
+<?php 
+if( strlen(get_the_page('tag') ) === 0 ):
+else :
+    foreach ( explode(',',get_the_page('tag') ) as $category ):
+?>
+            <category><![CDATA[<?php echo $category ?>]]></category>
+<?php endforeach; endif;?>
             <guid isPermaLink="false"><?php the_page('url') ?></guid>
-            <description><?php the_page('excerpt','<![CDATA[', ']]>') ?></description>
+            <description><![CDATA[<?php the_page('thumbnail')?><p><?php the_page('excerpt')?></p>]]></description>
         </item>
-    <?php endwhile; ?>
-
+<?php endwhile; ?>
     </channel>
 </rss>
 

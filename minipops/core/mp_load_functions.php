@@ -603,25 +603,9 @@ function get_the_blog( $field, $default = false ){
             $value = get_the_lang();
             break;
         case 'logo':
-
             $logos = glob( MP_PAGES_DIR. '/logo.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
             $logos = array_map( function($logo){ return ltrim( str_replace(MP_PAGES_DIR, '', $logo), '/' ); }, $logos);
- 
-            if( isset($logos[0]) && 'logo.svg' !== $logos[0] ){
-
-                $attr = '';
-
-                if( is_in('logo.svg', $logos) ){
-
-                    $attr = 'onerror="this.removeAttribute(\'onerror\'); this.src=\''.MP_PAGES_URL. '/'.$logos[0].'\'"';
-                    $logos[0] = 'logo.svg';
-                }
-
-                $scheme = apply_filters('mp_logo_scheme', '<a href="%s" title="%s"><img class="logo" src="%s" alt="logo %s" %s></a>' );
-                $value = sprintf( $scheme, get_the_blog('home'), get_the_blog('title'), MP_PAGES_URL .'/'. $logos[0], get_the_blog('title'), $attr );
-
-            } else
-                $value = null;
+            $value = join(',',$logos);
             break;   
         default:
             $value = get_option('blog->'.$field, $default);

@@ -4,7 +4,6 @@
  * @package CMS mini POPS
  */
 
-
 /** On definit le repertoire racine  */
 define( 'ABSPATH', dirname(__FILE__) . '/' );
 

@@ -183,70 +183,46 @@ function get_the_image( $name = '*', $url = true ){
 }
 
 
-
-
 /***********************************************/
-/*          Compress image                     */
+/*          Utilitaire image                   */
 /***********************************************/
+
 /**
- * Compression d'image
- * @param  $src      Source image jpeg, png, gif, svg
- * @param  $quality  normal, hard, ultra
- * @return boolean
- */
+* Lecture info image
+* @param  $image     info de l'image à récupérer
+*/
+function image_args( $image, $args = 'all' ){
 
-function mp_image_compress( $src, $dest = null, $mode = 'normal' ) {
+    $image   = (string) $image;
+    $args    = (string) $args;
 
-
-    if( strtolower( pathinfo($src, PATHINFO_EXTENSION) ) === 'svg'
-        && is_readable($src)
-    ){
-        $created = sanitize_svg(file_get_contents($src));
-        return $dest === null ? $created : file_put_contents($dest, $created );
+    try {
+        $img = new abeautifulsite\SimpleImage($image);
+        $info = $img->get_original_info();
+        if( $args !== 'all')
+            $info = isset($info[$args]) ? $info[$args] : false;
+    } catch(Exception $e) {
+        _doing_it_wrong(__FUNCTION__, $e->getMessage() );
+        return false;
     }
-    elseif( function_exists('imagecreatefrompng') // On vérifie que GD est présent
-            && is_readable($src)                      // On vérifie les permissions et l'existence du fichier
-            && is_in( exif_imagetype($src), array(IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG) )  // C'est bien une image !
-    ){
+    return $info;
+}
 
-        $image_size = getimagesize($src);
-        $file_mime  = end( @explode('/', $image_size['mime']) );
 
-        // Gestion mémoire
-        $m_img     = round(($image_size[0] * $image_size[1] * $image_size['bits'] * $image_size['channels'] / 8 + pow(2, 16)) * 1.65);
-        $m_need    = $m_img + memory_get_usage();
-        $m_need    = round($m_need / pow(1024,2),2);
-        $m_limit   = (int) get_limit_memory();
-        $m_alloc   = $m_need - $m_limit;
-        // Si pas assez de mémoire on stop
-        if( is_min($m_alloc, 0) ) return false;
+/**
+* Compresseur d'image
+* @param  $image     image à compresser
+*/
+function imagify( $image, $quality = 80 ){
 
-        /* On créer la ressource mémoire pour l'image */
-        switch ($file_mime) {
-            case 'jpeg':
-                $image   = imagecreatefromjpeg($src);
-                $quality = apply_filters('mode_jpeg_compress', array('normal'=>85, 'hard'=>80, 'ultra'=>75) );
-                $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 85;
-                $created = imagejpeg( $image, $dest , $quality );
-                break;
-            case 'png':
-                $image   = imagecreatefrompng($src);
-                $quality = apply_filters('mode_png_compress', array('normal'=>1, 'hard'=>2, 'ultra'=>3) );
-                $quality = array_key_exists( strtolower($mode), $quality) ? $quality[$mode] : 1;
-                $created = imagepng($image, $dest , $quality );
-                break;
-            case 'gif':
-                $image   = imagecreatefromgif($src);
-                $created = imagegif($image, $dest );
-                break;
-            default:
-                return false;
-                break;
-        }
+    $image   = (string) $image;
+    $quality = (int) $quality;
 
-        imagedestroy($image);
-        return $created;
+    try {
+        $img = new abeautifulsite\SimpleImage($image);
+        $img->flip('x')->save($image, $quality);
+    } catch(Exception $e) {
+        _doing_it_wrong(__FUNCTION__, $e->getMessage() );
+        return false;
     }
-
-    else return false;
 }
