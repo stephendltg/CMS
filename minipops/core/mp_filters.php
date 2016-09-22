@@ -48,25 +48,20 @@ add_filter('the_page_excerpt', function($value){
 /*        Filter pour logo                     */
 /***********************************************/
 
-add_filter('the_blog_logo', function($value){
+add_filter('the_blog_logo', function($logos){
 
-    if(strlen($value) == 0 ) return;
+    if( empty($logos) ) return;
 
-    $logos = explode(',', $value);
+    $attr = '';
+    $logo = basename($logos[0]);
 
-    if( isset($logos[0]) && 'logo.svg' !== $logos[0] ){
+    if( 'logo.svg' === $logo || 'logo@.svg' === $logo )
+        $attr = isset($logos[1]) ? 'onerror="this.removeAttribute(\'onerror\'); this.src=\''.$logos[1].'\'"' : '';
 
-        $attr = '';
+    $scheme = apply_filters('mp_logo_scheme', '<a href="%s" title="%s"><img class="logo" src="%s" alt="logo %s" %s></a>' );
+    
+    return sprintf( $scheme, get_the_blog('home'), get_the_blog('title'), $logos[0], get_the_blog('title'), $attr );
 
-        if( is_in('logo.svg', $logos) ){
-
-            $attr = 'onerror="this.removeAttribute(\'onerror\'); this.src=\''.MP_PAGES_URL. '/'.$logos[0].'\'"';
-            $logos[0] = 'logo.svg';
-        }
-        $scheme = apply_filters('mp_logo_scheme', '<a href="%s" title="%s"><img class="logo" src="%s" alt="logo %s" %s></a>' );
-        return sprintf( $scheme, get_the_blog('home'), get_the_blog('title'), MP_PAGES_URL .'/'. $logos[0], get_the_blog('title'), $attr );
-    }
-    return;
 });
 
 

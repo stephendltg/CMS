@@ -603,9 +603,7 @@ function get_the_blog( $field, $default = false ){
             $value = get_the_lang();
             break;
         case 'logo':
-            $logos = glob( MP_PAGES_DIR. '/logo.{jpeg,jpg,png,gif,bmp,svg}', GLOB_BRACE);
-            $logos = array_map( function($logo){ return ltrim( str_replace(MP_PAGES_DIR, '', $logo), '/' ); }, $logos);
-            $value = join(',',$logos);
+            $value = get_the_image('name=logo&orderby=type&max=5&order=desc', 'uri');
             break;   
         default:
             $value = get_option('blog->'.$field, $default);

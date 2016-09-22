@@ -24,7 +24,7 @@ function mp_pops( $content , $slug = '' ){
     $slug      = (string) $slug;
 
     // Liste shortcode
-    $pops = array('link','email','tel','image','file','twitter','youtube','audio', 'map');
+    $pops = array('link','email','tel','image','gallery','file','twitter','youtube','audio', 'map');
     $pops = apply_filters('pops_shortcode' , $pops );
 
     // On boucle sur la recherche des shortcode et on affecte à la fonction associé si elle existe en lui passant les paramètres du shortcode
@@ -97,8 +97,11 @@ function pops_audio( $args ){
             'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
             ));
 
-    // On nettoie le slug
-    $args['slug'] = trim( $args['slug'], '/');
+    // On nettoie
+    $slug  = trim( $args['slug'], '/');
+    $text  = sanitize_allspecialschars($args['text']);
+    $class = sanitize_html_class($args['class']);
+
 
     // On récupère la liste des fichiers
     $audio = explode( ',' , sanitize_list($args['audio'], ',') );
@@ -131,10 +134,10 @@ function pops_audio( $args ){
     }
 
     // On associe la description
-    $text  = !empty($args['text']) ? '<figcaption>'. $args['text'] .'</figcaption>' : '';
+    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
 
     // On associe la classe Css
-    $class = ' class="'. sanitize_html_class($args['class']) .'"';
+    $class = ' class="'. $class .'"';
 
     // Scheme du shortcode
     $schema = apply_filters('pops_audio_schema' ,'<figure%5$s><audio controls="controls"><source src=%1$s type="audio/mp3">%3$s<a href=%1$s download=%2$s>$mp3</a></audio>%4$s</figure>');
@@ -206,18 +209,21 @@ function pops_file( $args ){
 
     $args = parse_args( $args, array(
             'class' => 'my_file',
+            'text'  => null,
             'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
             ));
 
-    // On nettoie le slug
-    $args['slug'] = trim( $args['slug'], '/');
+    // On nettoie
+    $slug  = trim( $args['slug'], '/');
+    $text  = sanitize_allspecialschars($args['text']);
+    $class = sanitize_html_class($args['class']);
 
     // On définit l'url
     $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $args['file'];
     $path = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $args['file'];
 
     // On verifie si le fichier est valid et autorisé au téléchargement
-    if( !is_match($args['file'], '([^\s]+(\.(?i)(jpe?g|png|gif|bmp|pdf|zip|mp4|webm|ogv|txt))$)') )
+    if( !is_match($args['file'], '([^\s]+(\.(?i)(pdf|zip|ppt|pps|xls|doc|docx|txt))$)') )
         return;
 
     // On verifie si le fichier existe
@@ -225,13 +231,13 @@ function pops_file( $args ){
         return;
 
     // On associe le texte, class et link_file
-    $text       = !empty($args['text']) ? $args['text'] : $file;
-    $class      = ' class="'. sanitize_html_class($array['class']) .'"';
+    $text  = strlen($text) == 0 ? $args['file'] : $text;
+    $class = ' class="'. $class .'"';
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
 
-    return sprintf( $schema, $file, $url, $class, $text );
+    return sprintf( $schema, $args['file'], $url, $class, $text );
 }
 
 
@@ -247,7 +253,6 @@ function pops_file( $args ){
  *          'image' => filename,
  *          'text'  => text,
  *          'class' => css,
- *          'ratio' => 0 à 100 %
  *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
@@ -256,47 +261,87 @@ function pops_image( $args ){
 
     $args = parse_args( $args, array(
         'class' => 'my_image',
+        'text'  => null,
         'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
         ));
 
-    // On nettoie le slug
-    $args['slug'] = trim( $args['slug'], '/');
+    // On nettoie
+    $slug  = trim( $args['slug'], '/');
+    $text  = sanitize_allspecialschars($args['text']);
+    $class = sanitize_html_class($args['class']);
 
-    // On définit l'url
-    $url  = MP_PAGES_URL . '/'. $args['slug'] . '/' . $args['image'];
-    $path = MP_PAGES_DIR . '/'. $args['slug'] . '/' . $args['image'];
+    // On récupère l'image
+    $url = get_the_image( array('file'=>$args['image'], 'slug'=>$slug), 'uri' );
 
-    // On verifie si l'image est valide
-    if( !is_match( $args['image'] , '([^\s]+(\.(?i)(jpe?g|png|gif|bmp))$)' ) )
-        return;
+    // On verifie si l'image existe
+    if( !$url ) return;
 
-    // On verifie si le fichier existe
-    if( !file_exists($path) )
-        return;
-
-    // On associe le texte, alt, class, path et url
-    $alt        = !empty( $args['alt'] ) ? $args['alt'] : ' ';
-    $text       = !empty( $args['text'] ) ? '<figcaption>'. $args['text'] .'</figcaption>' : '';
-    $class      = ' class="'. sanitize_html_class($args['class']) .'"';
-
-    if( !empty($args['ratio'])
-        && is_intgr($args['ratio'])
-        && is_between($args['ratio'] , 0 , 100)
-    ){
-        // On récupère les dimenssions de l'image
-        list( $width, $height ) = getimagesize($path);
-        $ratio      = $args['ratio'];
-        $height     = ' height='. $height*($ratio/100);
-        $width      = ' width='. $width*($ratio/100);
-    } else {
-        $height = '';
-        $width  = '';
-    }
+    // On associe le texte, class
+    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
+    $class = ' class="'. $class .'"';
 
     // Scheme du shortcode
-    $schema   = apply_filters('pops_image_schema', '<figure%4$s><img src="%1$s"%5$s%6$s alt="%2$s"/>%3$s</figure>');
+    $schema   = apply_filters('pops_image_schema', '<figure%s><img src="%s"/>%s</figure>');
 
-    return sprintf( $schema, $url, $alt, $text, $class, $width, $height );
+    return sprintf( $schema, $class, $url, $text );
+}
+
+/**
+ * Shortcode Image
+ *
+ * mp_pops( '( image :  nom du fichier |  alt: texte |text : texte | class : classe css | ratio: 1OO )', $slug );
+ *
+ * ou
+ *
+ * $array = (
+ *          'slug'  => nom du repertoire de la page,
+ *          'image' => filename,
+ *          'text'  => text,
+ *          'class' => css,
+ *          )
+ * @param  $array     Paramètres du shortcode
+ * @return string     Retourne le contenu parsé par le shortcode
+ */
+function pops_gallery( $args ){
+
+    $args = parse_args( $args, array(
+        'class' => 'my_gallery',
+        'text'  => null,
+        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
+        ));
+
+    // On nettoie
+    $slug  = trim( $args['slug'], '/');
+    $text  = sanitize_allspecialschars($args['text']);
+    $class = sanitize_html_class($args['class']);
+
+    // On récupère l'image en mode large
+    $images = get_the_image( array('size'=>'large','file'=>$args['gallery'],'slug'=>$slug,'max'=>'auto'), 'uri' );
+
+    // On verifie si l'image existe
+    if( empty($images) ) return;
+
+    // On cherche les différents formats
+    $small = get_the_image( array('size'=>'small','file'=>$args['gallery'],'slug'=>$slug, 'max'=>'auto'), 'uri' );
+    $medium = get_the_image( array('size'=>'medium','file'=>$args['gallery'],'slug'=>$slug, 'max'=>'auto'), 'uri' );
+
+
+    // On associe le texte, class
+    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
+    $class = ' class="'. $class .'"';
+
+    // Scheme du shortcode
+    $scheme = '<img class="item-%s" srcset="%s 1024w, %s 640w, %s 320w" sizes="(min-width: 36em) 33.3vw, 100vw" src="%s">';
+
+    // fluid+gouttière pour gallery
+    // 'sizes="(min-width: 36em) calc(.333 * (100vw-[$gutter]em) ), 100vw"';
+
+    $gallery = '';
+
+    foreach ($images as $key => $image)
+        $gallery .= sprintf( $scheme, $key, $image[$key], $medium[$key], $small[$key], $small[$key] );
+    
+    return "<figure $class >$gallery $text</figure>";
 }
 
 

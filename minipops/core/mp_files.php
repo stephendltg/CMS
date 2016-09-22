@@ -36,7 +36,7 @@ function file_get_content_array($file) {
 /**
 * Function enregistrement d'un fichier
 * @param  string    $file     Chemin absolu du fichier
-* @return array
+* @return 
 */
 function file_put_content($file, $contents) {
 

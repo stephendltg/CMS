@@ -253,7 +253,7 @@ function mp_meta_opengraph(){
     $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
     if ( strlen($description) == 0 )  return;
 
-    $title = excerpt( apply_filters('meta_title', strip_all_tags(get_the_blog('title') ) ) , 65);
+    $title = excerpt( apply_filters('meta_title', get_the_blog('title') ) , 65);
     if ( strlen($title) == 0 )  return;
 
     global $query;
@@ -270,8 +270,8 @@ function mp_meta_opengraph(){
     $opengraph .= '<meta property="og:description" content="'.$description.'" />'."\n";
     $opengraph .= '<meta property="og:url" content="'.get_permalink($query).'" />'."\n";
 
-
-    $image = get_the_image();
+    $image = get_the_page('thumbnail');
+    $image = get_the_image("size=medium&file=$image", 'uri');
     if( $image )
         $opengraph .= '<meta property="og:image" content="'.$image.'" />'."\n";
 
@@ -365,6 +365,24 @@ function the_page( $field,  $before = '', $after = '' ) {
     echo $before . $value . $after;
 }
 
+function the_thumbnail( $before = '', $after = '' ) {
+
+    $before = (string) $before;
+    $after  = (string) $after;
+
+    $value  = get_the_page('thumbnail');
+    $large  = get_the_image('size=large&file='.$value, 'uri');
+
+    if ( strlen($large) === 0 )  return;
+
+    $scheme = apply_filters('the_thumbnail','<img srcset="%s 1x, %s 2x" src="%s"/><img>', $value);
+
+    $small  = get_the_image('size=small&file='.$value, 'uri');
+    $medium = get_the_image('size=medium&file='.$value, 'uri');
+
+    echo $before . sprintf($scheme, $small, $large, $medium ) . $after;
+}
+
 /***********************************************/
 /*        Fonctions date                       */
 /***********************************************/
@@ -396,36 +414,6 @@ function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
         echo $before . $value . $after;
     else
         return $before . $value . $after;
-}
-
-
-
-/***********************************************/
-/*        Fonctions affichage images           */
-/***********************************************/
-/**
- * the_images : afficher images recherché
- * @param  $where           array() : Listes des slugs de pages où chercher les images sous forme de tableau
- * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
- * @param  $max             integer : Nombre de résultat par défaut : 10
- * @param  $image_schema    string  : Schema de retour affiché
- * @return array    retourne les résultats sous forme de tableau
- */
-function the_images( $name = '*' , $where = null, $max = 10, $image_schema = '<img src="%1$s" alt="%2$s"/>'){
-
-    $max = (integer) $max;
-    $name = (string) $name;
-    $image_schema = (string) $image_schema;
-
-    $images = get_the_images( $name, $where, $max );
-
-    if ( is_size($images, 0) )  return;
-
-    $images = array_map( function($image)use($image_schema){
-        $image_alt    = sanitize_words( apply_filters('the_image_alt' , substr( basename($image), 0, strpos(basename($image),'.') ), $image ) );
-        return sprintf($image_schema, $image, $image_alt );} , $images );
-
-    echo implode($images);
 }
 
 

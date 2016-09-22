@@ -136,7 +136,7 @@ function the_loop( $args = array(), $pattern = null ){
     $where = array_merge( $where, $next );
 
     /* Limite de resultat */
-    array_splice( $where, $max );
+    array_splice( $where, intval($max) );
 
     /* On envoie les donnée à have_page */
     mp_cache_data('mp_query'. $pattern, $where);

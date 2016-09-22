@@ -10,8 +10,6 @@
 
 <?php snippet('header'); ?>
 
-    <?php the_blog('logo')?>
-
     <table role="presentation">
       <!-- surtout pas d'attribut summary -->
         <tr>

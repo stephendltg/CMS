@@ -38,6 +38,7 @@
 <body role="document">
 
     <header class="header ptl pbl txtcenter mtl mbl" role="banner">
+        <?php the_blog('logo')?>
         <hgroup class="title mtl">
             <h1 class="site-title h3-like mbn"><a href="<?php the_blog('home'); ?>"><?php the_blog('title') ?></a></h1>
             <h2 class="site-subtitle h6-like mtn"><?php the_blog('subtitle') ?></h2>

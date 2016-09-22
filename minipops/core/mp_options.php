@@ -12,8 +12,6 @@
 // On charge la classe
 mp_cache_data('mp_options', new OPTIONS() );
 
-//_echo(mp_cache_data('mp_options') );
-
 
 // Les fonctions d'utilisations de la classe
 function get_option( $option, $default = null, $domain = null ){

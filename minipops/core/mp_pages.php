@@ -50,9 +50,7 @@ function sanitize_page($field, $value, $slug){
             $value = parse_markdown( $value);
             break;
         case 'thumbnail':
-            $value = esc_html($value);
-            $value = http_build_query( array('image'=>$value, 'slug'=>$slug, 'alt'=>get_the_page('description'), 'class'=>'thumbnail' ) );
-            $value = pops_image($value);
+            $value = $slug .'/'. ltrim(esc_html($value),'/');
             break;
         case 'excerpt':
             $value = esc_html($value);
@@ -85,12 +83,12 @@ function get_the_page( $field, $slug = '' ){
 
         $slug = $query;
 
-        if( is_home() )  $slug = is_page('home') ? 'home' : '';
-
-        if( is_404() )   $slug = is_page('error') ? 'error' : '';
-
-        if(!is_page() )  return;
-
+        if( is_home() )  
+            $slug = is_page('home') ? 'home' : '';
+        elseif( is_404() )   
+            $slug = is_page('error') ? 'error' : '';
+        elseif( !is_page() )  
+            return;
     }
 
     if( !isset($page[$slug]) && !empty($slug) ){

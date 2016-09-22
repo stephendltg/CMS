@@ -23,19 +23,21 @@
  *                  'max'     integer : Nombre de résultat par défaut : 10
  *                  'order'   string  : Mode de tri "ASC" ( par défaut ), "DESC" ou "SHUFFLE"
  *                  'orderby' string  : Trier par "date" ( date du fichier, par défaut ), "name" ( nom du fichier) ou par "type" ( extension de fichier )
+                    'file'    string  : Recherche par nom de fichier ex:mon-image.jpg
+                    'slug'    string  : Ou on recherche les fichiers, un seul slug autorisé
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_attached_media( $args = array() ) {
-
-    global $query;
+function get_attached_media( $args = array(), $mode = 'path' ) {
 
     $args = parse_args( $args, array(
-            'where' => $query,
-            'max'   => 10,
-            'order' => 'ASC',
+            'where'   => '',
+            'max'     => 10,
+            'order'   => 'ASC',
             'orderby' => '',
             'name'    => '*',
-            'type'    => '*'
+            'type'    => '*',
+            'file'    => false,  // Nom des fichiers (doivent être dans le même repertoire)
+            'slug'    => null    // Repertoire ou se trouve les fichiers
         ));
 
 
@@ -59,9 +61,8 @@ function get_attached_media( $args = array() ) {
     );
 
 
-    /* validation "where" */
-    $args['where'] = sanitize_list( $args['where'], ',');
-    $args['where'] = explode( ',', $args['where'] );
+    /* valeur de sortie */
+    $medias = array();
 
     /* Init et nettoyage "order" */
     $args['order'] = strtoupper($args['order']);
@@ -70,24 +71,66 @@ function get_attached_media( $args = array() ) {
     $args['orderby'] = is_in( $args['orderby'], array('date','name','type') ) ? $args['orderby'] : '';
 
     /* Validation "type" */
-    $args['type'] = strtolower( sanitize_list($args['type'], ',') );
+    $args['type'] = strtolower( unique_sorted_list( sanitize_list($args['type'], ','), ',' ) );
     $args['type'] = explode( ',', $args['type'] );
     $types = '';
     foreach( $args['type'] as $type )
         $types .= is_in( $type, $extension ) ? $type.',' : '';
-    $types = '{'. rtrim($types,',') .'}';
 
-    /* On prépare la liste des nom recherché */
-    $names = '{'. sanitize_list( $args['name'], ',' ) .'}';
 
-    /* On créer la recherche */
-    $search = $names.'.'.$types;
+    /* On lance la recherche s'il dagit d'une recherche par nom ou par fichier */
+    if( $args['file'] === false ){
 
-    /* On récupère la liste des fichiers en nettoyant les fichiers sensibles */
-    foreach( $args['where'] as $slug ){
+        /* validation "where" */
+        $args['where'] = unique_sorted_list( sanitize_list( $args['where'], ','), ',');
+        $args['where'] = explode( ',', $args['where'] );
 
-        $medias = glob( MP_PAGES_DIR .'/'. $slug .'/'. $search, GLOB_BRACE );
-        $medias = array_diff( $medias , array( MP_PAGES_DIR.'/site.yml', MP_PAGES_DIR.'/'.$slug.'/'.basename($slug).'.md') );
+        /* On formate les types */
+        $types = '{'. rtrim($types,',') .'}';
+
+        /* On prépare la liste des nom recherché */
+        $names = '{'. unique_sorted_list( sanitize_list( $args['name'], ',' ), ',') .'}';
+
+        /* On créer la recherche */
+        $search = $names.'.'.$types;
+
+        /* On récupère la liste des fichiers en nettoyant les fichiers sensibles */
+        foreach( $args['where'] as $slug ){
+
+            /* slug ou se trouve les fichiers */
+            $slug  = strlen($slug) == 0 ? '/': '/'. trim($slug,'/') .'/';
+            $medias = glob( MP_PAGES_DIR . $slug . $search, GLOB_BRACE );
+            $medias = array_diff( $medias , array( MP_PAGES_DIR.'/site.yml', MP_PAGES_DIR.'/'.$slug.'/'.basename($slug).'.md') );
+        
+        }
+
+    } else {
+
+
+        /* Validation "file" */
+        $files = unique_sorted_list( sanitize_list($args['file'], ','), ',' );
+        $files = explode(',', $files);
+
+        /* Gestion des max dans le cas de plusieurs fichier */
+        if($args['max'] === 'auto')
+            $args['max'] = count($files);
+
+        /* slug ou se trouve les fichiers */
+        $slug  = strlen($args['slug']) == 0 ? '/': '/'. trim($args['slug'],'/') .'/';
+
+        /* On formate les types */
+        $types = explode(',', rtrim($types,',') );
+
+        /* On test tous les fichiers */
+        foreach ($files as $file) {
+            
+            $file  = ltrim($file, '/');
+            $type  = substr(strrchr($file,'.'), 1);
+
+            if( is_in($type, $types) && file_exists( MP_PAGES_DIR . $slug . $file) )
+                $medias[] = MP_PAGES_DIR . $slug . $file;
+        }
+
     }
 
     /* On filtre par "orderby" et "order" */
@@ -127,102 +170,193 @@ function get_attached_media( $args = array() ) {
     /* Limite de resultat */
     array_splice( $medias, intval($args['max']) );
 
-    /* On renvoie le tableau sous forme de slug */
-    return array_map( function($value){ return ltrim( str_replace(MP_PAGES_DIR.'/','',$value), '/');} , $medias );
+    /*  mode de sortie */
+    switch ($mode) {
+
+        case null:
+            return array_map( 'basename', $medias);
+        case 'path':
+            return $medias;
+        case 'uri':
+            return array_map( function($value){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$value) ); } , $medias );
+        default:
+            return array_map( function($value){ return ltrim( str_replace(MP_PAGES_DIR,'',$value) ,'/'); }, $medias);
+    }
+
 }
 
 
-/***********************************************/
-/*          Functions images attachées         */
-/***********************************************/
-
-/**
- * Recherche images attachés
- * @param  $where           array() : Listes des slugs de pages où chercher les images sous forme de tableau
- * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
- * @param  $max             integer : Nombre de résultat par défaut : 10
- * @return array    retourne les résultats sous forme de tableau
- */
-function get_the_images( $name = '*', $where = null, $max = 10 ){
-
-    $max    = (integer) $max;
-    $name   = (string) $name;
-
-    do_action('do_before_get_the_images', $name, $where );
-
-    $types  = apply_filters('the_images_type' , 'jpg,jpeg,png,gif,svg' );
-
-    $images = get_attached_media( array('where'=>$where, 'name'=>$name, 'type'=>$types, 'max'=>$max) );
-    $images = array_map( function($image){ return MP_PAGES_URL.'/'.$image;} , $images );
-
-    do_action('do_after_get_the_images', $name, $where );
-
-    return $images;
-}
 
 /**
  * Recherche une image attachés
  * @param  $name            string  : Listes des noms de medias recherchés séparer par des virgules ex: drums,loops
  * @return array    retourne les résultats sous forme de tableau
  */
-function get_the_image( $name = '*', $url = true ){
+function get_the_image( $args, $mode = 'scheme' ){
 
-    $name   = (string) $name;
+    $args = parse_args( $args, array(
+            'max'    => 1,
+            'size'   => null,
+        ));
 
-    do_action('do_before_get_the_image', $name );
+    // on prepare la size
+    $size = $args['size'];
+    unset($args['size']);
 
-    $types  = apply_filters('the_image_type' , 'jpg,jpeg,png,gif,svg' );
+    // init la sortie
+    $images = array();
 
-    $image = implode( get_attached_media( array('name' => $name, 'type' => $types, 'max'=> 1) ) );
+    // Requête
+    $req = http_build_query($args);
 
-    do_action('do_after_get_the_image', $name );
+    // On récupère la cache
+    if( mp_cache_data('get_the_image_'.$req) ){
+        
+        $images = mp_cache_data('get_the_image_'.$req);
 
-    if( !$image ) return;
+    } else {
 
-    return $url ? MP_PAGES_URL.'/'.$image : MP_PAGES_DIR.'/'.$image;
+        // Liste des images valident
+        $types  = '&type='. apply_filters('the_image_type', 'jpg,jpeg,png,gif,svg' );
+
+        // On lance la recherche
+        $images = get_attached_media( $req.$types, 'path' );
+
+        // Mise en cache
+        mp_cache_data('get_the_image_'.$req, $images);
+
+        // On sort si la table est vide
+        if( empty($images) )   return;  // get_the_image sert également à get_the_page('thumbnail')
+    }  
+
+    if( $mode === 'uri' ){
+
+        switch ($size) {
+
+            case 'small':
+                $images = array_map( function($image){ return imagify( $image,'width=320'); }, $images );
+                break;
+            case 'medium':
+                $images = array_map( function($image){ return imagify( $image,'width=800'); }, $images );
+                break;
+            case 'large':
+                $images = array_map( function($image){ return imagify( $image,'width=1024'); }, $images );
+                break;
+            case 'thumbnail':
+                $images = array_map( function($image){ return imagify( $image,'width=400&height=400'); }, $images );
+                break;
+            default:
+                $images = array_map( function($image){ return imagify( $image ); }, $images );
+                break;
+        }
+
+    }
+
+    // On nettoie la table
+    $images = array_map( function($image){ return str_replace(MP_PAGES_DIR,'',$image); } , $images );
+
+
+    // Mode de sortie
+    switch ($mode) {
+
+        case null:
+            $images = array_map( 'basename', $images);
+            return $args['max'] == 1 ? $images[0] : $images;
+
+        case 'uri':
+            $images = array_map( function($image){ return esc_url_raw(MP_PAGES_URL.$image); }, $images);
+            return $args['max'] == 1 ? $images[0] : $images;
+
+        case 'path':
+            $images = array_map( function($image){ return MP_PAGES_DIR.$image; }, $images);
+            return $args['max'] == 1 ? $images[0] : $images;
+
+        default:
+            $images = array_map( function($image){ return ltrim($image,'/'); }, $images);
+            return $args['max'] == 1 ? $images[0] : $images;
+    }
 }
 
 
-/***********************************************/
-/*          Utilitaire image                   */
-/***********************************************/
 
 /**
-* Lecture info image
-* @param  $image     info de l'image à récupérer
+* resize image
+* @param  $image     image à redimenssionner
 */
-function image_args( $image, $args = 'all' ){
+function imagify( $image, $args = null){
 
     $image   = (string) $image;
-    $args    = (string) $args;
 
-    try {
-        $img = new abeautifulsite\SimpleImage($image);
-        $info = $img->get_original_info();
-        if( $args !== 'all')
-            $info = isset($info[$args]) ? $info[$args] : false;
-    } catch(Exception $e) {
-        _doing_it_wrong(__FUNCTION__, $e->getMessage() );
-        return false;
+    $args = parse_args($args, array(
+
+        'width'   => false,    // Largeur image
+        'height'  => false,    // Hauteur image
+        'quality' => 80,       // Qualité compression image
+        'rotate'  => 0,        // rotation de l'image (angle en degres)
+        'flip'    => false,    // x, y inversion image
+        'keep'    => 'center'  // center, top, right, bottom, left, top left, top right, bottom left, bottom right
+        ));
+
+    // On check que l'image n'a pas déjà été traité
+    if( strpos($image, '@') )
+        return $image;
+
+    // on récupère l'extension du fichier
+    $extension  = strrchr($image,'.');
+
+    // Paramètre image
+    $params = $args['width']. ( !$args['height'] ? '' : 'x'.$args['height'] );
+
+    // Nouveau nom d'image 
+    $image_size = str_replace($extension, '@'.$params.$extension, $image);
+
+
+    if( !file_exists($image_size) ){
+
+        if( $extension !== '.svg' ){
+
+            try {
+
+                $img = new abeautifulsite\SimpleImage($image);
+
+                // effet mirroir
+                if( $args['flip'] === 'x' )
+                    $img->flip('x');
+                elseif( $args['flip'] === 'y' )
+                    $img->flip('y');
+
+                // rotation
+                if( $args['rotate'] !== 0 )
+                    $img->rotate( intval($args['rotate']) );
+
+                // Resize image
+                if( !$args['width'] && $args['height'] )
+                    $img->fit_to_height($args['height']);
+
+                elseif( $args['width'] && !$args['height'] )
+                    $img->fit_to_width($args['width']);
+
+                elseif( $args['width'] && $args['height'] )
+                    $img->thumbnail($args['width'], $args['height']);
+
+                // Save the image
+                $img->save($image_size, intval($args['quality']) );
+
+            } catch(Exception $e) {
+                _doing_it_wrong(__FUNCTION__, $e->getMessage() );
+                return $image;
+            }
+
+        } else {
+
+            if( !$svg = file_get_content( $image ) )
+                return $image;
+
+            $svg = sanitize_svg($svg);
+
+            if( !file_put_contents( $image_size, $svg ) )
+                return $image;
+        }
     }
-    return $info;
-}
-
-
-/**
-* Compresseur d'image
-* @param  $image     image à compresser
-*/
-function imagify( $image, $quality = 80 ){
-
-    $image   = (string) $image;
-    $quality = (int) $quality;
-
-    try {
-        $img = new abeautifulsite\SimpleImage($image);
-        $img->flip('x')->save($image, $quality);
-    } catch(Exception $e) {
-        _doing_it_wrong(__FUNCTION__, $e->getMessage() );
-        return false;
-    }
+    return $image_size;
 }

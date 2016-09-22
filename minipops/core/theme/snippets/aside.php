@@ -9,7 +9,7 @@
 ?>
 <aside role="complementary" class="scroll-X">
 	<figure class="gallery">
-    	<?php the_images() ?>
-    	<figcaption>Ma gallerie d'image</figure>
+    	<?php the_thumbnail() ?>
+    	<figcaption>Image à la Une</figcaption>
     <figure>
 </aside>
