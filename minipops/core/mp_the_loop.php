@@ -139,7 +139,7 @@ function the_loop( $args = array(), $pattern = null ){
     array_splice( $where, intval($max) );
 
     /* On envoie les donnée à have_page */
-    mp_cache_data('mp_query'. $pattern, $where);
+    mp_cache_data('mp_query_'. $pattern, $where);
 
     /* On informe que la requête est vide */
     if( empty($where) )
@@ -169,7 +169,7 @@ function have_pages( $pattern = null ){
     }
 
     // On charge la table envoyé par la boucle
-    $pages = mp_cache_data('mp_query'. $pattern);
+    $pages = mp_cache_data('mp_query_'. $pattern);
 
     // Si la table est vidé on remet la requête principale
     if( empty($pages) ){
@@ -184,7 +184,7 @@ function have_pages( $pattern = null ){
     // On supprime la clé de la table
     unset($pages[key($pages)]);
     // On met à jour la table envoyé par la boucle
-    mp_cache_data('mp_query'. $pattern, $pages);
+    mp_cache_data('mp_query_'. $pattern, $pages);
 
     return true;
 }

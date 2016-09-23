@@ -26,6 +26,9 @@ function mp_init_constants() {
 
 	if ( !defined('FORCE_RELOCATE') )
 		define( 'FORCE_RELOCATE', false );
+
+	if ( !defined('IMAGIFY') )
+		define( 'IMAGIFY', true );
         
 	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages' );
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );

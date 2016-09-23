@@ -144,7 +144,9 @@ function get_attached_media( $args = array(), $mode = 'path' ) {
                 $tmp = array_map( function($value){ return substr(strrchr($value,'.'),1);} , $medias );
                 break;
             case 'name':
-                $tmp = array_map( function($value){ return basename(str_replace(MP_PAGES_DIR.'/','',$value));} , $medias );
+                $tmp = array_map( 
+                            function($value){ return basename(str_replace(MP_PAGES_DIR.'/','',$value)); }
+                       , $medias );
                 break;
             default:
                 return array();
@@ -178,9 +180,13 @@ function get_attached_media( $args = array(), $mode = 'path' ) {
         case 'path':
             return $medias;
         case 'uri':
-            return array_map( function($value){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$value) ); } , $medias );
+            return array_map( 
+                        function($value){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$value) ); }
+                   , $medias );
         default:
-            return array_map( function($value){ return ltrim( str_replace(MP_PAGES_DIR,'',$value) ,'/'); }, $medias);
+            return array_map( 
+                        function($value){ return ltrim( str_replace(MP_PAGES_DIR,'',$value) ,'/'); }
+                   , $medias);
     }
 
 }
@@ -229,7 +235,7 @@ function get_the_image( $args, $mode = 'scheme' ){
         if( empty($images) )   return;  // get_the_image sert également à get_the_page('thumbnail')
     }  
 
-    if( $mode === 'uri' ){
+    if( $mode === 'uri' && IMAGIFY ){
 
         switch ($size) {
 
@@ -250,31 +256,12 @@ function get_the_image( $args, $mode = 'scheme' ){
                 break;
         }
 
+        $images = array_map( 
+                    function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); }
+                  , $images );
     }
 
-    // On nettoie la table
-    $images = array_map( function($image){ return str_replace(MP_PAGES_DIR,'',$image); } , $images );
-
-
-    // Mode de sortie
-    switch ($mode) {
-
-        case null:
-            $images = array_map( 'basename', $images);
-            return $args['max'] == 1 ? $images[0] : $images;
-
-        case 'uri':
-            $images = array_map( function($image){ return esc_url_raw(MP_PAGES_URL.$image); }, $images);
-            return $args['max'] == 1 ? $images[0] : $images;
-
-        case 'path':
-            $images = array_map( function($image){ return MP_PAGES_DIR.$image; }, $images);
-            return $args['max'] == 1 ? $images[0] : $images;
-
-        default:
-            $images = array_map( function($image){ return ltrim($image,'/'); }, $images);
-            return $args['max'] == 1 ? $images[0] : $images;
-    }
+    return $args['max'] == 1 ? $images[0] : $images;
 }
 
 

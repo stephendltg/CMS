@@ -69,34 +69,21 @@ function get_query_vars(){
  */
 function get_url_queries(){
 
-    if ( IS_REWRITE_RULES ){
-
+    if ( IS_REWRITE_RULES )
         return get_current_url('uri');
 
-    } else {
+    $args = get_query_vars();
 
-        $args = get_query_vars();
+    if( !$args)
+        return '';
 
-        if( !$args)
-            return '';
+    $value = reset($args);
+    $key   = key($args);
 
-        $value = reset($args);
-        $key   = key($args);
-
-        if( is_same('page', $key) )
-            return trim( $value , '/' );
-
-        $query_rules = apply_filters( 'query_rules' , array() );
-        $query_rules = array_merge( array('tag'), $query_rules );
-
-        foreach ( $query_rules as $rule ) {
-            if( is_same($rule, $key) )
-                return trim( $rule .'/'. $value , '/' );
-        }
-    }
+    if( is_same('page', $key) )
+        return trim( $value , '/' );
 
     return '';
-
 }
 
 
@@ -112,14 +99,17 @@ function get_permalink( $slug ='' , $type ='page' ){
     if( is_same($type , 'page') && empty($slug) )
         return MP_HOME;
 
+    // Un coup de ménage
+    $slug = sanitize_key($slug);
+
     if( is_same($type , 'page') &&  is_page($slug) )
         $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. $slug : MP_HOME .'/index.php?page='.$slug;
     if( is_same($type, 'feed') && is_same($slug , 'rss') )
         $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. 'feed' : MP_HOME .'/index.php?page='. 'feed';
     if( is_same($type , 'page') &&  is_same($slug , 'sitemap') )
         $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/sitemap.xml' : MP_HOME .'/index.php?page=sitemap.xml';
-    if( is_same($type , 'tag') &&  is_tag($slug) )
-        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/tag/'.$slug : MP_HOME .'/index.php?tag='.$slug;
+    if( is_same($type , 'tag') )
+        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/?tag='.$slug : MP_HOME .'/index.php?tag='.$slug;
 
     if(!empty($link) ) return $link;
     else return false;
@@ -251,19 +241,23 @@ function is_sitemap(){
 
 /**
  * Vérifie si la requête passé à l'url est un tag
+ * @param  boolean  mode de sortie si boolean ou valeur du tag
  * @return boolean
  */
-function is_tag(){
+function is_tag( $mode = false ){
 
     global $query;
 
-    if( !isset($query) )
+    $args = get_query_vars();
+
+    if( !isset($query) || strlen($query) !== 0 || !$args)
         return false;
 
-    $args = explode('/', $query);
+    $value = reset($args);
+    $key   = key($args);
 
-    if( $args[0] === 'tag' && !empty($args[1]) )
-        return true;
+    if( is_same('tag', $key) )
+        return $mode ? $args[$key] : true;
 
     return false;
 }

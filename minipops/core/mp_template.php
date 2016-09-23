@@ -383,6 +383,25 @@ function the_thumbnail( $before = '', $after = '' ) {
     echo $before . sprintf($scheme, $small, $large, $medium ) . $after;
 }
 
+
+/***********************************************/
+/*        Fonctions affichage tag              */
+/***********************************************/
+
+function search_tag( $before = '', $after = '' ){
+
+    $before = (string) $before;
+    $after = (string) $after;
+
+    if( !$tag = is_tag('tag') )
+        return;
+
+    the_loop( 'tag='.$tag , 'tag');
+
+    echo $before . $tag . $after;
+}
+
+
 /***********************************************/
 /*        Fonctions date                       */
 /***********************************************/
