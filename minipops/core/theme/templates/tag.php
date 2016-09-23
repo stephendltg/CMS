@@ -18,23 +18,24 @@
 
                     <?php the_breadcrumb() ?>
 
+
+                    <?php search_tag('<h1>','</h1>') ?>
+
+                    <?php while ( have_pages('tag') ) : ?>
+
                     <article class="article" >
 
                         <header class="header" >
                             <?php the_page('title', '<h1>', '</h1>'); ?>
                         </header>
 
-                        <section class="content">
-                        <?php the_page('content') ?>
+                        <section class="description">
+                        <?php the_page('description') ?>
                         </section>
 
-                        <?php the_page('tag') ?>
-
-                        <footer class="footer">
-                            <?php the_page('author') ?>
-                        </footer>
-
                     </article>
+
+                <?php endwhile ?>
 
                 </main>
 

@@ -34,13 +34,31 @@ function mp_load_default_style(){
 
 
 /***********************************************/
-/*        Filter pour extrait d'une page vide    */
+/*        Filter pour extrait d'une page vide  */
 /***********************************************/
 add_filter('the_page_excerpt', function($value){ 
 
     if( strlen($value) === 0 )
         return mp_easy_minify( excerpt( get_the_page('content'), 140, 'words' ), false );
     return $value; 
+} );
+
+
+/***********************************************/
+/*        Filter pour liens tag                */
+/***********************************************/
+add_filter('the_page_tag', function($value){ 
+
+    if( strlen($value) === 0 )
+        return;
+
+    $value = explode(',', $value);
+    $value = array_map( function($value){ return '<a href="'.get_permalink($value, 'tag').'">'.$value.'</a>' ;}
+            , $value);
+
+    $tag_delimiter = apply_filters('the_tag_delimiter', ', ');
+
+    return join($tag_delimiter,$value);
 } );
 
 
