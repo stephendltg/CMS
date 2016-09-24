@@ -57,10 +57,7 @@ function __( $text, $domain = null ){
 
         $domain = !empty($GLOBALS['__args']['lang']) ? $GLOBALS['__args']['lang'] : null ;
 
-    }
-
-    // On charge la traductions des domaines thème ou plugins
-    else {
+    } else { // On charge la traductions des domaines thème ou plugin
 
         if( is_same($domain, null) ){
             // Traduction du thème

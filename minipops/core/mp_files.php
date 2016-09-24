@@ -41,6 +41,7 @@ function file_get_content_array($file) {
 function file_put_content($file, $contents) {
 
     $fp = @fopen( $file, 'wb' );
+
     if ( ! $fp )
         return false;
 
@@ -68,20 +69,19 @@ function file_put_content($file, $contents) {
 */
 function file_replace_content($file, $old_content, $new_content) {
     
-    if ( ! file_exists( $file ) )
+    if ( ! file_exists($file) )
         return false;
 
-    $file_content  = get_contents( $file );
-
-    $new_content  = preg_replace( $old_content, $new_content, $file_content );
-    $replaced     = null !== $new_content && $new_content !== $file_content;
-    $put_contents = put_contents( $file, $new_content );
+    $file_content  = file_get_content( $file );
+    $new_content   = preg_replace( $old_content, $new_content, $file_content );
+    $replaced      = null !== $new_content && $new_content !== $file_content;
+    $put_contents  = file_put_content( $file, $new_content );
 
     return $put_contents && $replaced;
 }
 
 /**
-* Modifie un contenu entre deux marker
+* Modifie un contenu entre deux marker ( pour htaccess et php.ini)
 * @param  string    $file     Chemin absolu du fichier
 * @return array
 */
@@ -94,7 +94,6 @@ function file_marker_contents( $file, $new_content = '', $args = array() ) {
         'text'     => '',
         'keep_old' => false,
     ));
-
 
     $file_content  = '';
     $comment_char  = basename( $file ) !== 'php.ini' ? '#' : ';';
@@ -181,11 +180,11 @@ function file_get_page( $path ){
     };
 
     // On ouvre le fichier de la page, on l'encode en utf8 et on nettoie
-    $file = esc_attr( encode_utf8( file_get_contents( $path ) ) );
+    $file = esc_attr( encode_utf8( file_get_content($path) ) );
 
     if( preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match ) ){
         $match[1] = array_map( 'strtolower', $match[1] );
-        $yaml = array_combine($match[1], array_map($decode_value, $match[2]) );
+        $yaml     = array_combine($match[1], array_map($decode_value, $match[2]) );
         unset($match);
     }
 
@@ -214,8 +213,5 @@ function file_put_page( $path, $array ){
             $text .= PHP_EOL . sanitize_key($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
     }
 
-    if( file_exists($path) && !is_writable($path) )     return false;
-    if( !file_put_contents( $path , $text , LOCK_EX ) ) return false;
-    @chmod( $path , 0644 );
-    return true;
+    return file_put_content($path , $text);
 }

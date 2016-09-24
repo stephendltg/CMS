@@ -150,29 +150,28 @@ function mp_set_the_page( $slug , $args = array() ) {
         'content' => ''
         ));
 
-    if( is_filename(basename($slug)) ){
+    if( !is_filename(basename($slug)) )
+        return false;
 
-        $slugs = explode( '/', $slug );
+    $slugs = explode( '/', $slug );
 
-        // On vérifie que les pages parents existes si plusieurs élements dans le slug
-        if( is_sup($slugs, 1) ) {
-            unset($slugs[size($slugs)-1]);
-            foreach( $slugs as $page )
-                if(!is_page($page)) return false;
-        }
-
-        do_action('do_before_edit_the_page', array($slug) );
-
-        $dir = MP_PAGES_DIR .'/'. $slug;
-        @mkdir( $dir , 0755 , true );
-        if ( !file_put_page( $dir .'/'. basename($slug).'.md' , $args ) ) return false;
-        @chmod( $dir .'/'. basename($slug).'.md' , 0644 );
-
-        do_action('do_after_edit_the_page', array($slug) );
-
-        return true;
+    // On vérifie que les pages parents existes si plusieurs élements dans le slug
+    if( is_sup($slugs, 1) ) {
+        unset($slugs[size($slugs)-1]);
+        foreach( $slugs as $page )
+            if(!is_page($page)) return false;
     }
-    return false;
+
+    do_action('do_before_edit_the_page', array($slug) );
+
+    $dir = MP_PAGES_DIR .'/'. $slug;
+    @mkdir( $dir , 0755 , true );
+    
+    if ( !file_put_page( $dir .'/'. basename($slug).'.md' , $args ) ) return false;
+
+    do_action('do_after_edit_the_page', array($slug) );
+
+    return true;
 }
 
 /**

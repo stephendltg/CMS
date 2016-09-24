@@ -31,9 +31,9 @@ else :
 	$template = get_template('index');
 endif;
 
-if ( $template = apply_filters( 'template_include', $template ) ){
+if ( $template = apply_filters( 'template_include', $template ) ):
 	do_action('TEMPLATE_REDIRECT');
     include( $template );
-}
+endif;
 
 return;

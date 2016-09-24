@@ -31,7 +31,7 @@ function lang(){
 /**
 * Redirection vers url
 * @param $location      url
-* @param $status        etat de la redirection
+* @param $status        etat de la redirection 301: Move Permanently, 302: Found, 303: See Other, 307: Temporary Redirect
 */
 function redirect( $location , $status = 302 ){
 
@@ -39,7 +39,7 @@ function redirect( $location , $status = 302 ){
     if ( !$location )  return false;
 
     header("Location: $location", true, $status);
-    return true;
+    exit();
 }
 
 
@@ -53,11 +53,15 @@ function redirect( $location , $status = 302 ){
 * @param $array
 */
 function arrayToObject($array){
+
   if( is_array($array) ){
+
     foreach($array as &$item)
         $item = arrayToObject($item);
     return (object) $array;
+
   }
+
   return $array;
 }
 
@@ -77,6 +81,7 @@ function parse_args( $args, $defaults = '' ) {
         if ( get_magic_quotes_gpc() )
             $r = map_deep( $r, 'stripslashes_str' );
     }
+
     if ( is_array( $defaults ) )
         return array_merge( $defaults, $r );
     return $r;
@@ -223,12 +228,18 @@ function mp_cache_data( $key ) {
 * @param $string
 */
 function detect_encoding( $string ) {
+
     $string       = (string) $string;
+
     if ( function_exists( 'mb_internal_encoding' ) ) {
+
       return strtolower ( mb_detect_encoding( $string , 'UTF-8, ISO-8859-1, windows-1251') );
+
     } else {
-      foreach( array('utf-8', 'iso-8859-1', 'windows-1251') as $item )
-        if( md5( iconv( $item , $item , $string ) ) == md5( $string ) ) return $item;
+
+        foreach( array('utf-8', 'iso-8859-1', 'windows-1251') as $item )
+            if( md5( iconv( $item , $item , $string ) ) == md5( $string ) ) return $item;
+
       return false;
     }
 }
@@ -238,9 +249,14 @@ function detect_encoding( $string ) {
 * @param $string
 */
 function encode_utf8( $string ){
+
     $string       = (string) $string;
+
     $encoding = detect_encoding( $string );
-    if( is_same( $encoding , 'utf-8') ) return $string;
+
+    if( is_same( $encoding , 'utf-8') ) 
+        return $string;
+
     return iconv( $encoding , 'utf-8' , $string );
 }
 
@@ -379,7 +395,9 @@ function base32_decode($input) {
  * @return string
  */
 function convert($size){
+
     $unit=array('b','kb','mb','gb','tb','pb');
+
     return @round($size/pow(1024,($i=floor(log($size,1024)))),2).' '.$unit[$i];
 }
 
@@ -410,8 +428,10 @@ function get_cms_memory( $real_usage = false ) {
  * @return string
  */
 function get_limit_memory( $force_limit_mem = '' ) {
+
     if( is_integer($force_limit_mem) && is_sup($force_limit_mem, 16) )
         @ini_set('memory_limit', $force_limit_mem.'M');
+
     return ini_get('memory_limit');
 }
 
@@ -442,8 +462,10 @@ function get_post_memory() {
  * @return string
  */
 function get_max_time_execution( $ForceMaxTimeExec = '' ) {
+
     if( is_integer($ForceMaxTimeExec) && $ForceMaxTimeExec > 30 )
         @ini_set('max_execution_time', $ForceMaxTimeExec);
+
     return ini_get('max_execution_time');
 }
 
@@ -457,6 +479,7 @@ function get_max_time_execution( $ForceMaxTimeExec = '' ) {
  * @return string
  */
 function random_salt( $length = 8 ) {
+
     $length = (int) $length;
     $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-=+;:,.?";
     $salt = substr( str_shuffle( $chars ), 0, $length );
@@ -485,14 +508,16 @@ function excerpt( $text , $length = 140 , $mode = 'chars' ) {
     $text = strip_all_tags($text);
 
     if( is_same( strtolower($mode) , 'words' ) ){
+
         if( str_word_count($text , 0) > $length ) {
             $words = str_word_count($text, 2);
             $pos   = array_keys($words);
             $text  = substr( $text , 0 , $pos[$length]) . '...';
         }
         return $text;
-    }
-    else return substr( $text , 0 , $length );
+    
+    } else 
+        return substr( $text , 0 , $length );
 }
 
 

@@ -18,6 +18,7 @@
  * Usage: stockage dans base json
  */
 function esc_attr( $value ) {
+
     if ( is_string( $value ) ) {
         // On supprime les caractères invisibles
         $char = array('/%0[0-8bcef]/', '/%1[0-9a-f]/', '/[\x00-\x08]/', '/\x0b/', '/\x0c/', '/[\x0e-\x1f]/');
@@ -26,7 +27,10 @@ function esc_attr( $value ) {
             $value = preg_replace( $char , '' , $value );
         } while ( $cleaned != $value );
     }
-    if ( is_array( $value ) ) array_walk( $value , function( &$v ){ $v = esc_attr( $v ); } );
+
+    if ( is_array( $value ) ) 
+        array_walk( $value , function( &$v ){ $v = esc_attr( $v ); } );
+
     return $value;
 }
 
@@ -35,9 +39,12 @@ function esc_attr( $value ) {
  * Encode les signes < > " ' en valeur html.
  */
 function esc_html( $string ) {
+
     $string = (string) $string;
+
     $flags = ENT_QUOTES;
     if( defined('ENT_SUBSTITUTE') ) $flags |= ENT_SUBSTITUTE;
+
     return htmlspecialchars( $string , $flags , CHARSET );
 }
 
@@ -45,8 +52,10 @@ function esc_html( $string ) {
  * DECODE esc_html.
  */
 function html( $string ) {
+
     $string = (string) $string;
     $flags = ENT_QUOTES;
+
     return htmlspecialchars_decode( $string , $flags );
 }
 
@@ -56,7 +65,9 @@ function html( $string ) {
  * $_GET = array_map('esc_url', $_GET);
  */
 function esc_url( $url ){
+
     $url = (string) $url;
+
     $url = trim($url);
     $url = rawurldecode($url);
     $url = str_replace(array('--','&quot;','!','@','#','$','%','^','*','(',')','+','{','}','|',':','"','<','>',
@@ -69,6 +80,7 @@ function esc_url( $url ){
     $url = str_replace('//', '', $url);
     $url = preg_replace('/^\//', '', $url);
     $url = preg_replace('/^\./', '', $url);
+
     return $url;
 }
 
@@ -76,8 +88,11 @@ function esc_url( $url ){
  * Encode les signes < > " ' en valeur xml.
  */
 function esc_xml( $string ) {
+
     $string = (string) $string;
+
     if( defined('ENT_XML1') ) return htmlspecialchars( $string , ENT_QUOTES | ENT_XML1, CHARSET );
+
     return str_replace( '&#039;', '&apos;', htmlspecialchars( $string , ENT_QUOTES , CHARSET ) );
 }
 
@@ -89,6 +104,7 @@ function esc_xml( $string ) {
 function esc_url_raw( $url ) {
 
     $good_protocol = false;
+    
     $protocols = array( 'http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal' );
 
     if( '' == $url ) return $url;

@@ -31,12 +31,15 @@ function get_the_args( $field, $type = null ) {
 
     // On récupère la variable selon le noeud
     $ref = &$__args;
+
     foreach ($array_keys as $k)
         if(!isset($ref[$k]) ) return; else $ref = &$ref[$k];
+
     $arg = esc_html($ref);
 
     // On filtre le résultat si la fonction de validation existe
     $type = 'is_'.$type;
+
     if( function_exists($type) )
         if( $type($arg)) return $arg; else return;
 
@@ -56,7 +59,10 @@ function the_args( $field, $before = '', $after = '' ) {
     $after  = (string) $after;
 
     $value = apply_filters( 'the_args_'.$field, get_the_args( $field ) );
-    if ( is_array($value) || strlen($value) == 0 )  return;
+
+    if ( is_array($value) || strlen($value) == 0 )  
+        return;
+
     echo $before . $value . $after;
 }
 
@@ -66,9 +72,13 @@ function the_args( $field, $before = '', $after = '' ) {
  * @return echo
  */
 function snippet( $snippet ){
+
     $snippet = (string) $snippet;
+
     $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
+
     if( !empty($snippets) ){
+
         $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
         mp_cache_data('__args', $__args);
         include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
@@ -83,6 +93,7 @@ function snippet( $snippet ){
 /***********************************************/
 
 function get_page_template() {
+
     // On modifie le template
     $template = get_the_page('template') ? get_template( 'templates/'. get_the_page('template') ) : '';
     return !empty($template)?: get_template( 'templates/page' );
@@ -92,8 +103,10 @@ function get_page_template() {
 function get_template( $template_name ) {
 
     $template = glob( MP_TEMPLATE_DIR . '/' . $template_name .'.php' );
+
     if( !empty($template) )
         return MP_TEMPLATE_DIR . '/' . $template_name .'.php';
+
     else return '';
 }
 
@@ -189,7 +202,9 @@ function mp_meta_sitemap_link(){
 }
 
 function mp_meta_canonical_link(){
+
     global $query;
+
     if( !get_permalink($query) ) return;
     echo '<link rel="canonical" href="'. get_permalink($query) .'" />'."\n";
 }
@@ -489,6 +504,7 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
     $separator = (string) $separator;
     $before    = (string) $before;
     $after     = (string) $after;
+
     $breadcrumb       = '';
     $breadcrumb_begin = '<nav role="navigation" aria-label="'. __('You are here') .' : " id="breadcrumb" class="breadcrumb">';
     $breadcrumb_begin = apply_filters('breadcrumb_begin', $breadcrumb_begin);
@@ -498,15 +514,22 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
     $breadcrumb_schema = apply_filters('breadcrumb_schema' , $breadcrumb_schema );
 
     if( is_page() ){
+
         $queries = get_the_page('slug');
+
         do {
+
             $slug = substr( $queries , 0 , strpos($queries,'/') );
+
             if( $slug === '' )
                 $breadcrumb = sprintf( $breadcrumb_schema ,  get_the_blog('title')  , MP_HOME ) . $breadcrumb_schema_separator . $breadcrumb;
             else
                 $breadcrumb = ( is_page($slug) ) ? sprintf( $breadcrumb_schema , basename($slug) , get_permalink($slug) ) . $breadcrumb_schema_separator : '';
+            
             $queries = str_replace( $slug.'/' , '', $queries );
+
         } while ( strlen($slug) > 0 );
+
         $breadcrumb .= get_the_page('title');
     }
 

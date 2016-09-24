@@ -57,7 +57,7 @@ function add_inline_script( $handle, $data, $deps = array() ){
     if ( false !== stripos($data, '</script>') ) {
 
         _doing_it_wrong( __FUNCTION__, sprintf('Do not pass %1$s tags to %2$s.', '<code>&lt;script&gt;</code>','<code>add_inline_script()</code>') );
-            $data = trim( preg_replace( '#<script[^>]*>(.*)</script>#is', '$1', $data ) );
+        $data = trim( preg_replace( '#<script[^>]*>(.*)</script>#is', '$1', $data ) );
     }
     
     $deps = array_merge( $deps, array('data'=>$data) );

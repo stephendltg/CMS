@@ -28,9 +28,8 @@ if (!function_exists('http_response_code')) {
 
         $prev_code = (isset($GLOBALS['http_response_code']) ? $GLOBALS['http_response_code'] : 200);
 
-        if ($code === NULL) {
+        if ($code === NULL)
             return $prev_code;
-        }
 
         switch ($code) {
             case 100: $text = 'Continue'; break;
@@ -77,7 +76,9 @@ if (!function_exists('http_response_code')) {
         }
 
         $protocol = (isset($_SERVER['SERVER_PROTOCOL']) ? $_SERVER['SERVER_PROTOCOL'] : 'HTTP/1.0');
+
         header($protocol . ' ' . $code . ' ' . $text);
+
         $GLOBALS['http_response_code'] = $code;
 
         // original function always returns the previous or current code
@@ -415,9 +416,9 @@ function mp_set_internal_encoding() {
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
     header_remove( 'x-powered-by' );
-    if ( function_exists( 'mb_language' ) ) mb_language( 'uni' );
-    if ( function_exists( 'mb_regex_encoding' ) ) mb_regex_encoding( CHARSET );
-	if ( function_exists( 'mb_internal_encoding' ) ) mb_internal_encoding( CHARSET );
+    if ( function_exists( 'mb_language' ) )             mb_language( 'uni' );
+    if ( function_exists( 'mb_regex_encoding' ) )       mb_regex_encoding( CHARSET );
+	if ( function_exists( 'mb_internal_encoding' ) )    mb_internal_encoding( CHARSET );
 }
 
 
@@ -479,9 +480,10 @@ function is_ssl() {
     if ( isset($_SERVER['HTTPS']) ) {
 
         if ( 'on' == strtolower($_SERVER['HTTPS']) ) return true;
-        if ( '1' == $_SERVER['HTTPS'] ) return true;
+        if ( '1' == $_SERVER['HTTPS'] )              return true;
 
     } elseif ( isset($_SERVER['SERVER_PORT']) && ( '443' == $_SERVER['SERVER_PORT'] ) ) {
+
         return true; 
     }
 
@@ -497,24 +499,35 @@ function is_ssl() {
 function guess_url() {
 
 
-	if ( defined('MP_HOME') && '' != MP_HOME ) { $url = MP_HOME; }
-    else {
+	if ( defined('MP_HOME') && '' != MP_HOME ) { 
+    
+        $url = MP_HOME; 
+    
+    } else {
+
 		$abspath_fix = str_replace( '\\', '/', ABSPATH );
 		$script_filename_dir = dirname( $_SERVER['SCRIPT_FILENAME'] );
 
 		if ( $script_filename_dir . '/' == $abspath_fix ) {
+
 			$path = preg_replace( '#/[^/]*$#i', '', $_SERVER['PHP_SELF'] );
 
 		} else {
 
 			if ( false !== strpos( $_SERVER['SCRIPT_FILENAME'], $abspath_fix ) ) {
+
 				$directory = str_replace( ABSPATH, '', $script_filename_dir );
 				$path = preg_replace( '#/' . preg_quote( $directory, '#' ) . '/[^/]*$#i', '' , $_SERVER['REQUEST_URI'] );
+
 			} elseif ( false !== strpos( $abspath_fix, $script_filename_dir ) ) {
+
 				$subdirectory = substr( $abspath_fix, strpos( $abspath_fix, $script_filename_dir ) + strlen( $script_filename_dir ) );
 				$path = preg_replace( '#/[^/]*$#i', '' , $_SERVER['REQUEST_URI'] ) . $subdirectory;
+
 			} else {
+
 				$path = $_SERVER['REQUEST_URI'];
+
 			}
 		}
 
@@ -539,10 +552,14 @@ function get_template_directory( $mode = 'directory' ){
         
         // On liste les thèmes présents dans le repertoire
         $themes = glob( MP_THEMES_DIR .'/*', GLOB_ONLYDIR );
+
         if( is_sup($themes, 0) ){
-            foreach( $themes as $theme )
+
+            foreach( $themes as $theme ){
+
                 if( is_same( $theme, MP_THEMES_DIR . '/' . get_the_blog('theme') ) )
                     $path = get_the_blog('theme');
+            }
         }
     }
 
@@ -609,6 +626,7 @@ function get_the_blog( $field, $default = false ){
             $value = get_option('blog->'.$field, $default);
             break;
     }
+    
     return apply_filters( 'get_the_blog_'. $field, $value, $field );
 }
 

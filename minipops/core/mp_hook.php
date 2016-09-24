@@ -99,16 +99,26 @@ function do_action( $action_name , $args = null , $return = false ) {
 
     // On boucle pour ressortir les hooks à actionner
     foreach ( $mp_hook_actions[$action_name] as $priority=>$actions ) {
+
         foreach ( $actions as $actions=>$action ){
+
             if ( isset($args) ) {
-                if ( $return ) { return call_user_func_array( $action['function'], $args ); }
-                else { call_user_func_array( $action['function'], $args ); }
+
+                if ( $return )
+                    return call_user_func_array( $action['function'], $args );
+                else 
+                    call_user_func_array( $action['function'], $args );
+
             } else {
-                if ( $return ) { return call_user_func_array( $action['function'], $action['args'] ); }
-                else { call_user_func_array( $action['function'], $action['args'] ); }
+
+                if ( $return ) 
+                    return call_user_func_array( $action['function'], $action['args'] );
+                else 
+                    call_user_func_array( $action['function'], $action['args'] );
             }
         }
     }
+
     return true;
 }
 
@@ -142,16 +152,17 @@ function apply_filters( $filter_name, $value ) {
     foreach ( $mp_hook_filter[$filter_name] as $priority => $functions ) {
 
         if ( ! is_null($functions) ) {
+
             foreach ( $functions as $function ) {
 
                 $all_args = array_merge( array($value), $args );
                 $function_name = $function['function'];
                 $accepted_args = $function['accepted_args'];
 
-                if ( $accepted_args == 1 )     { $the_args = array($value);}
-                elseif ( $accepted_args > 1 )  { $the_args = array_slice($all_args, 0, $accepted_args); }
-                elseif ( $accepted_args == 0 ) { $the_args = null; }
-                else                           { $the_args = $all_args; }
+                if ( $accepted_args == 1 )          $the_args = array($value);
+                elseif ( $accepted_args > 1 )       $the_args = array_slice($all_args, 0, $accepted_args);
+                elseif ( $accepted_args == 0 )      $the_args = null;
+                else                                $the_args = $all_args;
 
                 $value = call_user_func_array($function_name, $the_args);
             }
@@ -192,8 +203,11 @@ function add_filter( $filter_name, $function_to_add, $priority = 10, $accepted_a
 
     // On vérifie qu'il n'y a pas le même filtre avec la même priorité. Thanks to WP :)
     if ( isset ( $mp_hook_filter[$filter_name][$priority] ) ) {
+
         foreach ( $mp_hook_filter[$filter_name][$priority] as $filter ) {
-            if ( $filter['function'] === $function_to_add ) return true;
+
+            if ( $filter['function'] === $function_to_add ) 
+                return true;
         }
     }
 
@@ -220,6 +234,7 @@ function remove_action( $tag, $function_to_remove, $priority = 10, $mp_hook = 'm
     if( !empty($hook[$tag][$priority]) ) {
 
         foreach ( $hook[$tag][$priority] as $index => $value ){
+            
             if( !empty($value['function']) && $function_to_remove === $value['function'] ) 
                 unset( $hook[$tag][$priority][$index] );
         }

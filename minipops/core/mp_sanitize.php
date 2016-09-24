@@ -20,6 +20,7 @@
 * @param $string     chaine
 */
 function backslashit( $string ) {
+
     if ( isset( $string[0] ) && $string[0] >= '0' && $string[0] <= '9' )
         $string = '\\\\' . $string;
     return addcslashes( $string, 'A..Za..z' );
@@ -39,7 +40,9 @@ function stripslashes_str( $value ) {
  * Supprime toutes les balises ( style et script y comprit ).
  */
 function strip_all_tags( $string ) {
+
     $string = (string) $string;
+
     $string = preg_replace( '@<(script|style)[^>]*?>.*?</\\1>@si', '', $string );
     return trim( strip_tags($string) );
 }
@@ -48,7 +51,9 @@ function strip_all_tags( $string ) {
  * Enlève tous les accents
  */
 function remove_accent( $string ){
+
     $string       = (string) $string;
+
     $string = encode_utf8( $string );
     $char_not_clean = array('/@/','/À/','/Á/','/Â/','/Ã/','/Ä/','/Å/','/Ç/','/È/','/É/','/Ê/','/Ë/','/Ì/','/Í/','/Î/','/Ï/','/Ò/','/Ó/','/Ô/','/Õ/','/Ö/','/Ù/','/Ú/','/Û/','/Ü/','/Ý/','/à/','/á/','/â/','/ã/','/ä/','/å/','/ç/','/è/','/é/','/ê/','/ë/','/ì/','/í/','/î/','/ï/','/ð/','/ò/','/ó/','/ô/','/õ/','/ö/','/ù/','/ú/','/û/','/ü/','/ý/','/ÿ/', '/©/');
     $clean = array('a','a','a','a','a','a','a','c','e','e','e','e','i','i','i','i','o','o','o','o','o','u','u','u','u','y','a','a','a','a','a','a','c','e','e','e','e','i','i','i','i','o','o','o','o','o','o','u','u','u','u','y','y','copy');
@@ -64,7 +69,9 @@ function remove_accent( $string ){
  * Enlève tous les caractères spéciaux
  */
 function sanitize_allspecialschars( $string ) {
+
     $string       = (string) $string;
+
     $special_chars = array( "[", "]", "/", "\\", "<", ">", "\"", "{", "}", chr(0) );
     $special_chars = apply_filters( 'sanitize_allspecialschars_char' , $special_chars );
     $special_chars = preg_replace( "#\x{00a0}#siu", ' ', $special_chars );
@@ -104,26 +111,26 @@ function sanitize_list( $list, $separator = ', ' ) {
  */
 function unique_sorted_list( $list, $separator = false ) {
     
-    if ( array() === $list || '' === $list ) {
+    if ( array() === $list || '' === $list )
         return $list;
-    }
 
-    if ( false !== $separator ) {
+    if ( false !== $separator )
         $list = explode( $separator, $list );
-    }
 
     $list = array_flip( array_flip( $list ) );
     natcasesort( $list );
 
-    if ( false !== $separator ) {
+    if ( false !== $separator )
         $list = implode( $separator, $list );
-    }
 
     return $list;
 }
 
 
 function sanitize_key( $key ) {
+
+    $key = (string) $key;
+
     $key = strtolower( $key );
     $key = preg_replace( '/[^a-z0-9\/_-]/', '', $key );
     return $key;
@@ -131,12 +138,18 @@ function sanitize_key( $key ) {
 
 
 function sanitize_tag( $tag_name ) {
+
+    $tag_name = (string) $tag_name;
+
     $tag_name = strtolower( preg_replace('/[^a-zA-Z0-9_]/', '', $tag_name) );
     return $tag_name;
 }
 
 
 function sanitize_html_class( $class ) {
+
+    $class = (string) $class;
+
     $class = preg_replace( '|%[a-fA-F0-9][a-fA-F0-9]|', '', $class );
     $class = preg_replace( '/[^A-Za-z0-9_-]/', '', $class );
     return $class;
@@ -144,6 +157,8 @@ function sanitize_html_class( $class ) {
 
 
 function sanitize_email( $email ){
+
+    $email = (string) $email;
 
     if( strlen($email ) < 3 ) return '';
 
@@ -182,6 +197,9 @@ function sanitize_email( $email ){
 
 
 function sanitize_user( $username ){
+
+    $username = (string) $username;
+
     $username = strip_all_tags( $username );
     $username = remove_accent( $username );
     $username = preg_replace( '|%([a-fA-F0-9][a-fA-F0-9])|', '', $username );
@@ -196,7 +214,9 @@ function sanitize_user( $username ){
  * Nettoie un nom de fichier
  */
 function sanitize_file_name( $filename ) {
+
     $filename       = (string) $filename;
+
     //thanks wordpress
     $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", chr(0) );
     $filename = apply_filters( 'sanitize_file_name_char' , $filename );
@@ -213,7 +233,9 @@ function sanitize_file_name( $filename ) {
  * Nettoie un mot de tout caractères
  */
 function sanitize_words( $words ) {
+
     $words       = (string) $words;
+
     //thanks wordpress
     $special_chars = array("?", "[", "]", "/", "\\", "=", "<", ">", ":", ";", ",", "'", "\"", "&", "$", "#", "*", "(", ")", "|", "~", "`", "!", "{", "}", ".", "_", "-", chr(0) );
     $words = apply_filters( 'sanitize_words_char' , $words );
@@ -228,6 +250,8 @@ function sanitize_words( $words ) {
  * Nettoie des données svg
  */
 function sanitize_svg( $svg ){
+
+    $svg       = (string) $svg;
 
     // Table des éléments présent normalement dans un fichier svg
     $whitelist = array(

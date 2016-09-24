@@ -42,6 +42,8 @@ function form_option( $option, $domain = null ){
 }
 
 
+
+// Fonction de nettoyage des options
 function sanitize_option($option, $value){
 
     switch ($option) {

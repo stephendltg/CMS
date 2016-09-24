@@ -101,8 +101,7 @@ function get_ip_client() {
             $ip = explode( ',', $_SERVER[ $key ] );
             $ip = end( $ip );
 
-            if ( is_ip($ip) )
-                return $ip;
+            if ( is_ip($ip) )           return $ip;
         }
     }
 
