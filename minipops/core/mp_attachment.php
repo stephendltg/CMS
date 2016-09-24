@@ -295,10 +295,9 @@ function imagify( $image, $args = null){
     $params = $args['width']. ( !$args['height'] ? '' : 'x'.$args['height'] );
 
     // Nouveau nom d'image 
-    $image_size = str_replace($extension, '@'.$params.$extension, $image);
+    $new_image = str_replace($extension, '@'.$params.$extension, $image);
 
-
-    if( !file_exists($image_size) ){
+    if( !file_exists($new_image) ){
 
         if( $extension !== '.svg' ){
 
@@ -327,7 +326,7 @@ function imagify( $image, $args = null){
                     $img->thumbnail($args['width'], $args['height']);
 
                 // Save the image
-                $img->save($image_size, intval($args['quality']) );
+                $img->save($new_image, intval($args['quality']) );
 
             } catch(Exception $e) {
                 _doing_it_wrong(__FUNCTION__, $e->getMessage() );
@@ -341,9 +340,9 @@ function imagify( $image, $args = null){
 
             $svg = sanitize_svg($svg);
 
-            if( !file_put_contents( $image_size, $svg ) )
+            if( !file_put_contents( $new_image, $svg ) )
                 return $image;
         }
     }
-    return $image_size;
+    return $new_image;
 }

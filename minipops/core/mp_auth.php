@@ -181,6 +181,8 @@ function parse_auth_cookie() {
 
 function user_valid( $user, $hmac ){
 
+    // En cours d'écriture
+
     if( $user === 'admin')
         return true;
 
