@@ -22,20 +22,21 @@ function mp_init_constants() {
 
     // Definit les constantes pour les répertoires de stockage du site
 	if ( !defined('MP_CONTENT_DIR') )
-		define( 'MP_CONTENT_DIR', ABSPATH . 'mp_content' );
+		define( 'MP_CONTENT_DIR', ABSPATH . 'mp-content-' . substr( md5( __FILE__ ), 0, 8 ) );
 
 	if ( !defined('FORCE_RELOCATE') )
 		define( 'FORCE_RELOCATE', false );
 
-	if ( !defined('IMAGIFY') )
-		define( 'IMAGIFY', true );
-        
 	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages' );
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
 		define( 'DEBUG', false );
+
+	// Constante de mise en cache
+	if ( !defined('CACHE') )
+		define( 'CACHE', true );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );
@@ -72,7 +73,7 @@ function mp_plugin_directory_constants() {
 
 	// A l'heure actuel MP_CONTENT_URL n'accepte pas les sous domaines
 	if ( !defined('MP_CONTENT_URL') )
-		define( 'MP_CONTENT_URL', guess_url() . '/mp_content' );
+		define( 'MP_CONTENT_URL', guess_url() . '/mp-content' . substr( md5( __FILE__ ), 0, 8 ) );
 
     // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
 	define( 'MP_PAGES_URL',   MP_CONTENT_URL  . '/pages' );
@@ -80,6 +81,11 @@ function mp_plugin_directory_constants() {
 	define( 'MP_PLUGIN_URL',  MP_CONTENT_URL  . '/plugins' );
 	define( 'MU_PLUGIN_DIR',  MP_CONTENT_DIR  . '/mu-plugins' );
 	define( 'MU_PLUGIN_URL',  MP_CONTENT_URL  . '/mu-plugins' );
+
+	// Constante pour optimisation des images et fichier svg
+	if ( !defined('IMAGIFY') )
+		define( 'IMAGIFY', true );
+
 }
 
 /**
@@ -100,13 +106,10 @@ function mp_cookies_constants() {
 	define('AUTH_COOKIE', 'minipops_auth_' . COOKIEHASH);
 
 	if ( !defined('COOKIEPATH') )
-		define('COOKIEPATH', preg_replace('|https?://[^/]+|i', '', get_option('home') . '/' ) );
+		define('COOKIEPATH', preg_replace('|https?://[^/]+|i', '', guess_url() . '/' ) );
 
 	if ( !defined('COOKIE_DOMAIN') )
 		define('COOKIE_DOMAIN', false);
-
-	if ( !defined('ADMIN_COOKIE_PATH') )
-		define( 'ADMIN_COOKIE_PATH', COOKIEPATH . 'mp-admin' );
 
 	// Spécifie la durée de vie du cookie en secondes. La valeur de 0 signifie : "Jusqu'à ce que le navigateur soit éteint".
     if ( !defined('SESSION_COOKIE_LIFE') )

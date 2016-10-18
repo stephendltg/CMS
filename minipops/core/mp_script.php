@@ -63,7 +63,6 @@ function add_inline_script( $handle, $data, $deps = array() ){
     $deps = array_merge( $deps, array('data'=>$data) );
 
     return mp_register_script( $handle, false , $deps );
-
 }
 
 
@@ -102,7 +101,7 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
 
     // On créer le $handle si définit
     if( $src )
-        mp_register_style( $handle, $src, $deps, $ver );
+        mp_register_script( $handle, $src, $deps, $ver );
 
     // On charge les registers
     $enqueue_script = mp_cache_data('mp_register_script');
@@ -220,7 +219,7 @@ function mp_enqueue_scripts(){
 
         // On charge les registers
         foreach ($enqueue_registers as $handle => $args)
-            mp_enqueue_style($handle);
+            mp_enqueue_script($handle);
     }
 
 }

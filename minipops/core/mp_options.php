@@ -99,6 +99,10 @@ function sanitize_option($option, $value){
             if( is_notin($value, array(true, false, 'disable', 'enable') ) )
                 $value = null;
             break;
+        case 'site_crons':
+            if( ! is_array($value) )
+                $value = false;
+            break;    
         default:
             break;
     }
@@ -344,6 +348,8 @@ class options {
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option );
 
+            // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
+            $this->_SetValueByNodeToArray($node, self::$_options, null);
             // On met à jour la nouvelle valeur
             $this->_SetValueByNodeToArray($node, self::$_options, $value);
             self::$_flag = true;

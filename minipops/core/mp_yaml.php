@@ -152,6 +152,9 @@ class yaml {
             // on nettoie le clé uniquement si c'est une chaine de caractère
             $k = is_string($k) ? sanitize_key($k) : $k;
 
+            // Si v est un tableau et qu'il est vide alors c'est une valeur null
+            if( is_array($v) && empty($v) )   $v = null;
+
             if (  is_array($v) ){
                 if( is_integer($k) )
                     $this->encode_iterator .= str_repeat($this->TAB , $i) .'- '. json_encode($v) ."\n";

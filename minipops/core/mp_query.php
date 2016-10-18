@@ -8,12 +8,6 @@
  * @version 1
  */
 
-/*
-global $query;
-
-// Requête passer à l'url
-$query = get_url_queries();
-*/
 
 /***********************************************/
 /*                Fonctions                    */

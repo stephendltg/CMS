@@ -23,8 +23,8 @@
  *                  'max'     integer : Nombre de résultat par défaut : 10
  *                  'order'   string  : Mode de tri "ASC" ( par défaut ), "DESC" ou "SHUFFLE"
  *                  'orderby' string  : Trier par "date" ( date du fichier, par défaut ), "name" ( nom du fichier) ou par "type" ( extension de fichier )
-                    'file'    string  : Recherche par nom de fichier ex:mon-image.jpg
-                    'slug'    string  : Ou on recherche les fichiers, un seul slug autorisé
+ *                  'file'    string  : Recherche par nom de fichier ex:mon-image.jpg
+ *                   'slug'    string  : Ou on recherche les fichiers, un seul slug autorisé
  * @return array    retourne les résultats sous forme de tableau
  */
 function get_attached_media( $args = array(), $mode = 'path' ) {
@@ -235,30 +235,31 @@ function get_the_image( $args, $mode = 'scheme' ){
         if( empty($images) )   return;  // get_the_image sert également à get_the_page('thumbnail')
     }  
 
-    if( $mode === 'uri' && IMAGIFY ){
+    if( $mode === 'uri' ){
 
-        switch ($size) {
+        if( IMAGIFY ){
 
-            case 'small':
-                $images = array_map( function($image){ return imagify( $image,'width=320'); }, $images );
-                break;
-            case 'medium':
-                $images = array_map( function($image){ return imagify( $image,'width=800'); }, $images );
-                break;
-            case 'large':
-                $images = array_map( function($image){ return imagify( $image,'width=1024'); }, $images );
-                break;
-            case 'thumbnail':
-                $images = array_map( function($image){ return imagify( $image,'width=400&height=400'); }, $images );
-                break;
-            default:
-                $images = array_map( function($image){ return imagify( $image ); }, $images );
-                break;
+            switch ($size) {
+
+                case 'small':
+                    $images = array_map( function($image){ return imagify( $image,'width=320'); }, $images );
+                    break;
+                case 'medium':
+                    $images = array_map( function($image){ return imagify( $image,'width=800'); }, $images );
+                    break;
+                case 'large':
+                    $images = array_map( function($image){ return imagify( $image,'width=1024'); }, $images );
+                    break;
+                case 'thumbnail':
+                    $images = array_map( function($image){ return imagify( $image,'width=400&height=400'); }, $images );
+                    break;
+                default:
+                    $images = array_map( function($image){ return imagify( $image ); }, $images );
+                    break;
+            }
         }
 
-        $images = array_map( 
-                    function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); }
-                  , $images );
+        $images = array_map( function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); } , $images );
     }
 
     return $args['max'] == 1 ? $images[0] : $images;

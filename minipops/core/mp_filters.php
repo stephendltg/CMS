@@ -23,8 +23,13 @@ add_action('shutdown', function() {
 /***********************************************/
 /*        Filter for the style                 */
 /***********************************************/
+
 add_action('enqueue_styles','mp_load_default_style');
 
+/**
+ * Chargement de la feuille de style par défaut
+ * @return
+ */
 function mp_load_default_style(){
 
     // On charge le fichier style.css du thème actif
@@ -36,6 +41,11 @@ function mp_load_default_style(){
 /***********************************************/
 /*        Filter pour extrait d'une page vide  */
 /***********************************************/
+
+/**
+ * Création d'un extrait si ce dernier n'existe pas dans la page
+ * @return
+ */
 add_filter('the_page_excerpt', function($value){ 
 
     if( strlen($value) === 0 )
@@ -47,6 +57,11 @@ add_filter('the_page_excerpt', function($value){
 /***********************************************/
 /*        Filter pour liens tag                */
 /***********************************************/
+
+/**
+ * Transforme les listes de mot clés en liens cliquable
+ * @return
+ */
 add_filter('the_page_tag', function($value){ 
 
     if( strlen($value) === 0 )
@@ -66,6 +81,10 @@ add_filter('the_page_tag', function($value){
 /*        Filter pour logo                     */
 /***********************************************/
 
+/**
+ * Créer un logo cliquable 
+ * @return
+ */
 add_filter('the_blog_logo', function($logos){
 
     if( empty($logos) ) return;
@@ -83,14 +102,168 @@ add_filter('the_blog_logo', function($logos){
 });
 
 
+
+/*********************************************************/
+/*                         filter  Backup                 /
+/*********************************************************/
+
+// Hook d'appel ( back up tous les jours )
+add_action('callback', 'do_backup_website');
+
+/**
+ * Sauvegarde repertoire du site
+ * @return
+ */
+function do_backup_website() {
+
+    $backup_file     = 'website-' . date( 'd-m-Y-G-i' );  // nom de l'archive de backup 
+    $backup_dir      = $_SERVER['DOCUMENT_ROOT'].'/backup-website-' . substr( md5( __FILE__ ), 0, 8 ); // nom du dossier où sera stocké tous les backup 
+    $htaccess_file   = $backup_dir . '/.htaccess'; // chemin vers le fichier .htaccess du dossier de backup 
+    $backup_max_life = 259200; // temps maximum de vie d'un backups 
+
+    // On créé le dossier backup-bdd si il n'existe pas 
+    if( !is_dir( $backup_dir ) )
+        mkdir( $backup_dir, 0755 ); 
+
+    // On ajoute un fichier .htaccess pour la sécurité 
+    if( !file_exists( $htaccess_file ) )
+        file_marker_contents($htaccess_file, "Order Allow, Deny\nDeny from all");
+
+    // On zip les fichiers du site
+    if( class_exists( 'ZipArchive' ) ) {
+
+        // On crée une fonction dans la classe qui permettra de parcourir les dossiers du site 
+        class ZipRecursif extends ZipArchive {
+
+            public function addDirectory( $dir ) { 
+
+                foreach( glob( $dir . '/*' ) as $file )
+                    is_dir( $file ) ? $this->addDirectory( $file ) : $this->addFile( $file );
+            } 
+        } 
+
+        $zip = new ZipRecursif; 
+
+        // On check si on peut se servir de l'archive 
+        if( $zip->open( $backup_dir . '/' . $backup_file . '.zip' , ZipArchive::CREATE ) === true ){
+
+            $zip->addDirectory(ABSPATH); 
+            $zip->close(); 
+        }
+    } 
+
+    // On supprime les backup qui datent de plus d'une semaine 
+    foreach ( glob( $backup_dir . '/*.zip' ) as $file ) { 
+
+        if( time() - filemtime( $file ) > $backup_max_life )
+            unlink($file); 
+    } 
+
+}
+
+
+/*********************************************************/
+/*        Filter pour optimiser chargement html          */
+/*********************************************************/
+
+/* On charge le cache s'il existe, sinon on lance un hook pour créer le cache */
+if( CACHE && !DEBUG ){
+
+    if( $_SERVER['REQUEST_METHOD'] == 'GET'
+        && empty($_GET)
+        && isset($_SERVER['HTTP_USER_AGENT'])
+        && !preg_match( '/(minipops_auth)/', var_export( $_COOKIE , true ) )
+        ){
+
+        $cache_dir = $_SERVER['DOCUMENT_ROOT'].'/cache-website-' . substr( md5( __FILE__ ), 0, 8 ) .'/';
+        $cache_file = $cache_dir . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/index.html';
+
+        // On supprimer le cache toutes les 24 heures
+        if( file_exists($cache_file) && (filemtime($cache_file) + DAY_IN_SECONDS) > microtime(true) ){
+            readfile( $cache_file );
+            die();
+        }
+
+        // Hook qui va créer le cache
+        add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+    }
+
+}
+
+/**
+ * Créer le cache d'une page   
+ * @return
+ */
+function mp_cache_pages( $html ){
+
+    if( is_404() ) return $html;
+
+    $cache_file = $_SERVER['DOCUMENT_ROOT'].'/cache-website-' . substr( md5( __FILE__ ), 0, 8 ) .'/';
+    @mkdir( $cache_file . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'], 0755, true );
+    file_put_content( $cache_file . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/index.html', mp_minify_html($html) );
+    return $html;
+}
+
+/**
+ * Efface l'ensemble du cache
+ * @return
+ */
+function mp_clear_cache_all_pages(){
+
+    $cache_file = $_SERVER['DOCUMENT_ROOT'].'/cache-website-' . substr( md5( __FILE__ ), 0, 8 ) .'/';
+    if( is_dir($cache_file) )
+        rrmdir($cache_file);
+}
+
+/*********************************************************/
+/*        Filter pour optimiser chargement image         */
+/*********************************************************/
+
+// On optimise les images une fois minipops chargé
+add_action('loaded', 'mp_lazy_load');
+
+/**
+ * Charge le script lasyload et lance l'action de lasyload   
+ * @return
+ */
+function mp_lazy_load(){
+
+    if ( !IMAGIFY ) return;
+
+    // On ajoute le script lazyload
+    add_inline_script('lazyload', '(function(a,e){function f(){var d=0;if(e.body&&e.body.offsetWidth){d=e.body.offsetHeight}if(e.compatMode=="CSS1Compat"&&e.documentElement&&e.documentElement.offsetWidth){d=e.documentElement.offsetHeight}if(a.innerWidth&&a.innerHeight){d=a.innerHeight}return d}function b(g){var d=ot=0;if(g.offsetParent){do{d+=g.offsetLeft;ot+=g.offsetTop}while(g=g.offsetParent)}return{left:d,top:ot}}function c(){var l=e.querySelectorAll("[data-lazy-original]");var j=a.pageYOffset||e.documentElement.scrollTop||e.body.scrollTop;var d=f();for(var k=0;k<l.length;k++){var h=l[k];var g=b(h).top;if(g<(d+j)){h.src=h.getAttribute("data-lazy-original");h.removeAttribute("data-lazy-original")}}}if(a.addEventListener){a.addEventListener("DOMContentLoaded",c,false);a.addEventListener("scroll",c,false)}else{a.attachEvent("onload",c);a.attachEvent("onscroll",c)}})(window,document);' );
+
+    // On ajouter un filter pour the_content et modifier les images et rendre lazy load actif
+    add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_lazyload_images'); } , PHP_INT_MAX );
+
+}
+
+/**
+ * Modifie les images par un gif base 64 ( optimise le chargement du site )
+ * @param (html) Contenu html
+ * @return
+ */
+function mp_lazyload_images( $html ) {
+
+    $lazyload_replace_callback = function($matches) {
+        return sprintf( '<img%1$s src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAAAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==" data-lazy-original=%2$s%3$s><noscript><img%1$s src=%2$s%3$s></noscript>', $matches[1], $matches[2], $matches[3] );
+    };
+
+    return preg_replace_callback( '#<img([^>]*) src=("(?:[^"]+)"|\'(?:[^\']+)\'|(?:[^ >]+))([^>]*)>#', $lazyload_replace_callback, $html );
+}
+
+
 /***********************************************/
 /*        Filter for the meta                  */
 /***********************************************/
 
-
 // On ajoute les filtres par defaut
 add_action('TEMPLATE_REDIRECT','mp_load_meta_filter');
 
+/**
+ * Lance les filtre pour modifier les meta donnée de la page html  
+ * @return
+ */
 function mp_load_meta_filter(){
     
     /***********************************************/
@@ -159,7 +332,10 @@ add_action('do_sitemap' , 'mp_doing_sitemap');
 add_action('do_favicon' , 'mp_doing_favicon');
 
 
-// On génére un fichier robots
+/**
+ * Générer un fichier robots.txt
+ * @return
+ */
 function mp_doing_robots(){
 
     // On déclarer le bon header
@@ -207,7 +383,11 @@ function mp_doing_robots(){
     exit();
 }
 
-// On génére un sitemap
+
+/**
+ * Générer un fichier sitemap 
+ * @return
+ */
 function mp_doing_sitemap(){
 
     // On déclare le bon header
@@ -226,7 +406,12 @@ function mp_doing_sitemap(){
     exit();
 }
 
-// On génére le flux rss
+
+
+/**
+ * Générer un flux xml
+ * @return
+ */
 function mp_doing_feed(){
 
     // on déclarerle bon header

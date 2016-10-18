@@ -246,7 +246,8 @@ function pops_image( $args ){
     $args = parse_args( $args, array(
         'class' => 'my_image',
         'text'  => null,
-        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
+        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : '',
+        'size'  => 'large' // Large, medium, small, thumbnail ( voir mp_attachement.php )
         ));
 
     // On nettoie
@@ -255,7 +256,7 @@ function pops_image( $args ){
     $class = ' class="'.sanitize_html_class($args['class']).'"';
 
     // On récupère l'image
-    $url = get_the_image( array('file'=>$args['image'], 'slug'=>$slug), 'uri' );
+    $url = get_the_image( array('file'=>$args['image'], 'size'=>$args['size'] , 'slug'=>$slug), 'uri' );
 
     // On verifie si l'image existe
     if( !$url ) return;

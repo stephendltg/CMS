@@ -51,40 +51,39 @@ $_GET = array_map( 'esc_url', $_GET );
 // Definit les constantes pour les répertoires de stockage du site
 if ( defined('MEMORY_LIMIT') ) get_limit_memory(MEMORY_LIMIT);
 
-// On charge les filtres par défaut
-require( ABSPATH . INC . '/mp_filters.php' );
-
 // On définit les constantes pour plugins ( + declaration de MP_HOME )
 mp_plugin_directory_constants();
 
+// On charge les filtres par défaut
+require( ABSPATH . INC . '/mp_filters.php' );
+
 // On charge la gestion des fichier yaml
 require( ABSPATH . INC . '/mp_yaml.php' );
-// On charge les fonctions gérant les options des plugins et du thème
+// On charge les fonctions gérant les options ainsi que le gestionnaire de tâche
 require( ABSPATH . INC . '/mp_options.php' );
+require( ABSPATH . INC . '/mp_cron.php' );
+
 
 // On init le blog
 init_the_blog();
 
 // On créer les constantes de securite.
-mp_secure_constants();
+mp_secure_constants(); 
+
+// On créer les constantes pour les cookies
+mp_cookies_constants();
+
+// On verifie l'utilisateur et son roles
+require( ABSPATH . INC . '/mp_auth.php' );
+
+// On charge les filtres par défaut
+//require( ABSPATH . INC . '/mp_filters.php' );
 
 // On active le mod rewrite si disponible
 mp_rewrite_rules();
 
 // Fonction d'extinction de minipops
 register_shutdown_function( 'shutdown_action_hook' );
-
-// Fonction pour gérer les pages
-//require( ABSPATH . INC . '/cron.php' );
-require( ABSPATH . INC . '/mp_query.php' );
-require( ABSPATH . INC . '/mp_pages.php' );
-require( ABSPATH . INC . '/mp_the_loop.php' );
-require( ABSPATH . INC . '/mp_attachment.php' );
-require( ABSPATH . INC . '/mp_pops.php' );
-require( ABSPATH . INC . '/vendors/parsedown.php' );
-require( ABSPATH . INC . '/vendors/SimpleImage.php' );
-// On charge les fonctions gérant la date
-require( ABSPATH . INC . '/mp_datei18n.php' );
 
 // On charge les must plugins ( plugins non désactivable ).
 foreach ( glob( MU_PLUGIN_DIR .'/*.php' ) as $mu_plugin ) {
@@ -94,11 +93,19 @@ unset( $mu_plugin );
 
 do_action( 'muplugins_loaded' );
 
-// On charge la gestion des script et style
-require( ABSPATH . INC . '/mp_script.php' );
-require( ABSPATH . INC . '/mp_style.php' );
+// Fonction pour gérer les pages
+require( ABSPATH . INC . '/mp_query.php' );
+require( ABSPATH . INC . '/mp_pages.php' );
+require( ABSPATH . INC . '/mp_the_loop.php' );
+require( ABSPATH . INC . '/mp_attachment.php' );
+require( ABSPATH . INC . '/mp_pops.php' );
+require( ABSPATH . INC . '/vendors/parsedown.php' );
+require( ABSPATH . INC . '/vendors/SimpleImage.php' );
+// On charge les fonctions gérant la date
+require( ABSPATH . INC . '/mp_datei18n.php' );
 // On charge les fonctions gérant la traduction
 require( ABSPATH . INC . '/mp_lang.php' );
+
 
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = [test, memory, ...]
 @mkdir( MP_PLUGIN_DIR , 0755 , true );
@@ -115,11 +122,9 @@ unset( $plugins );
 
 do_action( 'plugins_loaded' );
 
-// On créer les constantes pour les cookies
-mp_cookies_constants();
-
-// On verifie l'utilisateur et son roles
-require( ABSPATH . INC . '/mp_auth.php' );
+// On charge la gestion des script et style
+require( ABSPATH . INC . '/mp_script.php' );
+require( ABSPATH . INC . '/mp_style.php' );
 
 // Hook theme activé
 do_action( 'setup_theme' );
@@ -145,6 +150,9 @@ get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );
+
+// On lance le gestionnaire de tâche
+mp_cron();
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );

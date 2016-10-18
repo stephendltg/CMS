@@ -29,7 +29,7 @@ function file_get_content($file) {
 * @return array
 */
 function file_get_content_array($file) {
-    return @file($file);
+    return @file($file, FILE_IGNORE_NEW_LINES|FILE_SKIP_EMPTY_LINES);
 }
 
 
@@ -147,9 +147,15 @@ function file_marker_contents( $file, $new_content = '', $args = array() ) {
 * @param  string    $dir     Chemin absolu du répertoire
 */
 function rrmdir( $dir ) {
+
     foreach( glob($dir) as $file ){
-        if( is_dir($file) ){ rrmdir("$file/*"); rmdir($file); }
-        else unlink($file);
+
+        if( is_dir($file) ){ 
+
+            rrmdir("$file/*");
+            rmdir($file);
+
+        } else unlink($file);
     }
 }
 
