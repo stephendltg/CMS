@@ -216,6 +216,89 @@ function mp_clear_cache_all_pages(){
 }
 
 /*********************************************************/
+/*        Filter pour compass                            */
+/*********************************************************/
+
+add_filter('pre_style', 'mp_compass', 10, 2);
+
+/**
+ * Compilation des fichiers sass  
+ * @return
+ */
+function mp_compass( $url, $dependencies ){
+
+    if( 'scss' == substr(strrchr($url,'.'), 1) ){
+
+        // On redessine le chemin
+        $path = str_replace(MP_TEMPLATE_URL, MP_TEMPLATE_DIR, $url);
+
+        // Si le fichier n'existe pas on renvoie null
+        if( !file_exists($path) )  return;
+
+        // Nom du fichier
+        $file_name  = pathinfo($path)['filename'];
+
+        // Path scss file
+        $scss_dir = dirname($path) . '/';
+
+        // Dir et url css
+        if( isset($dependencies['css-dir']) && isset($dependencies['css-url']) ){
+            $css_dir  = rtrim( $dependencies['css-dir'], '/') . '/';
+            $css_url  = rtrim( $dependencies['css-url'], '/') . '/';
+        } else {
+            $css_dir = $scss_dir;
+            $css_url = substr($url, 0, - strlen($file_name.'.scss') );
+        }
+
+        // On renvoie le fichier s'il existe et que le fichier d'appel sass a été modifié
+        if( file_exists($css_dir.$file_name.'.css') && filemtime($css_dir.$file_name.'.css') > filemtime($path) )
+            return $css_url . $file_name . '.css';
+
+        // On charge la librairie
+        require_once ( ABSPATH . INC . '/vendors/scss.inc.php' );
+
+        $scss = new \Leafo\ScssPhp\Compiler();
+
+        // On import le repertoire à la librairie
+        $scss->setImportPaths($scss_dir);
+
+        // Mode de compression fichier
+        if( isset($dependencies['css-mode']) )
+            $mode = strtolower($dependencies['css-mode']);
+        else
+            $mode = 'nested';
+        // Application mode de compression
+        switch ($mode) {
+            case 'expanded':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
+                break;
+            case 'compressed':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Compressed');
+                break;
+            case 'compact':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Compact');
+                break;
+            case 'crunched':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Crunched');
+                break;
+            default:
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Nested');
+                break;
+        }
+        // Compilation sass
+        $string_css = $scss->compile('@import "'.$file_name.'.scss";');
+        // On créer le répertoire
+        if( ! is_dir($css_dir) )   @mkdir($css_dir);
+        // On enregistre le fichier
+        file_put_content( $css_dir . $file_name . '.css', $string_css );
+        // On retourne l'url du fichier css compilé
+        $url =  $css_url . $file_name . '.css';
+    }
+    
+    return $url;
+}
+
+/*********************************************************/
 /*        Filter pour optimiser chargement image         */
 /*********************************************************/
 

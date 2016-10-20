@@ -9,6 +9,8 @@ Author URI:
 */
 
 
-// Déclaration des feuilles de style
-add_inline_style('knacss', file_get_content(MP_TEMPLATE_DIR.'/assets/css/knacss.css' ) );
-add_inline_style('style', file_get_content(MP_TEMPLATE_DIR.'/assets/css/style.css' ) );
+// Déclaration de la feuille de style
+mp_register_style('style', 'assets/sass/style.scss', array('css-dir'=> ABSPATH, 'css-url'=> MP_HOME) );
+
+// Déclaration script pour gérér les prefix naviguateur
+add_inline_script('prefix-style', file_get_content(MP_TEMPLATE_DIR.'/assets/js/prefixfree.min.js') );
