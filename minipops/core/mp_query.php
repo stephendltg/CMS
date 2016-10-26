@@ -90,7 +90,7 @@ function get_permalink( $slug ='' , $type ='page' ){
     $type = (string) $type;
     $slug = (string) $slug;
 
-    if( is_same($type , 'page') && empty($slug) )
+    if( is_same($type , 'page') && ( empty($slug) || 'home' === $slug )  )
         return MP_HOME;
 
     // Un coup de ménage
