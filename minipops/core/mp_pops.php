@@ -442,10 +442,10 @@ function pops_tel( $args ){
     $class = ' class="'.sanitize_html_class($args['class']).'"';
 
     // On valide le numéro de téléphone
-    if( !is_match($args['tel'] , '#^0[1-68]([-. ]?[0-9]{2}){4}$#') ) return;
+    if( !is_match($args['tel'] , '#^0[1-678]([-. ]?[0-9]{2}){4}$#') ) return;
 
     $tel        = $args['tel'];
-    $text       = strlen($text) ? $tel : $text;
+    $text       = strlen($text) == 0 ? $tel : $text;
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_tel_schema', '<a href="tel:%1$s"%3$s>%2$s</a>');

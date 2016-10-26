@@ -395,7 +395,7 @@ function the_thumbnail( $before = '', $after = '' ) {
 
     if ( strlen($large) === 0 )  return;
 
-    $scheme = apply_filters('the_thumbnail','<img srcset="%s 1x, %s 2x" src="%s"/><img>', $value);
+    $scheme = apply_filters('the_thumbnail','<img srcset="%s 1x, %s 2x" src="%s">', $value);
 
     $small  = get_the_image('size=small&file='.$value, 'uri');
     $medium = get_the_image('size=medium&file='.$value, 'uri');

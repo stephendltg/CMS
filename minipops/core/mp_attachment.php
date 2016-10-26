@@ -254,7 +254,7 @@ function get_the_image( $args, $mode = 'scheme' ){
                     $images = array_map( function($image){ return imagify( $image,'width=400&height=400'); }, $images );
                     break;
                 default:
-                    $images = array_map( function($image){ return imagify( $image ); }, $images );
+                    $images = array_map( function($image) use ($args) { return imagify( $image, $args ); }, $images );
                     break;
             }
         }
