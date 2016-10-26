@@ -94,12 +94,10 @@ Tous les pops, ont des attributs commun: "class" et "text".
 ex: ( image: my-image.jpeg | class: image | text: mon image )
 
 
-|-------------------------------------------------------------------------------|
-| pops                      		|  Commentaires                      		|
-|---------------------------		|-------------------------------------------|
-|                           		|                                   		|
-| ( audio: my.mp3 )         		| Lecteur audio                       		|
-| (email: ss@sss.com | rel: me )	| Adresse email                        		|
+| pops                      		|  Commentaires                      	    |
+|-----------------------------------|-------------------------------------------|
+| ( audio: my.mp3 )         		| Lecteur audio                       	    |
+| (email: ss@sss.com | rel: me )	| Adresse email                        	    |
 | (file: my.docx ) 			   		| Telecharge fichier            		    |
 | (image: test.jpg | size: large)	| Image (size: large, medium, small, crop)  |
 | (gallery: test.png, hou.jpg)      | Gallerie d'image						    |
@@ -108,7 +106,6 @@ ex: ( image: my-image.jpeg | class: image | text: mon image )
 | (tel: 0256101213)				    | Téléphone 		                        |
 | (twitter: s@dltg | rel:me )       | Twitter                		       		|
 | (youtube: url_youtube )      		| Video youtube                   			|
-|-----------------------------------|-------------------------------------------|
 
 *************
 
@@ -147,10 +144,9 @@ FONCTIONS THEMES
 ----------------
 
 Fonction pour blog:
-|-----------------------------------------------------------------------|
+
 | fonction                  |  Commentaires                      		|
 |---------------------------|-------------------------------------------|
-|                           |                                   		|
 | the_blog('title')         | Titre du site                       		|
 | the_blog('subtitle')      | Sous-titre                         		|
 | the_blog('description')   | Déscription du site             		    |
@@ -167,14 +163,12 @@ Fonction pour blog:
 | the_blog('template_url')  | url du theme          		            |
 | the_blog('rss')           | Url flux rss 			                    |
 | the_blog('copyright')     | Texte coypright                           |
-|---------------------------|-------------------------------------------|
 
 
 Fonction pour page:
-|-----------------------------------------------------------------------|
+
 | fonction                  |  Commentaires                      		|
 |---------------------------|-------------------------------------------|
-|                           |                                   		|
 | the_page('title')         | Titre de la page                    		|
 | the_page('description')   | Description de la page              		|
 | the_page('excerpt')       | Extrait de la page            		    |
@@ -190,31 +184,25 @@ Fonction pour page:
 | the_thumbnail()           | Affichage image vignette 		            |
 | the_date()       	        | Date de publication formaté de la page    |
 | the_time()   		        | heure de publication formaté de la page   |
-|---------------------------|-------------------------------------------|
+
 
 Divers:
-|-----------------------------------------------------------------------|
+
 | fonction                  	|  Commentaires                      		|
 |---------------------------	|-------------------------------------------|
-|                           	|                                   		|
 | the_breadcrumb()          	| fil arianne  	                    		|
 | the_menu('primary_menu')  	| Menu ( configurer dans site.yml)     		|
-| search_tag()              	| A utiliser sur template tag: lance la     |
-| 						    	| boucle et affiche le mot recherché        |
-|                           	|                                           |
+| search_tag()              	| A utiliser sur template tag: lance la boucle et affiche le mot recherché |
 | snippet()                 	| Va charger un snippet definit             |
 | get_the_args('xxx')       	| Lit argument du fichier yml du snippet	|
 | the_args('xxx')          	 	| Affiche argument du fichier yml du snippet|
-|                           	|                                           |
 | mp_head()         			|              		   						|
 | mp_footer()               	|                 							|
 | body_class()           		| Classe pour balise body       		    |
 | the_loop()           		    | boucle minipops ( chercher dans les pages)|
 | have_pages()              	|        		    						|
 | have_not_pages()          	| 							    		    |
-|                           	|                                           |
 | _date()                   	| idem date() avec mise à l'heure           |
-| 	                        	|        		    						|
 | __( 'mon texte')          	| Traduction texte			    		    |
 | _e( 'mon texte')          	| Traduction texte			    		    |
 | esc_attr__( 'mon texte')  	| Traduction texte			    		    |
@@ -222,25 +210,23 @@ Divers:
 | esc_html_( 'mon texte')   	| Traduction texte			    		    |
 | esc_html_e( 'mon texte')  	| Traduction texte			    		    |
 | _n( 'article','articles',2 )  | Traduction texte  		    		    |
-|-------------------------------|-------------------------------------------|
+
 
 Fonctions pour style et script:
-|-----------------------------------------------------------------------|
+
 | fonction                  |  Commentaires                      		|
 |---------------------------|-------------------------------------------|
-|                           |                                   		|
 | mp_register_style()       | 			 	                    		|
 | add_inline_style()        | 								     		|
 | mp_deregister_style()     |										    |
 | mp_enqueue_style()	    | 										    |
 | mp_enqueue_styles()       | 									        |
-|                           |                                           |
 | mp_register_script()      | 			 	                    		|
 | add_inline_script()       |  								     		|
 | mp_deregister_script()    |										    |
 | mp_enqueue_script()	    | 										    |
 | mp_enqueue_scripts()      | 									        |
-|---------------------------|-------------------------------------------|
+
 
 *************
 
@@ -251,10 +237,9 @@ LES CONSTANTES
 Plusieurs constantes peuvent être définit dans le fichier mp-config.php.
 Le fichier mp-config.php doit être placé à côté du fichier index.php ou un cran au dessus.
 
-|----------------------------------------------------------------|
+
 | Constante                 |  Commentaires                      |
 |---------------------------|------------------------------------|
-|                           |                                    |
 | MP_CONTENT_DIR            | Répertoire du contenu du site      |
 | MP_CONTENT_URL            | URL d'accès au répertoire          |
 | MP_HOME                   | URL du site                        |
@@ -265,7 +250,7 @@ Le fichier mp-config.php doit être placé à côté du fichier index.php ou un 
 | DEBUG_DISPLAY             | Afficahge erreur à l'écran         |
 | DEBUG_LOG                 | Ecriture fichier error.log         |
 | MEMORY_LIMIT              | taille de la mémoire limite ex: 64 |
-|---------------------------|------------------------------------|
+
 
 *************
 
@@ -275,15 +260,14 @@ LES HOOKS
 
 Minipops permet d'appliquer des filtres ou d'ajouter des actions.
 
-|----------------------------------------------------------------|
+
 | fonction                  |  Commentaires                      |
 |---------------------------|------------------------------------|
-|                           |                                    |
 | add_action()              | Ajout d'une action     		     |
 | do_action()               | Executer actions		             |
 | add_filter()    		    | Ajout d'un filter                  |
 | apply_filters()           | Appliquer des filtres              |
-|---------------------------|------------------------------------|
+
 
 *************
 
@@ -293,16 +277,15 @@ LES TACHES
 
 Minipops permet de gérer certaines taches à des moments précis ou récursive.
 
-|----------------------------------------------------------------|
+
 | Fonction                  |  Commentaires                      |
 |---------------------------|------------------------------------|
-|                           |                                    |
 | do_event()                | Evenements					     |
 | get_schedules()           | Plage horaires		             |
 | get_scheduled()           | Lecture d'un evenement             |
 | reschedule_event()        | Replannifier un evenement          |
 | unschedule_event()        | De-pllanifier un evenement         |
-|---------------------------|------------------------------------|
+
 
 *************
 
