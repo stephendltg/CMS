@@ -643,6 +643,9 @@ function mp_rewrite_rules(){
     // On tent d'écrire les règles principale 
     if( !file_marker_contents(ABSPATH . '.htaccess', $rules) )
          _doing_it_wrong( __FUNCTION__, 'Error file permission .htaccess.' );
+
+    if( file_exists( ABSPATH . 'php.ini' ) )
+        file_marker_contents( ABSPATH . 'php.ini', 'expose_php = on');
     
     // On stock la valeur de réécriture dans option
     update_option('setting->urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );

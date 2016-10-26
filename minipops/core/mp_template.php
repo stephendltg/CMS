@@ -96,7 +96,7 @@ function get_page_template() {
 
     // On modifie le template
     $template = get_the_page('template') ? get_template( 'templates/'. get_the_page('template') ) : '';
-    return !empty($template)?: get_template( 'templates/page' );
+    return $template ?: get_template( 'templates/page' );
 }
 
 
