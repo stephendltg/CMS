@@ -480,7 +480,7 @@ function get_the_menu( $menu_nav = '' ){
     return $menu;
 }
 
-function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s"><a href="%1$s">%2$s</a></li>' ){
+function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</ul>', $menu_item = '<li class="menu-item%3$s" itemprop="url"><a href="%1$s" itemprop="name">%2$s</a></li>' ){
 
     $before = (string) $before;
     $after  = (string) $after;
