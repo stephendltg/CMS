@@ -30,7 +30,8 @@
                         </header>
 
                         <section class="description">
-                        <?php the_page('description') ?>
+                            <?php the_page('excerpt') ?>
+                            <?php the_thumbnail() ?>
                         </section>
 
                     </article>

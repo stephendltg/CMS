@@ -284,9 +284,14 @@ function mp_meta_opengraph(){
     $opengraph .= '<meta property="og:title" content="'.$title.'" />'."\n";
     $opengraph .= '<meta property="og:description" content="'.$description.'" />'."\n";
     $opengraph .= '<meta property="og:url" content="'.get_permalink($query).'" />'."\n";
+    $opengraph .= '<meta property="og:locale" content="'.get_the_lang().'" />'."\n";
+    $opengraph .= '<meta property="og:type" content="website" />'."\n";
+    $opengraph .= '<meta property="og:site_name" content="'.get_the_blog('title') .'" />'."\n";
 
+    /* prepare image */
     $image = get_the_page('thumbnail');
     $image = get_the_image("size=medium&file=$image", 'uri');
+
     if( $image )
         $opengraph .= '<meta property="og:image" content="'.$image.'" />'."\n";
 
