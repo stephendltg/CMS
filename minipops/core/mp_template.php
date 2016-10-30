@@ -391,14 +391,14 @@ function the_thumbnail( $before = '', $after = '' ) {
     $after  = (string) $after;
 
     $value  = get_the_page('thumbnail');
-    $large  = get_the_image('size=large&file='.$value, 'uri');
+    $large  = apply_filters( 'the_thumbnail_large', get_the_image('size=large&file='.$value, 'uri') );
 
     if ( strlen($large) === 0 )  return;
 
-    $scheme = apply_filters('the_thumbnail','<img srcset="%s 1x, %s 2x" src="%s">', $value);
+    $small  = apply_filters( 'the_thumbnail_small',  get_the_image('size=small&file='.$value, 'uri') );
+    $medium = apply_filters( 'the_thumbnail_medium', get_the_image('size=medium&file='.$value, 'uri') );
 
-    $small  = get_the_image('size=small&file='.$value, 'uri');
-    $medium = get_the_image('size=medium&file='.$value, 'uri');
+    $scheme = apply_filters('the_thumbnail','<img srcset="%s 1x, %s 2x" src="%s">', $value);
 
     echo $before . sprintf($scheme, $small, $large, $medium ) . $after;
 }
