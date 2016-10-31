@@ -251,7 +251,7 @@ function get_the_image( $args, $mode = 'scheme' ){
                     $images = array_map( function($image){ return imagify( $image,'width=1024'); }, $images );
                     break;
                 case 'thumbnail':
-                    $images = array_map( function($image){ return imagify( $image,'width=400&height=400'); }, $images );
+                    $images = array_map( function($image){ return imagify( $image,'width=480&height=480'); }, $images );
                     break;
                 default:
                     $images = array_map( function($image) use ($args) { return imagify( $image, $args ); }, $images );

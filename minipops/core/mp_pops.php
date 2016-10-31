@@ -359,7 +359,7 @@ function pops_link( $args ){
 
     // On associe le texte, titre, class, rel
     $title      = !empty($args['title']) ? ' title="'. $args['title'] .'"' : '';
-    $text       = strlen($text) ? esc_html($link): $text ;
+    $text       = strlen($text) == 0 ? esc_html($link): $text ;
     $rel        = !empty($args['rel']) && is_in($args['rel'] , array('me','nofollow')) ? ' rel="'. $args['rel'] .'"' : '';
 
     // Scheme du shortcode
