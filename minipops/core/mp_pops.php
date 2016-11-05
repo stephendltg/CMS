@@ -25,7 +25,8 @@ function mp_pops( $content , $slug = '' ){
 
     // Liste shortcode
     $pops = array('link','email','tel','image','gallery','file','twitter','youtube','audio', 'map');
-    $pops = apply_filters('pops_shortcode' , $pops );
+    //$pops = apply_filters('pops_shortcode' , $pops );
+    $pops = array_merge( apply_filters( 'pops_shortcode', array() ), $pops );
 
     // On boucle sur la recherche des shortcode et on affecte à la fonction associé si elle existe en lui passant les paramètres du shortcode
     foreach ( $pops as $name ) {
@@ -265,7 +266,7 @@ function pops_image( $args ){
     $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
 
     // Scheme du shortcode
-    $schema   = apply_filters('pops_image_schema', '<figure%s><img src="%s"/>%s</figure>');
+    $schema   = apply_filters('pops_image_schema', '<figure%s><img class="img" src="%s"/>%s</figure>');
 
     return sprintf( $schema, $class, $url, $text );
 }
@@ -311,7 +312,7 @@ function pops_gallery( $args ){
     $gallery = '';
 
     foreach ($images as $key => $image)
-        $gallery .= sprintf( $scheme, $key, $image[$key], $medium[$key], $small[$key], $small[$key] );
+        $gallery .= sprintf( $scheme, $key, $image, $medium[$key], $small[$key], $small[$key] );
     
     return "<figure $class >$gallery $text</figure>";
 }

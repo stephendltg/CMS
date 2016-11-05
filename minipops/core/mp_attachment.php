@@ -98,11 +98,15 @@ function get_attached_media( $args = array(), $mode = 'path' ) {
         foreach( $args['where'] as $slug ){
 
             /* slug ou se trouve les fichiers */
-            $slug  = strlen($slug) == 0 ? '/': '/'. trim($slug,'/') .'/';
+            $slug   = strlen($slug) == 0 ? '/': '/'. trim($slug,'/') .'/';
             $medias = glob( MP_PAGES_DIR . $slug . $search, GLOB_BRACE );
             $medias = array_diff( $medias , array( MP_PAGES_DIR.'/site.yml', MP_PAGES_DIR.'/'.$slug.'/'.basename($slug).'.md') );
         
         }
+
+        /* Gestion des max dans le cas de plusieurs fichier */
+        if($args['max'] === 'auto')
+            $args['max'] = count($medias);
 
     } else {
 
@@ -253,6 +257,10 @@ function get_the_image( $args, $mode = 'scheme' ){
                 case 'thumbnail':
                     $images = array_map( function($image){ return imagify( $image,'width=480&height=480'); }, $images );
                     break;
+                case '16/9':
+                    //get_the_image('width=640&height='. ceil(640/(16/9)) .'&file='.$value, 'uri');
+                    $images = array_map( function($image){ return imagify( $image,'keep=top&width=1024&height='. ceil(768/(16/9)) ); }, $images );
+                    break;
                 default:
                     $images = array_map( function($image) use ($args) { return imagify( $image, $args ); }, $images );
                     break;
@@ -282,7 +290,7 @@ function imagify( $image, $args = null){
         'quality' => 80,       // Qualité compression image
         'rotate'  => 0,        // rotation de l'image (angle en degres)
         'flip'    => false,    // x, y inversion image
-        'keep'    => 'center'  // center, top, right, bottom, left, top left, top right, bottom left, bottom right
+        'keep'    => 'top'  // center, top, right, bottom, left, top left, top right, bottom left, bottom right
         ));
 
     // On check que l'image n'a pas déjà été traité
@@ -324,7 +332,7 @@ function imagify( $image, $args = null){
                     $img->fit_to_width($args['width']);
 
                 elseif( $args['width'] && $args['height'] )
-                    $img->thumbnail($args['width'], $args['height']);
+                    $img->thumbnail($args['width'], $args['height'], $args['keep'] );
 
                 // Save the image
                 $img->save($new_image, intval($args['quality']) );

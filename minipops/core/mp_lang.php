@@ -55,7 +55,7 @@ function __( $text, $domain = null ){
     // On charge la traductions du snippets ( fichiers traduction temporaire et valide le temps du snippets )
     if( is_same( $domain, 'snippets') ){
 
-        $domain = !empty($GLOBALS['__args']['lang']) ? $GLOBALS['__args']['lang'] : null ;
+        $domain = mp_cache_data('__args')['lang'] ? mp_cache_data('__args')['lang'] : null;
 
     } else { // On charge la traductions des domaines thème ou plugin
 

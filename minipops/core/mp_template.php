@@ -78,7 +78,6 @@ function snippet( $snippet ){
     $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
 
     if( !empty($snippets) ){
-
         $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
         mp_cache_data('__args', $__args);
         include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
