@@ -36,7 +36,7 @@ function mp_init_constants() {
 
 	// Constante de mise en cache
 	if ( !defined('CACHE') )
-		define( 'CACHE', true );
+		define( 'CACHE', false );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );
@@ -73,7 +73,7 @@ function mp_plugin_directory_constants() {
 
 	// A l'heure actuel MP_CONTENT_URL n'accepte pas les sous domaines
 	if ( !defined('MP_CONTENT_URL') )
-		define( 'MP_CONTENT_URL', guess_url() . '/mp-content' . substr( md5( __FILE__ ), 0, 8 ) );
+		define( 'MP_CONTENT_URL', guess_url() . '/mp-content-' . substr( md5( __FILE__ ), 0, 8 ) );
 
     // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
 	define( 'MP_PAGES_URL',   MP_CONTENT_URL  . '/pages' );
