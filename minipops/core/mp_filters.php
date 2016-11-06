@@ -108,13 +108,16 @@ add_filter('the_blog_logo', function($logos){
 /*********************************************************/
 
 // Hook d'appel ( back up tous les jours )
-add_action('callback', 'do_backup_website');
+// add_action('callback', 'do_backup_website');
 
 /**
  * Sauvegarde repertoire du site
  * @return
  */
 function do_backup_website() {
+
+    get_limit_memory(64);
+    get_max_time_execution(60);
 
     $backup_file     = 'website-' . date( 'd-m-Y-G-i' );  // nom de l'archive de backup 
     $backup_dir      = $_SERVER['DOCUMENT_ROOT'].'/backup-website-' . substr( md5( __FILE__ ), 0, 8 ); // nom du dossier où sera stocké tous les backup 
@@ -185,16 +188,20 @@ if( CACHE && !DEBUG ){
         }
 
         // Hook qui va créer le cache
+        //add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
         add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
     }
 
 }
+
 
 /**
  * Créer le cache d'une page   
  * @return
  */
 function mp_cache_pages( $html ){
+
+    if( apply_filters('mp_cache', false) ) return $html;
 
     if( is_404() ) return $html;
 

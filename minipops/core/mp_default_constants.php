@@ -36,7 +36,7 @@ function mp_init_constants() {
 
 	// Constante de mise en cache
 	if ( !defined('CACHE') )
-		define( 'CACHE', false );
+		define( 'CACHE', true );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );
