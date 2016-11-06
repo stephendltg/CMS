@@ -247,7 +247,7 @@ function mp_meta_viewport(){
     initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
     maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width (wrong for most sites)
     */
-    $viewport = '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = no">'."\n";
+    $viewport = '<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable = yes">'."\n";
     echo apply_filters('mp_meta_viewport', $viewport);
 }
 

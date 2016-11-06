@@ -259,7 +259,7 @@ function get_the_image( $args, $mode = 'scheme' ){
                     break;
                 case '16/9':
                     //get_the_image('width=640&height='. ceil(640/(16/9)) .'&file='.$value, 'uri');
-                    $images = array_map( function($image){ return imagify( $image,'keep=top&width=1024&height='. ceil(768/(16/9)) ); }, $images );
+                    $images = array_map( function($image){ return imagify( $image,'keep=top&width=800&height='. ceil(600/(16/9)) ); }, $images );
                     break;
                 default:
                     $images = array_map( function($image) use ($args) { return imagify( $image, $args ); }, $images );
@@ -287,7 +287,7 @@ function imagify( $image, $args = null){
 
         'width'   => false,    // Largeur image
         'height'  => false,    // Hauteur image
-        'quality' => 80,       // Qualité compression image
+        'quality' => 75,       // Qualité compression image
         'rotate'  => 0,        // rotation de l'image (angle en degres)
         'flip'    => false,    // x, y inversion image
         'keep'    => 'top'  // center, top, right, bottom, left, top left, top right, bottom left, bottom right

@@ -266,7 +266,7 @@ function pops_image( $args ){
     $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
 
     // Scheme du shortcode
-    $schema   = apply_filters('pops_image_schema', '<figure%s><img class="img" src="%s"/>%s</figure>');
+    $schema   = apply_filters('pops_image_schema', '<figure%s><img class="img" src="%s"/>%s</figure>', $args['image'], $slug );
 
     return sprintf( $schema, $class, $url, $text );
 }
