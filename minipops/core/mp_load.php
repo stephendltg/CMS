@@ -138,6 +138,9 @@ define( 'MP_TEMPLATE_URL' , get_template_directory('url') );
 if ( glob( MP_TEMPLATE_DIR . '/functions.php' ) )
 	include( MP_TEMPLATE_DIR . '/functions.php' );
 
+// On lance le gestionnaire de tâche
+mp_cron();
+
 // Hook apres chargement du theme
 do_action( 'after_setup_theme' );
 
@@ -150,9 +153,6 @@ get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );
-
-// On lance le gestionnaire de tâche
-mp_cron();
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );

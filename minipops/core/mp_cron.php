@@ -228,6 +228,10 @@ function mp_cron() {
 
         if ( $timestamp > $gmt_time ) break;
 
+        // Au moins une action à lancer
+        // On laisse le script s'éxecuter même si la page est rechargé
+        add_action('loaded', function(){ ignore_user_abort(true); }, 1 );
+
         foreach ( $cronhooks as $hook => $keys ) {
 
             foreach ( $keys as $k => $v ) {
@@ -241,8 +245,8 @@ function mp_cron() {
                 if ( $schedule != false )
                     reschedule_event($timestamp, $schedule, $hook, $v['args']);
 
-                // On lance l'action
-                do_action($hook, $v['args']);
+                // On lance l'action une fois minipops complètemement chargé ( le fichier de conf etant ecrit l'action ne se répètera pas indéfiniment)
+                add_action('loaded', function() use($hook, $v) { do_action($hook, $v['args']); if( 1 == connection_aborted() ) die(); } );
             }
         }
     }        

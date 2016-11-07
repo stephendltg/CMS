@@ -109,6 +109,10 @@ function esc_url_raw( $url ) {
 
     if( '' == $url ) return $url;
 
+    // On évite les liens placer pour les ancres
+    if( 0 === stripos( $url, '#' ) )
+        return '#'.sanitize_html_class($url);
+
     $url = preg_replace('|[^a-z0-9-~+_.?#=!&;,/:%@$\|*\'()\\x80-\\xff]|i', '', $url );
 
     if( 0 !== stripos( $url, 'mailto:' ) ){

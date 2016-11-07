@@ -108,16 +108,13 @@ add_filter('the_blog_logo', function($logos){
 /*********************************************************/
 
 // Hook d'appel ( back up tous les jours )
-// add_action('callback', 'do_backup_website');
+add_action('callback', 'do_backup_website');
 
 /**
  * Sauvegarde repertoire du site
  * @return
  */
 function do_backup_website() {
-
-    get_limit_memory(64);
-    get_max_time_execution(60);
 
     $backup_file     = 'website-' . date( 'd-m-Y-G-i' );  // nom de l'archive de backup 
     $backup_dir      = $_SERVER['DOCUMENT_ROOT'].'/backup-website-' . substr( md5( __FILE__ ), 0, 8 ); // nom du dossier où sera stocké tous les backup 
@@ -150,7 +147,7 @@ function do_backup_website() {
         // On check si on peut se servir de l'archive 
         if( $zip->open( $backup_dir . '/' . $backup_file . '.zip' , ZipArchive::CREATE ) === true ){
 
-            $zip->addDirectory(ABSPATH); 
+            $zip->addDirectory(MP_CONTENT_DIR); 
             $zip->close(); 
         }
     } 

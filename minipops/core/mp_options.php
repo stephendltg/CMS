@@ -135,7 +135,7 @@ class options {
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
-        add_action('loaded', function (){ mp_cache_data('mp_options')->save(); });
+        add_action('after_setup_theme', function (){ mp_cache_data('mp_options')->save(); });
     }
 
     /**

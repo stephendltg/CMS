@@ -538,7 +538,7 @@ function parse_markdown( $markdown ){
 
     // On nettoie toutes les urls dans href
     $clean_all_url = function($array){ return 'href="'.esc_url_raw($array[2]).'"'; };
-    //$markdown = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $markdown );
+    $markdown = preg_replace_callback( '/href=([\'"])(.+?)([\'"])/i' , $clean_all_url , $markdown );
 
     // On remet les chevrons pour la balise code
     $markdown = str_replace( '&amp;', '&' , $markdown );
