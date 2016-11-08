@@ -219,6 +219,16 @@ function mp_cron() {
     $gmt_time = microtime( true );
     $keys     = array_keys( $crons );
 
+    // On laisse 10 minutes entre chaque action
+    if( $gmt_time < ( get_option('doing_cron', 0 ) + 10 * MINUTE_IN_SECONDS ) )
+        return;
+
+    // On supprime l'option
+    delete_option('doing_cron');
+
+    // Toogle
+    $cron = false;
+
     if ( isset($keys[0]) && ltrim($keys[0], '_') > $gmt_time )
         return;
 
@@ -228,9 +238,7 @@ function mp_cron() {
 
         if ( $timestamp > $gmt_time ) break;
 
-        // Au moins une action à lancer
-        // On laisse le script s'éxecuter même si la page est rechargé
-        add_action('loaded', function(){ ignore_user_abort(true); }, 1 );
+        $cron = true;
 
         foreach ( $cronhooks as $hook => $keys ) {
 
@@ -246,8 +254,35 @@ function mp_cron() {
                     reschedule_event($timestamp, $schedule, $hook, $v['args']);
 
                 // On lance l'action une fois minipops complètemement chargé ( le fichier de conf etant ecrit l'action ne se répètera pas indéfiniment)
-                add_action('loaded', function() use($hook, $v) { do_action($hook, $v['args']); if( 1 == connection_aborted() ) die(); } );
+                add_action('loaded', function() use($hook, $v) { do_action($hook, $v['args']); } );
             }
         }
-    }        
+    }
+
+    if($cron){
+
+        // On créer une option pour surveiller l'esapce temps entre chaque actions 
+        add_option('doing_cron', sprintf( '%.22F', $gmt_time ) );
+
+        // On prépare la redirection avant de lancer le script principal
+        add_action('loaded', function(){ 
+
+            // On force le time out du script
+            ignore_user_abort(true);
+
+            // On redirige vers la page demandé
+            ob_start();
+            $location = get_current_url('raw');
+            header("Location: $location", true, 302);
+            echo ' ';
+            // flush any buffers and send the headers
+            while ( @ob_end_flush() );
+            flush();
+
+            } , 1 );
+
+        // On force la sortie du script principal
+        add_action('loaded', function(){ exit() ; /* On force la sortie */ } , PHP_INT_MAX );
+    }
+
 }

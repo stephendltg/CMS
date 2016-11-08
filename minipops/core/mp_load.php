@@ -1,4 +1,4 @@
-<?php defined('ABSPATH') or die('No direct script access.');
+<?php //defined('ABSPATH') or die('No direct script access.');
 /**
  * CHARGEMENT DU CMS mini POPS
  *
@@ -7,6 +7,22 @@
  * @subpackage load
  * @version 1
  */
+
+
+// On définit le coeur du CMS
+define( 'INC', 'core' );
+
+/** On verifie que le fichier config existe  */
+if( file_exists( ABSPATH . 'mp-config.php') ) {
+
+	/** Le fichier config est dans  ABSPATH */
+	require_once( ABSPATH . 'mp-config.php' );
+
+} elseif( @file_exists( dirname( ABSPATH ) . '/mp-config.php' ) ){
+
+	/** Le fichier config est un cran au dessus de ABSPATH */
+	require_once( dirname( ABSPATH ) . '/mp-config.php' );
+}
 
 /** On inclut les fonctions primordiales  */
 require( ABSPATH . INC . '/mp_load_functions.php' );
@@ -149,7 +165,7 @@ global $query;
 $query = get_url_queries();
 
 // On charge le bon http header selon la requête
-get_http_header();
+//get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );

@@ -102,7 +102,7 @@ function sanitize_option($option, $value){
         case 'site_crons':
             if( ! is_array($value) )
                 $value = false;
-            break;    
+            break;   
         default:
             break;
     }
