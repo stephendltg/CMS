@@ -505,7 +505,7 @@ function mp_doing_feed(){
     header( 'Content-Type: text/xml; charset='.CHARSET );
 
     // Boucle pour flux rss
-    the_loop('max=5', 'my_feed'); 
+    the_loop('max=5&order=desc', 'my_feed'); 
 
     // Déclaration du document
     echo '<?xml version="1.0" encoding="UTF-8" ?>';
@@ -542,7 +542,7 @@ else :
             <category><![CDATA[<?php echo $category ?>]]></category>
 <?php endforeach; endif;?>
             <guid isPermaLink="false"><?php the_page('url') ?></guid>
-            <description><![CDATA[<?php the_page('thumbnail')?><p><?php the_page('excerpt')?></p>]]></description>
+            <description><![CDATA[<?php the_thumbnail()?><p><?php the_page('excerpt')?></p>]]></description>
         </item>
 <?php endwhile; ?>
     </channel>

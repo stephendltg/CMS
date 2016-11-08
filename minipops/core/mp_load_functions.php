@@ -273,6 +273,7 @@ function mp_rewrite_rules(){
     $header .= '    Header set X-XSS-Protection "1; mode=block"'. PHP_EOL;
     $header .= '    Header always append X-Frame-Options SAMEORIGIN'. PHP_EOL; /* DENY, SAMEORIGIN */
     $header .= '    Header set X-Content-Type-Options nosniff'. PHP_EOL;
+    $header .= '    Header unset X-Powered-By'. PHP_EOL;
     $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
 
 
