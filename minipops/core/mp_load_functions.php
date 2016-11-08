@@ -276,8 +276,6 @@ function mp_rewrite_rules(){
     $header .= '    Header unset X-Powered-By'. PHP_EOL;
     $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
 
-
-
     /**********************
         Firewall 
     ***********************/
@@ -565,6 +563,15 @@ function mp_rewrite_rules(){
 
     $header .= '    # On s\'assure que les proxies envoient le bon contenu'. PHP_EOL;
     $header .= '    Header append Vary User-Agent env=!dont-vary'. PHP_EOL;
+    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
+
+    /**********************
+        Gestion si fichiers sur serveur differents tel que police et css
+    ***********************/
+    $header .= '<IfModule mod_headers.c>'. PHP_EOL;
+    $header .= '<FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css)$">'. PHP_EOL;
+    $header .= 'Header set Access-Control-Allow-Origin "*"'. PHP_EOL;
+    $header .= '</FilesMatch>'. PHP_EOL;
     $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
 
 

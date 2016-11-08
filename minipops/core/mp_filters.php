@@ -34,7 +34,7 @@ function mp_load_default_style(){
 
     // On charge le fichier style.css du thème actif
     if ( glob( MP_TEMPLATE_DIR . '/style.css' ) )
-        mp_enqueue_style('my-style', 'style.css');
+        mp_enqueue_style('my-style', 'style.css', array(), 236);
 }
 
 
