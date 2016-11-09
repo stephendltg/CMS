@@ -77,7 +77,12 @@ $is_iis7 = $is_IIS && intval( substr( $_SERVER['SERVER_SOFTWARE'], strpos( $_SER
 /*          module apache detection            */
 /***********************************************/
 
-$is_mod_rewrite = function_exists('apache_get_modules') ? in_array( 'mod_rewrite', apache_get_modules() ) : false ;
+
+if (function_exists('apache_get_modules'))
+  $is_mod_rewrite = in_array('mod_rewrite', apache_get_modules() );
+else
+  $is_mod_rewrite =  getenv('HTTP_MOD_REWRITE')=='On' ? true : false;
+
 
 
 
