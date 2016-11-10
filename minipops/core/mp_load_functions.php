@@ -196,6 +196,28 @@ function cms_not_installed() {
     if ( !is_writable( ABSPATH ) ) 
         cms_maintenance( 'Error directory permissions !' );
 
+    if( isset($GLOBALS['mp_config']) ){
+
+        $GLOBALS['mp_config'] = "<?php
+/**
+ * La configuration de votre cms.
+ *
+ * @package CMS mini POPS
+ * @subpackage config
+ * @version 1
+ */
+
+
+/** Definit le mode de debuggage pour développement. */
+define ( 'DEBUG' , fase );
+
+/** Definit l'url du site. */
+define( 'MP_HOME', '". guess_url(). "' );";
+
+    file_put_content( ABSPATH . 'mp-configs.php', $GLOBALS['mp_config'] );
+    unset($GLOBALS['mp_config']);
+    }
+
     @mkdir( MP_CONTENT_DIR , 0755 , true );
     if ( !is_writable( MP_CONTENT_DIR ) ) 
         cms_maintenance( 'Error directory permissions : '.  MP_CONTENT_DIR .' !' );
@@ -222,7 +244,7 @@ function mp_rewrite_rules(){
         update_option('setting->urlrewrite', true);
 
     // On récupère la variable dans option
-    $rewrite = get_option('setting->urlrewrite', true);
+    $rewrite = get_option('setting->urlrewrite', $is_mod_rewrite);
 
     // Si mod rewrite déjà activé on arrête la fonction et on définit la constante IS_REWRITE_RULES
     if ( $rewrite === 'enable' ){
@@ -237,14 +259,15 @@ function mp_rewrite_rules(){
     }
 
     // Si pas un serveur apache et pas de mod rewrite actif on affecte la variable stocker dans option à false
-    if( !$is_apache || !$is_mod_rewrite )
-        $rewrite = false;
+    // if( !$is_apache || !$is_mod_rewrite )
+    //    $rewrite = false;
 
     // Entête à tout document htaccess
 
     /**********************
         Protection 
     ***********************/
+
     $header  = '# SECURITY:[FILES]'. PHP_EOL;
     $header .= '# htaccess protect'. PHP_EOL;
     $header .= '<Files .htaccess>'. PHP_EOL;
@@ -576,13 +599,13 @@ function mp_rewrite_rules(){
 
 
     // On affecte le header au règle apache pour le domaine
-    $rules   = $header;
+    $rules   = apply_filters('mp_apache_rules_header', $header);
 
     // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
     if ( $rewrite === true ) {
 
         // On affecte la variable qui sera stocker dans la table option
-        define('IS_REWRITE_RULES', true);
+        define('IS_REWRITE_RULES', !$is_apache ? false : true );
 
         // On definit le repertoire root
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
@@ -647,6 +670,9 @@ function mp_rewrite_rules(){
 
         define('IS_REWRITE_RULES', false);
     }
+
+    if( !$is_apache )
+        $rules = '';
 
     // On tent d'écrire les règles principale 
     if( !file_marker_contents(ABSPATH . '.htaccess', $rules) )
@@ -964,6 +990,8 @@ function get_the_blog( $field, $default = false ){
  */
 function init_the_blog(){
 
+    global $is_mod_rewrite;
+
     $blog = array(
         'title'=>'miniPops',
         'subtitle'=>'Un site sous miniPops',
@@ -977,7 +1005,7 @@ function init_the_blog(){
         'robots'=>'index' );
 
     $setting = array(
-        'urlrewrite'=> true,
+        'urlrewrite'=> $is_mod_rewrite,
         'timezone'=> 'Europe/London',
         'date_format' => 'F j, Y',
         'time_format' => 'g:i a',

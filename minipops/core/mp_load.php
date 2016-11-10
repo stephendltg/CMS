@@ -22,6 +22,11 @@ if( file_exists( ABSPATH . 'mp-config.php') ) {
 
 	/** Le fichier config est un cran au dessus de ABSPATH */
 	require_once( dirname( ABSPATH ) . '/mp-config.php' );
+
+} else {
+
+	/** On prépare la création du fichier mp_config.php */
+	$GLOBALS['mp_config'] = true;
 }
 
 /** On inclut les fonctions primordiales  */
@@ -92,12 +97,6 @@ mp_cookies_constants();
 // On verifie l'utilisateur et son roles
 require( ABSPATH . INC . '/mp_auth.php' );
 
-// On charge les filtres par défaut
-//require( ABSPATH . INC . '/mp_filters.php' );
-
-// On active le mod rewrite si disponible
-mp_rewrite_rules();
-
 // Fonction d'extinction de minipops
 register_shutdown_function( 'shutdown_action_hook' );
 
@@ -108,6 +107,9 @@ foreach ( glob( MU_PLUGIN_DIR .'/*.php' ) as $mu_plugin ) {
 unset( $mu_plugin );
 
 do_action( 'muplugins_loaded' );
+
+// On active le mod rewrite si disponible
+mp_rewrite_rules();
 
 // Fonction pour gérer les pages
 require( ABSPATH . INC . '/mp_query.php' );
