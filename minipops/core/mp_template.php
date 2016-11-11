@@ -492,6 +492,7 @@ function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</u
         
         $title  = is_string($title) ? $title: basename($slug);
         $active = is_same($slug, $GLOBALS['query'] ) ? ' active' : '';
+        $menu_item = apply_filters('mp_the_menu_scheme', $menu_item, $slug );
         $slug   = sprintf( $menu_item, get_permalink($slug), $title, $active );
 
     } );
