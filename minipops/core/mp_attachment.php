@@ -290,7 +290,8 @@ function imagify( $image, $args = null){
         'quality' => 75,       // Qualité compression image
         'rotate'  => 0,        // rotation de l'image (angle en degres)
         'flip'    => false,    // x, y inversion image
-        'keep'    => 'top'  // center, top, right, bottom, left, top left, top right, bottom left, bottom right
+        'keep'    => 'top',   // center, top, right, bottom, left, top left, top right, bottom left, bottom right
+        'grid'    => false
         ));
 
     // On check que l'image n'a pas déjà été traité
@@ -325,8 +326,21 @@ function imagify( $image, $args = null){
                     $img->rotate( intval($args['rotate']) );
 
                 // Resize image
-                if( !$args['width'] && $args['height'] )
-                    $img->fit_to_height($args['height']);
+                if( !$args['width'] && $args['height'] ){
+
+                    if($args['grid']){
+
+                        $width = ceil( $args['grid']/3 );
+
+                        if( 'portrait' == $img->get_orientation() )
+                            $img->thumbnail($width, $args['height'], $args['keep'] );
+                        else
+                            $img->thumbnail($width*2, $args['height'], $args['keep'] );
+                    
+                    } else {
+                        $img->fit_to_height($args['height']);
+                    }
+                }
 
                 elseif( $args['width'] && !$args['height'] )
                     $img->fit_to_width($args['width']);
