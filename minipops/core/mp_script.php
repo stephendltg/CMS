@@ -161,7 +161,7 @@ function mp_enqueue_script( $handle, $src = false, $deps = array(), $ver = false
         else
             $version = sanitize_allspecialschars($enqueue_script[$handle]['version']);
         
-        $url = $url . ( strlen($version) === 0  ? '' : '?' . $version );
+        $url = $url . ( strlen($version) === 0  ? '' : '?ver=' . $version );
 
 
         /* ATTRIBUTS */

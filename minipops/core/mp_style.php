@@ -164,7 +164,7 @@ function mp_enqueue_style( $handle , $src = false, $deps = array(), $ver = false
         else
             $version = sanitize_allspecialschars($enqueue_style[$handle]['version']);
         
-        $url = $url . ( strlen($version) === 0  ? '' : '?' . $version );
+        $url = $url . ( strlen($version) === 0  ? '' : '?ver=' . $version );
 
 
         /* MEDIA */

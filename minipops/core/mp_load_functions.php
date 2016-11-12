@@ -294,7 +294,7 @@ function mp_rewrite_rules(){
     $header .= '# XSS Protection & iFrame Protection & Mime Security'. PHP_EOL;
     $header .= '<IfModule mod_headers.c>'. PHP_EOL;
     $header .= '    Header set X-XSS-Protection "1; mode=block"'. PHP_EOL;
-    $header .= '    Header always append X-Frame-Options SAMEORIGIN'. PHP_EOL; /* DENY, SAMEORIGIN */
+    $header .= '    Header always append X-Frame-Options DENY'. PHP_EOL; /* DENY, SAMEORIGIN */
     $header .= '    Header set X-Content-Type-Options nosniff'. PHP_EOL;
     $header .= '    Header unset X-Powered-By'. PHP_EOL;
     $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
@@ -571,12 +571,12 @@ function mp_rewrite_rules(){
     $header .= '    AddOutputFilterByType DEFLATE text/xml'. PHP_EOL;
     $header .= '    AddOutputFilterByType DEFLATE text/css'. PHP_EOL;
     $header .= '    AddOutputFilterByType DEFLATE text/plain'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE image/svg+xml'. PHP_EOL;
+    $header .= '    AddOutputFilterByType DEFLATE image/svg+xml svg svgz'. PHP_EOL;
     $header .= '    AddOutputFilterByType DEFLATE text/javascript'. PHP_EOL;
     $header .= '    AddOutputFilterByType DEFLATE font/opentype'. PHP_EOL . PHP_EOL;
 
     $header .= '    # On s\'assure que certains types de fichiers ne sont pas pris en compte'. PHP_EOL;
-    $header .= '    SetEnvIfNoCase Request_URI \.(?:exe|t?gz|zip|bz2|sit|rar|gif|jpe?g|png|avi|mpg|swf|flv|mov|mp3|ogv|mp4|pdf|webm|ogg|rm)$ no-gzip dont-vary'. PHP_EOL . PHP_EOL;
+    $header .= '    SetEnvIfNoCase Request_URI \.(?:exe|t?gz|zip|bz2|sit|rar|gif|jpe?g|svg|png|avi|mpg|swf|flv|mov|mp3|ogv|mp4|pdf|webm|ogg|rm)$ no-gzip dont-vary'. PHP_EOL . PHP_EOL;
 
     $header .= '    BrowserMatch ^Mozilla/4 gzip-only-text/html'. PHP_EOL;
     $header .= '    BrowserMatch ^Mozilla/4\.0[678] no-gzip'. PHP_EOL . PHP_EOL;

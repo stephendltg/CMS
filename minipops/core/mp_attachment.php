@@ -291,7 +291,7 @@ function imagify( $image, $args = null){
         'rotate'  => 0,        // rotation de l'image (angle en degres)
         'flip'    => false,    // x, y inversion image
         'keep'    => 'top',   // center, top, right, bottom, left, top left, top right, bottom left, bottom right
-        'grid'    => false
+        'grid'    => 1
         ));
 
     // On check que l'image n'a pas déjà été traité
@@ -302,7 +302,7 @@ function imagify( $image, $args = null){
     $extension  = strrchr($image,'.');
 
     // Paramètre image
-    $params = $args['width']. ( !$args['height'] ? '' : 'x'.$args['height'] );
+    $params = !$args['width'] ? '': ( $args['width'] / ceil($args['grid']) ) . ( !$args['height'] ? '' : 'x'.$args['height'] );
 
     // Nouveau nom d'image 
     $new_image = str_replace($extension, '@'.$params.$extension, $image);
@@ -345,8 +345,22 @@ function imagify( $image, $args = null){
                 elseif( $args['width'] && !$args['height'] )
                     $img->fit_to_width($args['width']);
 
-                elseif( $args['width'] && $args['height'] )
-                    $img->thumbnail($args['width'], $args['height'], $args['keep'] );
+                elseif( $args['width'] && $args['height'] ){
+
+                    if( ceil($args['grid']) > 1 ){
+
+                        $width = ceil( $args['width']/$args['grid'] );
+
+                        if( 'portrait' == $img->get_orientation() )
+                            $img->thumbnail($width, $args['height'], $args['keep'] );
+                        else
+                            $img->thumbnail($width*2, $args['height'], $args['keep'] );
+
+                    } else {
+
+                        $img->thumbnail($args['width'], $args['height'], $args['keep'] );
+                    }
+                }
 
                 // Save the image
                 $img->save($new_image, intval($args['quality']) );
