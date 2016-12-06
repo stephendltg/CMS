@@ -10,6 +10,8 @@
 
 <?php snippet('header'); ?>
 
+<?php snippet('form'); ?>
+
     <table role="presentation">
       <!-- surtout pas d'attribut summary -->
         <tr>

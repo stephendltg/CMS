@@ -1,0 +1,321 @@
+@mixin firefox-message($selector) {
+  body.firefox #{$selector}:before {
+    content: "Hi, Firefox users!";
+  }
+}
+
+@include firefox-message(".header");
+
+
+
+/* ----------------------------- */
+/* == Button 				     */
+/* ----------------------------- */
+
+// Button variables
+$button-color: $color2; 		// Couleur texte 
+$button-border: $color1;		// Couleur de la bordure
+$button-background : $color1;	// Couleur du background
+$button-hover-color: $color3;   // Couleur au survol
+
+// Styling Button
+.btn,
+button,
+input[type='button'],
+input[type='reset'],
+input[type='submit'] {
+	background-color: $button-background;
+	border: .1rem solid $button-border;
+	border-radius: .4rem;
+	color: $button-color;
+	cursor: pointer;
+	font-size: 1.1rem;
+	font-weight: 700;
+	height: 3.8rem;
+	letter-spacing: .1rem;
+	line-height: 3.8rem;
+	padding: 0 3.0rem;
+	text-align: center;
+	text-decoration: none;
+	text-transform: uppercase;
+	white-space: nowrap;
+
+	&:focus,
+	&:hover {
+		background-color: $button-hover-color;
+		border-color: $button-hover-color;
+		color: $button-color;
+		outline: 0;
+	}
+
+	&[disabled] {
+		cursor: default;
+		opacity: .5;
+		&:focus,
+		&:hover {
+			background-color: $button-background;
+			border-color: $button-background;
+		}
+	}
+
+	&.button-outline {
+		background-color: transparent;
+		color: $button-color;
+		&:focus,
+		&:hover {
+			background-color: transparent;
+			border-color: $button-hover-color;
+			color: $button-hover-color;
+		}
+		&[disabled] {
+			&:focus,
+			&:hover {
+				border-color: inherit;
+				color: $button-color;
+			}
+		}
+	}
+
+	&.button-clear {
+		background-color: transparent;
+		border-color: transparent;
+		color: $button-color;
+		&:focus,
+		&:hover {
+			background-color: transparent;
+			border-color: transparent;
+			color: $button-hover-color;
+		}
+		&[disabled] {
+			&:focus,
+			&:hover {
+				color: $button-color;
+			}
+		}
+	}
+}
+
+
+/* ----------------------------- */
+/* == Input 				     */
+/* ----------------------------- */
+
+// Input variables
+$border-color : #ddd;
+$border-focus-color: $color3;
+
+input[type='email'],
+input[type='number'],
+input[type='password'],
+input[type='search'],
+input[type='tel'],
+input[type='text'],
+input[type='url'],
+input[type="date"],
+input[type="time"],
+input[type="week"],
+input[type="month"],
+input[type="datetime"],
+input[type="datetime-local"],
+input[type="color"],
+textarea,
+select {
+	appearance: none; // Removes awkward default styles on some inputs for iOS
+	background-color: transparent;
+	border: .1rem solid $border-color;
+	border-radius: .4rem;
+	box-shadow: none;
+	height: 3.8rem;
+	padding: .6rem 1.0rem; // The .6rem vertically centers text on FF, ignored by Webkit
+	&:focus {
+		border-color: $border-focus-color;
+		outline: 0;
+	}
+}
+
+select {
+	background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="#d1d1d1" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625"/></svg>') center right no-repeat;
+	padding-right: 3.0rem;
+	&:focus {
+		background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" height="14" viewBox="0 0 29 14" width="29"><path fill="#9b4dca" d="M9.37727 3.625l5.08154 6.93523L19.54036 3.625"/></svg>');
+	}
+}
+
+
+input[type="color"]{
+	padding:0;
+}
+
+textarea {
+	min-height: 6.5rem;
+}
+
+
+/* ----------------------------- */
+/* == input range    		     */
+/* ----------------------------- */
+input[type=range] {
+    /*removes default webkit styles*/
+    -webkit-appearance: none;
+    
+    /*fix for FF unable to apply focus style bug */
+    border: 1px solid white;
+    
+    /*required for proper track sizing in FF*/
+    width: 300px;
+}
+input[type=range]::-webkit-slider-runnable-track {
+    width: 300px;
+    height: 5px;
+    background: #ddd;
+    border: none;
+    border-radius: 3px;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: $color3; //goldenrod;
+    margin-top: -4px;
+}
+input[type=range]:focus {
+    outline: none;
+}
+input[type=range]:focus::-webkit-slider-runnable-track {
+    background: #ccc;
+}
+
+input[type=range]::-moz-range-track {
+    width: 300px;
+    height: 5px;
+    background: #ddd;
+    border: none;
+    border-radius: 3px;
+}
+input[type=range]::-moz-range-thumb {
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: $color3;
+}
+
+/*hide the outline behind the border*/
+input[type=range]:-moz-focusring{
+    outline: 1px solid white;
+    outline-offset: -1px;
+}
+
+input[type=range]::-ms-track {
+    width: 300px;
+    height: 5px;
+    
+    /*remove bg colour from the track, we'll use ms-fill-lower and ms-fill-upper instead */
+    background: transparent;
+    
+    /*leave room for the larger thumb to overflow with a transparent border */
+    border-color: transparent;
+    border-width: 6px 0;
+
+    /*remove default tick marks*/
+    color: transparent;
+}
+input[type=range]::-ms-fill-lower {
+    background: #777;
+    border-radius: 10px;
+}
+input[type=range]::-ms-fill-upper {
+    background: #ddd;
+    border-radius: 10px;
+}
+input[type=range]::-ms-thumb {
+    border: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: $color3;
+}
+input[type=range]:focus::-ms-fill-lower {
+    background: #888;
+}
+input[type=range]:focus::-ms-fill-upper {
+    background: #ccc;
+}
+
+/* ----------------------------- */
+/* == radio, checkbox 		     */
+/* ----------------------------- */
+
+
+/* Cachons la case à cocher */
+[type="checkbox"]:not(:checked),
+[type="checkbox"]:checked {
+  position: absolute;
+  left: -9999px;
+}
+ 
+/* on prépare le label */
+[type="checkbox"]:not(:checked) + label,
+[type="checkbox"]:checked + label {
+  position: relative; /* permet de positionner les pseudo-éléments */
+  padding-left: 25px; /* fait un peu d'espace pour notre case à venir */
+  cursor: pointer;    /* affiche un curseur adapté */
+}
+
+/* :before sert à créer la case à cocher */
+[type="checkbox"]:not(:checked) + label:before,
+[type="checkbox"]:checked + label:before {
+  content: '';
+  position: absolute;
+  left:0; top: 2px;
+  width: 17px; height: 17px; /* dim. de la case */
+  border: 1px solid #aaa;
+  background: #f8f8f8;
+  border-radius: 3px; /* angles arrondis */
+  box-shadow: inset 0 1px 3px rgba(0,0,0,.3) /* légère ombre interne */
+}
+ 
+/* Aspect général de la coche */
+[type="checkbox"]:not(:checked) + label:after,
+[type="checkbox"]:checked + label:after {
+  content: '✔';
+  position: absolute;
+  top: 0; left: 4px;
+  font-size: 14px;
+  color: #09ad7e;
+  transition: all .2s; /* on prévoit une animation */
+}
+/* Aspect si "pas cochée" */
+[type="checkbox"]:not(:checked) + label:after {
+  opacity: 0; /* coche invisible */
+  transform: scale(0); /* mise à l'échelle à 0 */
+}
+/* Aspect si "cochée" */
+[type="checkbox"]:checked + label:after {
+  opacity: 1; /* coche opaque */
+  transform: scale(1); /* mise à l'échelle 1:1 */
+}
+
+/* aspect désactivée */
+[type="checkbox"]:disabled:not(:checked) + label:before,
+[type="checkbox"]:disabled:checked + label:before {
+  box-shadow: none;
+  border-color: #bbb;
+  background-color: #ddd;
+}
+/* styles de la coche (si cochée/désactivée) */
+[type="checkbox"]:disabled:checked + label:after {
+  color: #999;
+}
+/* on style aussi le label quand désactivé */
+[type="checkbox"]:disabled + label {
+  color: #aaa;
+}
+ 
+/* aspect au focus de l'élément */
+[type="checkbox"]:checked:focus + label:before,
+[type="checkbox"]:not(:checked):focus + label:before {
+  border: 1px dotted blue;
+}

@@ -1,5 +1,5 @@
 /*!
-* www.KNACSS.com V6.0.0 (27 septembre 2016) @author: Alsacreations, Raphael Goetter
+* www.KNACSS.com V6.0.4 (22 novembre 2016) @author: Alsacreations, Raphael Goetter
 * Licence WTFPL http://www.wtfpl.net/
 */
 
@@ -56,6 +56,9 @@
 // Grids
 @import "grids/_grillade.scss"; // grids
 
+// Plugins
+@import "_plugins/_forms.scss"; // Formulaire
+
 
 /* ----------------------------- */
 /* ==Own stylesheet              */
@@ -64,5 +67,8 @@
 /* Here should go your own CSS styles */
 // You can also link them with a Sass @import
 @import "my-styles";
+
+
+
 
 

@@ -28,9 +28,9 @@ body {
 }
 
 a {
-  color: $base-color-link;
+  color: $link-color;
   &:hover, &:focus, &:active {
-    color: $base-color-link-hover;
+    color: $link-hover-color;
   }
 }
 

@@ -209,12 +209,12 @@ function cms_not_installed() {
 
 
 /** Definit le mode de debuggage pour développement. */
-define ( 'DEBUG' , fase );
+define ( 'DEBUG' , false );
 
 /** Definit l'url du site. */
 define( 'MP_HOME', '". guess_url(). "' );";
 
-    file_put_content( ABSPATH . 'mp-configs.php', $GLOBALS['mp_config'] );
+    file_put_content( ABSPATH . 'mp-config.php', $GLOBALS['mp_config'] );
     unset($GLOBALS['mp_config']);
     }
 
