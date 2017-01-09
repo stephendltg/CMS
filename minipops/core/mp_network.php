@@ -36,7 +36,7 @@ function email( $params = null , $mode = 'plain' ){
         foreach ( explode( ',', trim($to) ) as $addr_mail )
             if( !is_email($addr_mail) ) return false;
 
-        if( empty($to) || empty($subject) || empty($body) ) 
+        if( empty($to) || empty($subject) || empty($body) )
             return false;
 
         if( empty($from) ) {
@@ -49,10 +49,10 @@ function email( $params = null , $mode = 'plain' ){
             $from = 'miniPOPS@' . $sitename;
         }
 
-        if( empty($replyTo) ) 
+        if( empty($replyTo) )
             $replyTo = $from;
 
-        if( is_notin( $mode , array('plain','html') ) ) 
+        if( is_notin( $mode , array('plain','html') ) )
             return false;
 
         $headers = array(
@@ -97,7 +97,7 @@ function get_ip_client() {
     foreach ( $keys as $key ) {
 
         if ( array_key_exists( $key, $_SERVER ) ) {
-            
+
             $ip = explode( ',', $_SERVER[ $key ] );
             $ip = end( $ip );
 
@@ -118,7 +118,22 @@ function get_ip_client() {
  * @param  string    url à vérifier
  * @return integer   code de retour de l'url 200: ok, etc ...
  */
-function get_http_response_code( $url ) {
+function get_http_response_code( $url, $timeout = 5 ) {
+
+    if ( function_exists('curl_version') ){
+
+        $ch = curl_init();
+        $opts = array( CURLOPT_RETURNTRANSFER => true, CURLOPT_URL => $url, CURLOPT_NOBODY => true, CURLOPT_TIMEOUT => $timeout );
+        curl_setopt_array($ch, $opts);
+        curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        return $httpCode;
+    }
+
+    ini_set("default_socket_timeout","05");
+    set_time_limit(5);
 
     $headers = get_headers($url);
     return intval( substr($headers[0], 9, 3) );
@@ -131,6 +146,9 @@ function get_http_response_code( $url ) {
  * @return integer   code de retour de l'url 200: ok, etc ...
  */
 function url_get_content($url, $code = false) {
+
+    ini_set("default_socket_timeout","05");
+    set_time_limit(5);
 
     $content = file_get_content($url);
 
@@ -168,15 +186,15 @@ function mp_remote( $url, $token, $method ='GET', $options = array() ){
         $context['http']['method'] = 'POST';
 
     if( is_in( $method, array('PUT', 'PATCH') ) ){
-        
-        if( !empty($options) && is_array($options) ) 
+
+        if( !empty($options) && is_array($options) )
             $context['http']['content'] = $options;
         else return false;
     }
 
     $context  = stream_context_create( $context );
 
-    if( !file_get_contents( $url, false, $context ) ) 
+    if( !file_get_contents( $url, false, $context ) )
         return false;
 
     return json_decode( $response );
