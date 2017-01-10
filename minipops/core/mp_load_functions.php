@@ -196,9 +196,12 @@ function cms_not_installed() {
     if ( !is_writable( ABSPATH ) ) 
         cms_maintenance( 'Error directory permissions !' );
 
-    if( isset($GLOBALS['mp_config']) ){
+    if( defined('LOAD_MP_CONFIG_SAMPLE') && ( 
+        !file_exists( ABSPATH . 'mp-config.php') 
+        || !@file_exists( dirname( ABSPATH ) . '/mp-config.php' ) 
+        ) ){
 
-        $GLOBALS['mp_config'] = "<?php
+        $mp_config_sample = "<?php
 /**
  * La configuration de votre cms.
  *
@@ -211,11 +214,14 @@ function cms_not_installed() {
 /** Definit le mode de debuggage pour développement. */
 define ( 'DEBUG' , false );
 
+/** Definit le cache pour la création de page statique. */
+define ( 'CACHE' , false);
+
 /** Definit l'url du site. */
 define( 'MP_HOME', '". guess_url(). "' );";
 
-    file_put_content( ABSPATH . 'mp-config.php', $GLOBALS['mp_config'] );
-    unset($GLOBALS['mp_config']);
+    file_put_content( ABSPATH . 'mp-config.php', $mp_config_sample );
+    unset($mp_config_sample);
     }
 
     @mkdir( MP_CONTENT_DIR , 0755 , true );
@@ -674,6 +680,8 @@ function mp_rewrite_rules(){
     if( !$is_apache )
         $rules = '';
 
+    do_action('mp_before_write_rules');
+
     // On tent d'écrire les règles principale 
     if( !file_marker_contents(ABSPATH . '.htaccess', $rules) )
          _doing_it_wrong( __FUNCTION__, 'Error file permission .htaccess.' );
@@ -684,6 +692,7 @@ function mp_rewrite_rules(){
     // On stock la valeur de réécriture dans option
     update_option('setting->urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );
 
+    do_action('mp_after_write_rules');
 }
 
 

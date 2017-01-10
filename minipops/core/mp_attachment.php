@@ -246,25 +246,27 @@ function get_the_image( $args, $mode = 'scheme' ){
             switch ($size) {
 
                 case 'small':
-                    $images = array_map( function($image){ return imagify( $image,'width=320'); }, $images );
+                    $imagify_args = apply_filters('mp_imagify_small', 'width=320');
                     break;
                 case 'medium':
-                    $images = array_map( function($image){ return imagify( $image,'width=800'); }, $images );
+                    $imagify_args = apply_filters('mp_imagify_medium', 'width=800');
                     break;
                 case 'large':
-                    $images = array_map( function($image){ return imagify( $image,'width=1024'); }, $images );
+                    $imagify_args = apply_filters('mp_imagify_large', 'width=1024');
                     break;
                 case 'thumbnail':
-                    $images = array_map( function($image){ return imagify( $image,'width=480&height=480'); }, $images );
+                    $imagify_args = apply_filters('mp_imagify_thumbnail', 'width=480&height=480');
                     break;
                 case '16/9':
-                    //get_the_image('width=640&height='. ceil(640/(16/9)) .'&file='.$value, 'uri');
-                    $images = array_map( function($image){ return imagify( $image,'keep=top&width=800&height='. ceil(600/(16/9)) ); }, $images );
+                    $imagify_args = apply_filters('mp_imagify_16/9', 'keep=top&width=800&height='. ceil(600/(16/9)));
                     break;
                 default:
-                    $images = array_map( function($image) use ($args) { return imagify( $image, $args ); }, $images );
+                    $imagify_args = $args;
                     break;
             }
+            
+            // On charge l'image recalculée par imagify
+            $images = array_map( function($image) use ($imagify_args){ return imagify( $image, $imagify_args); }, $images );
         }
 
         $images = array_map( function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); } , $images );

@@ -219,6 +219,14 @@ function mp_clear_cache_all_pages(){
         rrmdir($cache_file);
 }
 
+
+/**
+ * On ajoute une action si une modification des règles de réécriture url
+ * @return
+ */
+add_action('mp_before_write_rules', 'mp_clear_cache_all_pages' );
+
+
 /*********************************************************/
 /*        Filter pour compass                            */
 /*********************************************************/

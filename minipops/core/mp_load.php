@@ -9,7 +9,10 @@
  */
 
 
-// On définit le coeur du CMS
+/** On definit le repertoire racine  */
+define( 'ABSPATH', dirname( dirname(__FILE__) ) . '/' );
+
+/** On définit le coeur du CMS **/
 define( 'INC', 'core' );
 
 /** On verifie que le fichier config existe  */
@@ -23,11 +26,8 @@ if( file_exists( ABSPATH . 'mp-config.php') ) {
 	/** Le fichier config est un cran au dessus de ABSPATH */
 	require_once( dirname( ABSPATH ) . '/mp-config.php' );
 
-} else {
-
-	/** On prépare la création du fichier mp_config.php */
-	$GLOBALS['mp_config'] = true;
 }
+
 
 /** On inclut les fonctions primordiales  */
 require( ABSPATH . INC . '/mp_load_functions.php' );
@@ -49,7 +49,6 @@ mp_debug_mode();
 
 // On definit l'encodage du header.
 mp_set_internal_encoding();
-
 
 // On charge les fonctions primordiales ( Hook, helper )
 require( ABSPATH . INC . '/mp_helper.php' );
@@ -167,7 +166,7 @@ global $query;
 $query = get_url_queries();
 
 // On charge le bon http header selon la requête
-//get_http_header();
+get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );

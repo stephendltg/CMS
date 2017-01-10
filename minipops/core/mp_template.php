@@ -136,6 +136,19 @@ function the_lang( $before = '', $after = '' ) {
 }
 
 
+function the_permalink( $before = '', $after = '' ){
+
+    global $query;
+
+    $before = (string) $before;
+    $after  = (string) $after;
+
+    $value = apply_filters( 'the_permalink', get_permalink($query) );
+    if ( strlen($value) == 0 )  return;
+    echo $before . esc_url_raw($value) . $after;
+
+}
+
 /***********************************************/
 /*        Fonctions link meta                  */
 /***********************************************/
