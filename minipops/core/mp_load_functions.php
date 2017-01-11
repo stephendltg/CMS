@@ -1014,6 +1014,7 @@ function init_the_blog(){
         'robots'=>'index' );
 
     $setting = array(
+        'setting->home'=> esc_url_raw(MP_HOME),
         'urlrewrite'=> $is_mod_rewrite,
         'timezone'=> 'Europe/London',
         'date_format' => 'F j, Y',

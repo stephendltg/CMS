@@ -10,7 +10,8 @@
 
 
 /** On definit le repertoire racine  */
-define( 'ABSPATH', dirname( dirname(__FILE__) ) . '/' );
+if ( !defined('ABSPATH') )
+	define( 'ABSPATH', dirname( dirname(__FILE__) ) . '/' );
 
 /** On définit le coeur du CMS **/
 define( 'INC', 'core' );
@@ -71,18 +72,16 @@ $_GET = array_map( 'esc_url', $_GET );
 // Definit les constantes pour les répertoires de stockage du site
 if ( defined('MEMORY_LIMIT') ) get_limit_memory(MEMORY_LIMIT);
 
-// On définit les constantes pour plugins ( + declaration de MP_HOME )
-mp_plugin_directory_constants();
-
 // On charge les filtres par défaut
 require( ABSPATH . INC . '/mp_filters.php' );
-
 // On charge la gestion des fichier yaml
 require( ABSPATH . INC . '/mp_yaml.php' );
 // On charge les fonctions gérant les options ainsi que le gestionnaire de tâche
 require( ABSPATH . INC . '/mp_options.php' );
 require( ABSPATH . INC . '/mp_cron.php' );
 
+// On définit les url pour plugins
+mp_plugin_directory_constants();
 
 // On init le blog
 init_the_blog();

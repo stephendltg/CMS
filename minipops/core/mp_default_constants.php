@@ -69,7 +69,7 @@ function mp_plugin_directory_constants() {
 
     // Definit la constante MP_HOME : url du site de référence
     if ( !defined('MP_HOME') )
-		define( 'MP_HOME', guess_url() );
+		define( 'MP_HOME', get_option('setting->home', guess_url() ) );
 
 	// A l'heure actuel MP_CONTENT_URL n'accepte pas les sous domaines
 	if ( !defined('MP_CONTENT_URL') )
@@ -85,8 +85,8 @@ function mp_plugin_directory_constants() {
 	// Constante pour optimisation des images et fichier svg
 	if ( !defined('IMAGIFY') )
 		define( 'IMAGIFY', true );
-
 }
+
 
 /**
  *
