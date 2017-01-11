@@ -109,6 +109,77 @@ function get_ip_client() {
 }
 
 
+
+/**
+ * Recupère la localisation de l'adresse ip du client
+ * @return string
+ *
+ * 'status' => 'success',
+ * 'country' => 'COUNTRY',
+ * 'countryCode' => 'COUNTRY CODE',
+ * 'region' => 'REGION CODE',
+ * 'regionName' => 'REGION NAME',
+ * 'city' => 'CITY',
+ * 'zip' => ZIP CODE,
+ * 'lat' => LATITUDE,
+ * 'lon' => LONGITUDE,
+ * 'timezone' => 'TIME ZONE',
+ * 'isp' => 'ISP NAME',
+ * 'org' => 'ORGANIZATION NAME',
+ * 'as' => 'AS NUMBER / NAME',
+ * 'query' => 'IP ADDRESS USED FOR QUERY'
+ *
+ * Si erreur:
+ *  'status' => 'fail',
+ *  'message' => 'ERROR MESSAGE',
+ *  'query' => 'IP ADDRESS USED FOR QUERY'
+ */
+function geo_ip( $args = array() ){
+
+    $args = parse_args( $args, array(
+        'ip'   => get_ip_client(),  // $ip = '90.93.196.19';
+        'mode' => null
+        ) );
+
+    // On peut geo-localiser une url
+    if( is_url($args['ip']) )
+        $$args['ip'] = parse_url($args['ip'])['host'];
+    else
+        if( !is_ip($args['ip']) ) return false;
+
+    // Api de géolocalisation 
+    $geo_api = apply_filters('geo_api_service', 'http://ip-api.com/php/');
+    $geo_api = esc_url_raw($geo_api);
+
+    // Fields de retour
+    $fields = 262143; // http://ip-api.com/docs/api:returned_values#field_generator
+
+    //connection au serveur de ip-api.com et recuperation des données 
+    if(is_callable('curl_init')) {
+
+        $c = curl_init();
+        curl_setopt($c, CURLOPT_URL, $geo_api.$args['ip'].'?fields='.$fields);
+        curl_setopt($c, CURLOPT_HEADER, false);
+        curl_setopt($c, CURLOPT_TIMEOUT, 10);
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, true);
+        $query = @unserialize(curl_exec($c));
+        curl_close($c);
+
+    } else {
+        $query = @unserialize(file_get_contents($geo_api.$args['ip'].'?fields='.$fields));
+    }
+
+    if($query && $query['status'] == 'success') { 
+
+        if( !empty($args['mode']) )
+            return isset($query[$args['mode']]) ? $query[$args['mode']] : false;
+        else
+            return $query;
+    }
+
+    return false;
+}
+
 /***********************************************/
 /*                    url                      */
 /***********************************************/
@@ -159,6 +230,38 @@ function url_get_content($url, $code = false) {
         return intval( substr($http_response_header[0], 9, 3) );
 }
 
+
+
+/***********************************************/
+/*                 FTP CLIENT                  */
+/***********************************************/
+
+
+function remote_ftp(){
+
+if (isset($_POST['Submit'])) {
+ if (!empty($_FILES['upload']['name'])) {
+    $ch = curl_init();
+    $localfile = $_FILES['upload']['tmp_name'];
+    $fp = fopen($localfile, 'r');
+    curl_setopt($ch, CURLOPT_URL, 'ftp://ftp_login:password@ftp.domain.com/'.$_FILES['upload']['name']);
+    curl_setopt($ch, CURLOPT_UPLOAD, 1);
+    curl_setopt($ch, CURLOPT_INFILE, $fp);
+    curl_setopt($ch, CURLOPT_INFILESIZE, filesize($localfile));
+    curl_exec ($ch);
+    $error_no = curl_errno($ch);
+    curl_close ($ch);
+        if ($error_no == 0) {
+            $error = 'File uploaded succesfully.';
+        } else {
+            $error = 'File upload error.';
+        }
+ } else {
+        $error = 'Please select a file.';
+ }
+}
+
+}
 
 /***********************************************/
 /*                 API-REST CLIENT             */
