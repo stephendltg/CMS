@@ -1003,18 +1003,18 @@ function init_the_blog(){
 
     $blog = array(
         'title'=>'miniPops',
-        'subtitle'=>'Un site sous miniPops',
-        'description'=>'Un site sous miniPops',
-        'keywords'=>'minipops, cms, minipopscms',
+        'subtitle'=>'your website',
+        'description'=>'~',
+        'keywords'=>'minipops, cms, website',
         'author'=>'stephen deletang',
         'author_email'=>'~',
-        'copyright'=>'@2015 -  Propulsé par miniPops',
+        'copyright'=>'@2015 - MiniPops',
         'lang'=> lang(),
         'theme'=>'default',
         'robots'=>'index' );
 
     $setting = array(
-        'setting->home'=> esc_url_raw(MP_HOME),
+        'home'=> esc_url_raw(MP_HOME),
         'urlrewrite'=> $is_mod_rewrite,
         'timezone'=> 'Europe/London',
         'date_format' => 'F j, Y',
