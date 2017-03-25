@@ -423,9 +423,6 @@ add_action('do_feed' , 'mp_doing_feed');
 // On ajoute la fonction d'appel de construction du fichier sitempa.xml
 add_action('do_sitemap' , 'mp_doing_sitemap');
 
-// On ajoute la fonction d'appel de construction de l'image favicon
-add_action('do_favicon' , 'mp_doing_favicon');
-
 
 /**
  * Générer un fichier robots.txt

@@ -78,7 +78,7 @@ function snippet( $snippet ){
     $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
 
     if( !empty($snippets) ){
-        $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, true );
+        $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, apply_filters('mp_snippets_cache', CACHE) );
         mp_cache_data('__args', $__args);
         include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
         mp_cache_data('__args', null); // On décharge les arguments du snippet
@@ -227,6 +227,7 @@ function mp_meta_favicon(){
 
     // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
     $favicon = apply_filters( 'mp_meta_favicon_path', 'favicon.ico' );
+
     if ( strlen($favicon) != 0 )
         $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon.'" type="image/x-icon">'."\n";
 

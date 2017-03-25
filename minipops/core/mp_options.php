@@ -131,7 +131,7 @@ class options {
     function __construct(){
 
         // On charge la table option dans la variable static
-        $options = yaml_parse_file(MP_PAGES_DIR. '/site.yml', 0, null, true);
+        $options = yaml_parse_file(MP_PAGES_DIR. '/site.yml', 0, null, apply_filters('mp_options_cache',CACHE) );
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
