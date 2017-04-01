@@ -171,7 +171,7 @@ class options {
         // On vérifie les noeuds
         foreach ($nodes as $node)
             if(!is_match($node, '/^[a-z0-9_]+$/i') ) return false;
-
+        
         return $nodes;
     }
 

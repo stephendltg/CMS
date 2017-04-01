@@ -150,7 +150,7 @@ class yaml {
         foreach( $data as $k => $v ) {
 
             // on nettoie le clé uniquement si c'est une chaine de caractère
-            $k = is_string($k) ? sanitize_key($k) : $k;
+            $k = is_string($k) ? preg_replace( '/[^a-z0-9\/_-]/', '', strtolower($k) ) : $k;
 
             // Si v est un tableau et qu'il est vide alors c'est une valeur null
             if( is_array($v) && empty($v) )   $v = null;
@@ -216,6 +216,19 @@ class yaml {
     }
 
     /**
+    * Récupère une valeur selon un noeud dans une table
+    * @access private
+    * @param $array_keys array  Table des noeuds
+    * @param $yaml_data  array  Table de retour
+    */
+    private function GetValueByNodeFromArray ( $array_keys, $yaml_data ){
+        $ref = &$yaml_data;
+        foreach ($array_keys as $k)
+            if(!isset($ref[$k]) ) return; else $ref = &$ref[$k];
+        return $ref;
+    }
+
+    /**
     * Recherche le nombre de document yaml
     * @access private
     * @param $pos position du premier document recherché
@@ -277,6 +290,9 @@ class yaml {
 
         // init pour les noeuds
         $yaml_node = array();
+
+        // init les pointeurs yaml
+        $yaml_pointers = array();
 
         /***********************/
         /*      THE LOOP       */
@@ -359,14 +375,22 @@ class yaml {
                 $yaml_node[$indents] = $key;
                 $yaml_node = array_slice( $yaml_node, 0, $indents+1, true);
 
-                // On cherche si une variable yaml existe
-                /*
-                if( preg_match('/^&(\w+)[ \t]*(.*)/', $value, $match) ){
-                    $yaml_var = array($match[1] => $yaml_node);
-                    $value    = isset($match[2]) ? $match[2] : '';
-                    var_dump($yaml_var);
+                // On recherche si un pointeur est déclaré
+                // Un pointeur est tjrs déclaré en debut de la chaine de valeur et sa valeur est le reste de la chaine ex: &prenom stephen 
+                if( $value && '&' === $value[0] ){
+
+                    // On récupere le nom du pointeur
+                    $pointer = explode(' ', substr($value,1), 2 );
+
+                    // On valid la clé du pointeur
+                    if( preg_match( '/^[a-z0-9]+$/i', $pointer[0] ) == true ){
+
+                        // On stock le chemin de la valeur du pointer
+                        $yaml_pointers[ $pointer[0] ] = $yaml_node;
+                        // On renvoi la valeur à décoder
+                        $value = !empty($pointer[1]) ? $pointer[1] : null;
+                    }
                 }
-                */
 
                 // On checked si block iterator
                 if( $value && '>' === $value[0] )
@@ -376,6 +400,30 @@ class yaml {
                     $block_scalar = array( 'enable' => true, 'type' => '|', 'position' => strpos($line, '|'), 'value' => '' );
 
                 else{
+
+                    // On recherche si un pointeur est utilisé
+                    // Il peut être utilisé n'importe ou dans la chaine de valeur ex: je suis *prenom  et j'aime le php
+                    $offset = 0;
+
+                    while( false !== $pointer = stripos($value, '*', $offset) ){
+
+                        // On cherche la clé du pointer
+                        $args = explode(' ', substr($value, $pointer + 1, strlen($value) ), 2 );
+
+                        // On verifie que la clé du pointeur est valide
+                        if( strlen($args[0]) == 0 || !array_key_exists($args[0], $yaml_pointers) ){
+
+                            $offset = $pointer + strlen($args[0]) + 1;
+
+                        } else {
+
+                            $pre_value  = substr($value, 0, $pointer);
+                            $next_value = !empty($args[1]) ? $args[1] : null;
+                            $args[0] = $this->GetValueByNodeFromArray($yaml_pointers[$args[0]], $yaml_data );
+                            $value = $pre_value . $args[0] . $next_value;
+                        }
+                    }
+
 
                     // On decode la valeur
                     $value = trim($value);
