@@ -82,15 +82,12 @@ lang:
 # Fichier de traduction phrases
 # ~
 ---
-
-var: &test 24
-
 lang:
 
 	en :
 		- Made with mini-Pops and <b>♥</b>
 
 	fr :
-		- *test Fait avec 1 *test 0 mini-Pops et un peu d'<b>amour</b>
+		- Fait avec mini-Pops et un peu d'<b>amour</b>
 
 ...

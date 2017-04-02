@@ -291,8 +291,8 @@ class yaml {
         // init pour les noeuds
         $yaml_node = array();
 
-        // init les pointeurs yaml
-        $yaml_pointers = array();
+        // init les alias yaml
+        $yaml_alias = array();
 
         /***********************/
         /*      THE LOOP       */
@@ -375,62 +375,122 @@ class yaml {
                 $yaml_node[$indents] = $key;
                 $yaml_node = array_slice( $yaml_node, 0, $indents+1, true);
 
-                // On recherche si un pointeur est déclaré
-                // Un pointeur est tjrs déclaré en debut de la chaine de valeur et sa valeur est le reste de la chaine ex: &prenom stephen 
-                if( $value && '&' === $value[0] ){
+                // mode de décodage
+                $decode_value = 'auto';
 
-                    // On récupere le nom du pointeur
-                    $pointer = explode(' ', substr($value,1), 2 );
+                // On recherche si un alias est déclaré
+                // Un alias est tjrs déclaré en debut de la chaine de valeur et sa valeur est le reste de la chaine ex: &prenom stephen 
+                if( strlen($value)>1 && '&' === $value[0] ){
 
-                    // On valid la clé du pointeur
-                    if( preg_match( '/^[a-z0-9]+$/i', $pointer[0] ) == true ){
+                    // On récupere le nom du alias
+                    $alias = explode(' ', substr($value,1), 2 );
 
-                        // On stock le chemin de la valeur du pointer
-                        $yaml_pointers[ $pointer[0] ] = $yaml_node;
+                    // On valid le nom de l'alias
+                    if( preg_match( '/^[a-z0-9]+$/i', $alias[0] ) == true ){
+
+                        // On stock le chemin de la valeur du alias
+                        $yaml_alias[ $alias[0] ] = $yaml_node;
                         // On renvoi la valeur à décoder
-                        $value = !empty($pointer[1]) ? $pointer[1] : null;
+                        $value = !empty($alias[1]) ? $alias[1] : null;
+                    }
+                }
+
+                // On recherche si un alias est utilisé
+                if( strlen($value)>1 && '*' === $value[0] ){
+
+                    // On récupere le nom du alias
+                    $alias = explode(' ', substr($value,1), 2 );
+
+                    // On verifie que le nom de l'alias est valide
+                    if( array_key_exists($alias[0], $yaml_alias) )
+                        $decode_value = $value = '';
+                }
+
+                // On recherche si un format doit etre appliqué a la valeur
+                if( strlen($value)>2 && '!!' === $value[0].$value[1]  ){
+
+                    // On le format
+                    $format = explode(' ', substr($value,2), 2 );
+
+                    if( in_array($format[0], array('str','bool','int','float','seq','map','binary','null','timestamp'), true ) ){
+                        $decode_value = $format[0];    
+                        $value = !empty($format[1]) ? $format[1] : null;
                     }
                 }
 
                 // On checked si block iterator
-                if( $value && '>' === $value[0] )
+                if( strlen($value)>1 && '>' === $value[0] )
                     $block_scalar = array( 'enable' => true, 'type' => '>', 'position' => strpos($line, '>'), 'value' => '' );
 
-                elseif( $value && '|' === $value[0] )
+                elseif( strlen($value)>1 && '|' === $value[0] )
                     $block_scalar = array( 'enable' => true, 'type' => '|', 'position' => strpos($line, '|'), 'value' => '' );
 
                 else{
 
-                    // On recherche si un pointeur est utilisé
-                    // Il peut être utilisé n'importe ou dans la chaine de valeur ex: je suis *prenom  et j'aime le php
-                    $offset = 0;
+                    switch ($decode_value) {
 
-                    while( false !== $pointer = stripos($value, '*', $offset) ){
+                        case 'auto':
+                            $value = trim($value);
+                            $value = json_decode($value, true) ?: $value;
+                            if( in_array($value, array('y','Y','yes','Yes','YES','true','True','TRUE','on','On','ON') ) )
+                                $value = true;
+                            elseif( in_array($value, array('n','N','no','No','NO','false','False','FALSE','off','Off','OFF') ) )
+                                $value = false;
+                            elseif( in_array($value, array('null','Null','NULL','~') ) )
+                                $value = null;
+                            break;
 
-                        // On cherche la clé du pointer
-                        $args = explode(' ', substr($value, $pointer + 1, strlen($value) ), 2 );
+                        case 'str':
+                            $value = is_string($value) ? $value : null;
+                            break;
 
-                        // On verifie que la clé du pointeur est valide
-                        if( strlen($args[0]) == 0 || !array_key_exists($args[0], $yaml_pointers) ){
+                        case 'int':
+                            $value = is_integer($value) ? $value : null;
+                            break;
 
-                            $offset = $pointer + strlen($args[0]) + 1;
+                        case 'float':
+                            $value = is_float($value) ? $value : null;
+                            break;
 
-                        } else {
+                        case 'bool':
+                            if( in_array($value, array('y','Y','yes','Yes','YES','true','True','TRUE','on','On','ON') ) )
+                                $value = true;
+                            elseif( in_array($value, array('n','N','no','No','NO','false','False','FALSE','off','Off','OFF') ) )
+                                $value = false;
+                            else
+                                $value = null;
+                            break;
 
-                            $pre_value  = substr($value, 0, $pointer);
-                            $next_value = !empty($args[1]) ? $args[1] : null;
-                            $args[0] = $this->GetValueByNodeFromArray($yaml_pointers[$args[0]], $yaml_data );
-                            $value = $pre_value . $args[0] . $next_value;
-                        }
+                        case 'binary':
+                            if( preg_match( '/^[a-z0-9+\/=]+$/i' , $value ) == false )
+                                $value = null;
+                            break;
+
+                        case 'seq':
+                        case 'map':
+                            $value = json_decode($value, true) ?: null;
+                            break;
+
+                        case 'null':
+                            if( in_array($value, array('null','Null','NULL','~') ) )
+                                $value = null;
+                            break;
+
+                        case 'timestamp':
+                            $time = strtotime( $value );
+                            if(!$time)    $value = null;
+                            else{
+                                $year  = date('Y', $time);
+                                $month = date('m', $time);
+                                $day   = date('d', $time);
+                                if( false == checkdate( $month , $day , $year ) )  $value = null;
+                            }
+                            break;
+                        
+                        default:
+                            $value = $this->GetValueByNodeFromArray($yaml_alias[$alias[0]], $yaml_data );
+                            break;
                     }
-
-
-                    // On decode la valeur
-                    $value = trim($value);
-                    $value = json_decode($value, true) ?: $value;
-                    if( $value === 'false' )  $value = false;
-                    elseif( $value === '~' )      $value = null;
-                    elseif( $value === 'null' )   $value = null;
 
                     // On sauvegarde le valeur selon le noeuds trouvé
                     $this->SetValueByNodeToArray( $yaml_node, $yaml_data, $value );
