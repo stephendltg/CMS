@@ -1,13 +1,14 @@
-<?php defined('ABSPATH') or die('No direct script access.');
+<?php
 
 /**
- * class YAML
+ * YAML
  *
  * http://www.yaml.org/spec/1.2/spec.html
- * https://github.com/symfony/yaml/blob/master/Parser.php
+ *
+ * (c) stephen deletang
  *
  * @package cms mini POPS
- * @subpackage yaml
+ * @subpackage yaml parser-dump
  * @version 1
  */
 
