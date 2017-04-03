@@ -113,6 +113,47 @@ class yaml {
     }
 
 
+    /**
+    * Detecte le type d'encodage d'une chaine
+    * @param $string
+    */
+    private function detect_encoding( $string ) {
+
+        if ( function_exists( 'mb_internal_encoding' ) ) {
+          return strtolower ( mb_detect_encoding( $string , 'UTF-8, ISO-8859-1, windows-1251') );
+        } else {
+            foreach( array('utf-8', 'iso-8859-1', 'windows-1251') as $item )
+                if( md5( iconv( $item , $item , $string ) ) == md5( $string ) ) return $item;
+          return false;
+        }
+    }
+
+    /**
+    * Encode une chaine en utf-8
+    * @param $string
+    */
+    private function encode_utf8( $string ){
+
+        $encoding = detect_encoding( $string );
+        if( is_same( $encoding , 'utf-8') ) 
+            return $string;
+        return iconv( $encoding , 'utf-8' , $string );
+    }
+
+    /**
+     * Enlèves les caractères dangereux et Encode les signes < > " ' en valeur html pur.
+     * Usage: stockage dans base json
+     */
+    private function esc_attr( $value ) {
+
+        $char = array('/%0[0-8bcef]/', '/%1[0-9a-f]/', '/[\x00-\x08]/', '/\x0b/', '/\x0c/', '/[\x0e-\x1f]/');
+        do {
+            $cleaned = $value;
+            $value = preg_replace( $char , '' , $value );
+        } while ( $cleaned != $value );
+
+        return $value;
+    }
 
     /**
     * encode les valeurs d'une au format yaml
@@ -135,8 +176,6 @@ class yaml {
 
         return $value;
     }
-
-
 
     /**
     * encode une table au format yaml
@@ -376,7 +415,7 @@ class yaml {
                 $yaml_node = array_slice( $yaml_node, 0, $indents+1, true);
 
                 // mode de décodage
-                $decode_value = 'auto';
+                $decode_value = 'value';
 
                 // On recherche si un alias est déclaré
                 // Un alias est tjrs déclaré en debut de la chaine de valeur et sa valeur est le reste de la chaine ex: &prenom stephen 
@@ -412,7 +451,7 @@ class yaml {
                     // On le format
                     $format = explode(' ', substr($value,2), 2 );
 
-                    if( in_array($format[0], array('str','bool','int','float','seq','map','binary','null','timestamp'), true ) ){
+                    if( in_array($format[0], array('str','bool','int','float','seq','map','binary','null','timestamp','value'), true ) ){
                         $decode_value = $format[0];    
                         $value = !empty($format[1]) ? $format[1] : null;
                     }
@@ -427,10 +466,12 @@ class yaml {
 
                 else{
 
+                    // On nettoie la valeur des espaces superflus
+                    $value = trim($value);
+
                     switch ($decode_value) {
 
-                        case 'auto':
-                            $value = trim($value);
+                        case 'value':
                             $value = json_decode($value, true) ?: $value;
                             if( in_array($value, array('y','Y','yes','Yes','YES','true','True','TRUE','on','On','ON') ) )
                                 $value = true;
@@ -472,8 +513,7 @@ class yaml {
                             break;
 
                         case 'null':
-                            if( in_array($value, array('null','Null','NULL','~') ) )
-                                $value = null;
+                            $value = null;
                             break;
 
                         case 'timestamp':
@@ -484,6 +524,7 @@ class yaml {
                                 $month = date('m', $time);
                                 $day   = date('d', $time);
                                 if( false == checkdate( $month , $day , $year ) )  $value = null;
+                                $value = date('c',$time);
                             }
                             break;
                         
@@ -526,10 +567,10 @@ class yaml {
         if( !is_integer($ndocs) && $ndocs !== null ) return false;
 
         // On encode en utf-8
-        $text = encode_utf8( $text );
+        $text = $this->encode_utf8( $text );
 
         // On supprime les caractères invisibles
-        $text = esc_attr($text);
+        $text = $this->esc_attr($text);
 
         // On supprime les retour chariots
         $text = str_replace(array("\r\n", "\r"), "\n", $text);
