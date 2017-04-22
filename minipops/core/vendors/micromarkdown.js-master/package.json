@@ -1,0 +1,46 @@
+{
+  "name": "micromarkdown",
+  "title": "micromarkdown.js",
+  "description": "converts markdown to html",
+  "version": "0.3.4",
+  "homepage": "https://github.com/SimonWaldherr/micromarkdown.js",
+  "author": {
+    "name": "Simon Waldherr",
+    "email": "contact@simonwaldherr.de",
+    "url": "http://simon.waldherr.eu/"
+  },
+  "main": "micromarkdown.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SimonWaldherr/micromarkdown.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SimonWaldherr/micromarkdown.js/issues"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://simon.waldherr.eu/license/mit/"
+    }
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": ">= 0.4.1",
+    "gzip-js": ">= 0.3.1",
+    "grunt-contrib-jshint": "~0.8.0",
+    "grunt-contrib-uglify": ">= 0.2.2",
+    "grunt-compare-size": ">= 0.0.0",
+    "colors": ">= 0.6.1"
+  },
+  "keywords": [
+    "micromarkdown",
+    "markdown",
+    "gfm",
+    "md",
+    "html",
+    "parser"
+  ],
+  "scripts": {
+    "test": "node nodemmd.js"
+  }
+}
