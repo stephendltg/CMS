@@ -52,7 +52,7 @@ function file_put_content($file, $contents) {
     $bytes_written = fwrite( $fp, $contents );
   
     fclose( $fp );
-  
+
     if ( $data_length !== $bytes_written )
         return false;
   

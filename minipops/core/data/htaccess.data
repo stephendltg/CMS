@@ -1,0 +1,365 @@
+# SECURITY:[FILES]
+    # htaccess protect
+    <Files .htaccess>
+        order allow,deny
+        deny from all
+    </Files>
+
+    # block listing files
+    Options All -Indexes
+    # Force index.php the others are blocked
+    DirectoryIndex index.php
+    # block all files begin by index
+
+    <Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">
+         order allow,deny
+         deny from all
+    </Files>
+
+# SECURITY:[SERVEUR]
+    # Masquer les informations du serveur
+    ServerSignature Off
+    # Activation du suivi des liens symboliques
+    Options +FollowSymLinks
+
+# SECURITY:[XSS Protection]
+    # XSS Protection & iFrame Protection & Mime Security
+    <IfModule mod_headers.c>
+        Header set X-XSS-Protection "1; mode=block"
+        Header always append X-Frame-Options DENY 
+        # [DENY, SAMEORIGIN]
+        Header set X-Content-Type-Options nosniff
+        Header unset X-Powered-By
+    </IfModule>
+
+
+# 6G FIREWALL/BLACKLIST
+# @ https://perishablepress.com/6g/'. PHP_EOL . PHP_EOL;
+
+    /*
+        6G:[QUERY STRINGS]
+        Cette partie vérifie que l'URL demandée par le client n'a pas été faite pour profiter de failles sur votre serveur web ou votre code PHP. 
+        Si c'est le cas, il va interdire l'accès à la page grace à (RewriteRule .* - [F]), ou le [F] signifie que l'accès n'est pas autorisé.
+    */
+    # 6G:[QUERY STRINGS]
+    <IfModule mod_rewrite.c>
+        RewriteEngine On
+        RewriteCond %{QUERY_STRING} (eval\() [NC,OR]
+        RewriteCond %{QUERY_STRING} (127\.0\.0\.1) [NC,OR]
+        RewriteCond %{QUERY_STRING} ([a-z0-9]{2000}) [NC,OR]
+        RewriteCond %{QUERY_STRING} (javascript:)(.*)(;) [NC,OR]
+        RewriteCond %{QUERY_STRING} (base64_encode)(.*)(\() [NC,OR]
+        RewriteCond %{QUERY_STRING} (GLOBALS|REQUEST)(=|\[|%) [NC,OR]
+        RewriteCond %{QUERY_STRING} (<|%3C)(.*)script(.*)(>|%3) [NC,OR]
+        RewriteCond %{QUERY_STRING} (\\|\.\.\.|\.\./|~|`|<|>|\|) [NC,OR]
+        RewriteCond %{QUERY_STRING} (boot\.ini|etc/passwd|self/environ) [NC,OR]
+        RewriteCond %{QUERY_STRING} (thumbs?(_editor|open)?|tim(thumb)?)\.php [NC,OR]
+        RewriteCond %{QUERY_STRING} (\'|\")(.*)(drop|insert|md5|select|union) [NC]
+        RewriteRule .* - [F]
+    </IfModule>
+
+    /*
+        6G: [REQUEST METHOD]
+        Cette partie teste les méthodes HTTP envoyées. 
+        Les navigateurs ne prenant en charge que GET et POST, toutes les autres se retrouvent bloquées avec la même méthode que le bloc précédent.
+    */
+    # 6G:[REQUEST METHOD]
+    <IfModule mod_rewrite.c>
+        RewriteCond %{REQUEST_METHOD} ^(connect|debug|delete|move|put|trace|track) [NC]
+        RewriteRule .* - [F]
+    </IfModule>
+
+    /*
+        6G:[REFERRERS]
+        Ce bloc est là pour bloquer le trafique provenant de certains referers (c'est-à-dire les referents, les sites d'où proviennent les visiteurs).
+        Si vos êtes soumis a dû référer spam, c'est à cet endroit que vous pourrez lister les adresses de spammeur.
+    */
+
+    # 6G:[REFERRERS]
+    <IfModule mod_rewrite.c>
+        RewriteCond %{HTTP_REFERER} ([a-z0-9]{2000}) [NC,OR]
+        RewriteCond %{HTTP_REFERER} ({{bad_referrers}}) [NC]
+        RewriteRule .* - [F]
+    </IfModule>
+    
+    /*
+        6G:[REQUEST STRINGS]
+        Ce bloc est là pour bloquer les appels les plus fréquents fait pas des Bots essayant de déterminer le type de site que vous possédez.
+    */
+    # 6G:[REQUEST STRINGS]
+    <IfModule mod_alias.c>
+        RedirectMatch 403 (?i)([a-z0-9]{2000})
+        RedirectMatch 403 (?i)(https?|ftp|php):/
+        RedirectMatch 403 (?i)(base64_encode)(.*)(\()
+        RedirectMatch 403 (?i)(=\\\'|=\\%27|/\\\'/?)\.
+        RedirectMatch 403 (?i)/(\$(\&)?|\*|\"|\.|,|&|&amp;?)/?$
+        RedirectMatch 403 (?i)(\{0\}|\(/\(|\.\.\.|\+\+\+|\\\"\\\")
+        RedirectMatch 403 (?i)(~|`|<|>|:|;|,|%|\\|\s|\{|\}|\[|\]|\|)
+        RedirectMatch 403 (?i)/(=|\$&|_mm|cgi-|etc/passwd|muieblack)
+        RedirectMatch 403 (?i)(&pws=0|_vti_|\(null\)|\{\$itemURL\}|echo(.*)kae|etc/passwd|eval\(|self/environ)
+        RedirectMatch 403 (?i)\.(aspx?|bash|bak?|cfg|cgi|dll|exe|git|hg|ini|jsp|log|mdb|out|sql|svn|swp|tar|rar|rdf)$
+        RedirectMatch 403 (?i)/(^$|(mp-)?config|mobiquo|phpinfo|shell|sqlpatch|thumb|thumb_editor|thumbopen|timthumb|webshell)\.php
+    </IfModule>
+
+    /*
+        6G:[USER AGENTS]
+        Cette ligne bloque les bots dont le nom est dans la grande liste que vous pouvez voir.
+        Notez la présence de archive.org en tout premier. 
+        J'ai personnellement autorise ce bot, car je trouve que la présence d'une copie de son site sur la waybackmachine n'est pas un mal, au contraire.
+    */
+    # 6G:[USER AGENTS]
+    <IfModule mod_setenvif.c>
+        SetEnvIfNoCase User-Agent ([a-z0-9]{2000}) bad_bot
+        SetEnvIfNoCase User-Agent ({{bad_bots}}) bad_bot
+        # Apache < 2.3
+        <IfModule !mod_authz_core.c>
+            Order Allow,Deny
+            Allow from All
+            Deny from env=bad_bot
+        </IfModule>
+        # Apache >= 2.3
+        <IfModule mod_authz_core.c>
+            <RequireAll>
+                Require all Granted
+                Require not env bad_bot
+            </RequireAll>
+        </IfModule>
+    </IfModule>
+
+
+    /*
+        6G:[BAD IPS]
+        Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques.
+        Si vous subissez les assauts d'un bot ou une tentative de DDOS depuis une IP, c'est à cet endroit qu'il faudra l'inserer !
+    */
+
+    # 6G:[BAD IPS]
+    <Limit GET HEAD OPTIONS POST PUT>
+        Order Allow,Deny
+        {{foreach bad_ips as ip}}
+        Deny from {{ip}}
+        {{endforeach}}
+        Allow from All
+    </Limit>
+
+
+    # SECURITY:[hotlinking]
+    # Disable hotlinking of images
+    RewriteEngine On
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{$_SERVER['HTTP_HOST']}} [NC]
+
+    // On va cherche la liste des domain autorise à faire des liens sur les images
+    $hotlinking_whitelist = file_get_content_array( INC . '/data/hotlinking-whitelist.data');
+
+    if( !empty($hotlinking_whitelist) ){
+        foreach ($hotlinking_whitelist as $domain)
+            RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?'. $domain .' [NC]
+    }
+    unset($hotlinking_whitelist);
+
+    RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
+
+
+    # CHARSET:[Set default charset utf-8]
+    AddDefaultCharset UTF-8
+
+    # TYPE:[Format file]
+    AddType audio/ogg  .ogg
+    AddType audio/mp3  .mp3
+    AddEncoding gzip svgz
+    AddType image/svg+xml svg svgz
+
+
+    # CACHE:[Expires headers (for better cache control)]
+    <IfModule mod_expires.c>
+        ExpiresActive on
+
+        # Perhaps better to whitelist expires rules? Perhaps.
+        ExpiresDefault "access plus 1 month "
+
+        # cache.appcache needs re-requests in FF 3.6 (thanks Remy ~Introducing HTML5)
+        ExpiresByType text/cache-manifest "access plus 0 seconds "
+
+        # Your document html
+        ExpiresByType text/html  "access plus 0 seconds "
+
+        # Data
+        ExpiresByType text/xml  "access plus 0 seconds"
+        ExpiresByType application/xml  "access plus 0 seconds"
+        ExpiresByType application/json  "access plus 0 seconds"
+
+        # Feed
+        ExpiresByType application/rss+xml "access plus 1 hour"
+        ExpiresByType application/atom+xml "access plus 1 hour"
+
+        # Favicon (cannot be renamed)
+        ExpiresByType image/x-icon "access plus 1 week"
+
+        # Media: images, video, audio
+        ExpiresByType image/gif "access plus 1 month "
+        ExpiresByType image/png "access plus 1 month "
+        ExpiresByType image/jpg "access plus 1 month "
+        ExpiresByType image/jpeg "access plus 1 month "
+        ExpiresByType video/ogg "access plus 1 month "
+        ExpiresByType audio/ogg "access plus 1 month "
+        ExpiresByType video/mp4 "access plus 1 month "
+        ExpiresByType video/webm "access plus 1 month "
+
+        # HTC files (css3pie)
+        ExpiresByType text/x-component "access plus 1 month "
+
+        # Webfonts
+        ExpiresByType application/x-font-ttf "access plus 1 month"
+        ExpiresByType font/opentype "access plus 1 month"
+        ExpiresByType application/x-font-woff "access plus 1 month"
+        ExpiresByType application/x-font-woff2 "access plus 1 month"
+        ExpiresByType image/svg+xml "access plus 1 month"
+        ExpiresByType application/vnd.ms-fontobject "access plus 1 month"
+
+        # CSS and JavaScript
+        ExpiresByType text/css "access plus 1 year "
+        ExpiresByType application/javascript "access plus 1 year "
+
+    </IfModule>
+
+    <IfModule mod_headers.c>
+        <filesMatch "\.(ico|jpe?g|png|gif|swf)$">
+            Header set Cache-Control "public"
+        </filesMatch>
+        <filesMatch "\.(css)$">
+            Header set Cache-Control "public"
+        </filesMatch>
+        <filesMatch "\.(js)$">
+            Header set Cache-Control "private"
+        </filesMatch>
+        <filesMatch "\.(x?html?|php)$">
+            Header set Cache-Control "private, must-revalidate"
+        </filesMatch>
+    </IfModule>
+
+
+    # COMPRESS:[Compression static file]
+    <IfModule mod_deflate.c>
+        # DeflateCompressionLevel 9 (Ne fonctionne pas sur macos)
+        # On force deflate sur certains mauvais headers
+        # # developer.yahoo.com/blogs/ydn/posts/2010/12/pushing-beyond-gzipping/
+        <IfModule mod_setenvif.c>
+            <IfModule mod_headers.c>
+                SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding
+                RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding
+            </IfModule>
+        </IfModule>
+
+        # On supprime les Etags
+        <IfModule mod_headers.c>
+            Header unset ETag
+        </IfModule>
+        FileETag None
+
+        AddOutputFilterByType DEFLATE application/atom_xml
+        AddOutputFilterByType DEFLATE application/rss+xml
+        AddOutputFilterByType DEFLATE application/xml
+        AddOutputFilterByType DEFLATE application/x-httpd-php
+        AddOutputFilterByType DEFLATE application/x-httpd-fastphp
+        AddOutputFilterByType DEFLATE application/x-httpd-eruby
+        AddOutputFilterByType DEFLATE application/vnd.google-earth.kml+xml
+        AddOutputFilterByType DEFLATE application/javascript
+        AddOutputFilterByType DEFLATE application/x-javascript
+        AddOutputFilterByType DEFLATE application/xhtml+xml
+        AddOutputFilterByType DEFLATE application/json
+        AddOutputFilterByType DEFLATE text/html
+        AddOutputFilterByType DEFLATE text/xml
+        AddOutputFilterByType DEFLATE text/css
+        AddOutputFilterByType DEFLATE text/plain
+        AddOutputFilterByType DEFLATE image/svg+xml svg svgz
+        AddOutputFilterByType DEFLATE text/javascript
+        AddOutputFilterByType DEFLATE font/opentype
+
+        # On s\'assure que certains types de fichiers ne sont pas pris en compte
+        SetEnvIfNoCase Request_URI \.(?:exe|t?gz|zip|bz2|sit|rar|gif|jpe?g|svg|png|avi|mpg|swf|flv|mov|mp3|ogv|mp4|pdf|webm|ogg|rm)$ no-gzip dont-vary
+
+        BrowserMatch ^Mozilla/4 gzip-only-text/html
+        BrowserMatch ^Mozilla/4\.0[678] no-gzip
+
+        # A décommenter car empêche flowplayer de se charger sur Internet Explorer
+        BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+        # On s\'assure que les proxies envoient le bon contenu
+        Header append Vary User-Agent env=!dont-vary
+    </IfModule>
+
+
+    # FONTS/CSS:[header for font and css]
+    <IfModule mod_headers.c>
+        <FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css)$">
+            Header set Access-Control-Allow-Origin "*"
+        </FilesMatch>
+    </IfModule>
+
+
+    // On affecte le header au règle apache pour le domaine
+    $rules   = apply_filters('mp_apache_rules_header', $header);
+
+    // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
+    if ( $rewrite === true ) {
+
+        // On affecte la variable qui sera stocker dans la table option
+        define('IS_REWRITE_RULES', !$is_apache ? false : true );
+
+        // On definit le repertoire root
+        $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
+        if ( empty( $root ) ) $root = '/';
+
+
+        /**********************
+            REWRITE RULE
+        ***********************/
+        $rules .= '# MINIPOPS:[Rewrite url]' . PHP_EOL;
+        $rules .= '<IfModule mod_rewrite.c>
+        $rules .= ' RewriteEngine on'. PHP_EOL . PHP_EOL;
+        $rules .= ' # if you homepage is '. MP_HOME . PHP_EOL;
+        $rules .= ' # RewriteBase '. $root . PHP_EOL. PHP_EOL;
+
+        // On récupère les extensions à bloquer
+        $bad_exts = file_get_content_array( INC . '/data/bad-exts.data');
+
+        if( 0 === strpos( MP_CONTENT_DIR, ABSPATH) ){
+
+            $rules .= ' # SECURITY:[FILES]
+            if( !empty($bad_exts) )
+                $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.('. join('|', $bad_exts) .')$ error [R=301,L]'. PHP_EOL . PHP_EOL;
+
+        } else {
+            
+            // Règles apache si MP_CONTENT_DIR est en dehors du répertoire ABSPATH
+            $rules_content_dir  = $header;
+            $rules_content_dir .= '# SECURITY:[SERVEUR]
+            $rules_content_dir .= '# disable ExecCGI
+            $rules_content_dir .= 'OPTIONS -ExecCGI  -Indexes'. PHP_EOL . PHP_EOL;
+
+            if( !empty($bad_exts) ){
+                $rules_content_dir .= '# SECURITY:[FILES]
+                $rules_content_dir .= '<Files ~ "\.('. join('|', $bad_exts) .')$">
+                $rules_content_dir .= ' Deny from all
+                $rules_content_dir .= '</Files>
+            }
+
+            // On tente de proteger les fichiers
+            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content_dir);
+        }
+
+        unset($bad_exts);
+
+        // Suite du bloc principale
+        $rules .= ' # SECURITY:[FILES-CORE]
+        $rules .= ' RewriteRule ^core/(.*) error [R=301,L]
+        //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
+        //$rules .= "RewriteCond %{REQUEST_FILENAME} !-d\n\t";
+        //$rules .= "RewriteRule ^panel/(.*) panel/index.php [L]\n\n\t";
+        $rules .= ' RewriteCond %{REQUEST_FILENAME} !-f
+        $rules .= ' RewriteCond %{REQUEST_FILENAME} !-d
+        $rules .= ' RewriteRule ^(.*) index.php [L]'. PHP_EOL . PHP_EOL;
+        $rules .= ' # Update code bellow for SEO improvements
+        $rules .= ' # Redirect 301 /index ' . MP_HOME . '/' . PHP_EOL. PHP_EOL;
+        $rules .= '</IfModule>';

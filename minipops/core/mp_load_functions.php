@@ -270,6 +270,15 @@ function mp_rewrite_rules(){
 
     // Entête à tout document htaccess
 
+    $file_htaccess = file_get_content(INC . '/data/htaccess.data');
+
+    $args = array(
+            '{{ip}}' => 'manger',
+            '{{ko}}' => 'ouf'
+        );
+
+    $file_htaccess = str_replace(array_keys($args), $args, $file_htaccess);
+
     /**********************
         Protection 
     ***********************/

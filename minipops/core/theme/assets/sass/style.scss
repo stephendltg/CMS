@@ -1,5 +1,5 @@
 /*!
-* www.KNACSS.com V6.0.0 (27 septembre 2016) @author: Alsacreations, Raphael Goetter
+* www.KNACSS.com v6.1.1 (21 avril 2017) @author: Alsacreations, Raphael Goetter
 * Licence WTFPL http://www.wtfpl.net/
 */
 
@@ -58,10 +58,11 @@
 
 
 /* ----------------------------- */
-/* ==Own stylesheet              */
+/* ==Plugind                     */
 /* ----------------------------- */
 
 @import "plugins/_forms.scss"; // form
+@import "plugins/_animate.scss"; // animate
 
 
 /* ----------------------------- */

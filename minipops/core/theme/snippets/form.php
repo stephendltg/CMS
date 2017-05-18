@@ -12,7 +12,7 @@
     
     <form method="post" action="traitement.php">
 
-       <label for="pseudo">Votre pseudo :</label>
+       <label for="pseudo" class="animated swing">Votre pseudo :</label>
        <input type="text" name="pseudo" id="pseudo" autofocus/>
 
        <label for="pass">Votre mot de passe :</label>

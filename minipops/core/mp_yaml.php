@@ -1,9 +1,9 @@
 <?php
 
 /**
- * YAML
+ * YAML PARSER - DUMP
  *
- * http://www.yaml.org/spec/1.2/spec.html
+ * Specifications : http://www.yaml.org/spec/1.2/spec.html
  *
  * (c) stephen deletang
  *
@@ -44,7 +44,7 @@ if (!function_exists('yaml_parse_file')) {
 
 
 /**
-* Parser une table vers yaml
+* Parser une table vers un flux yaml
 * @access private
 * @param $array  table de donnée
 */
@@ -84,7 +84,6 @@ class yaml {
     # ~
 
 
-
     /**#@+
     * @access private
     * @var array
@@ -97,7 +96,7 @@ class yaml {
     # ~
 
     /***********************************************/
-    /*              Functions private              */
+    /*              Functions privates             */
     /***********************************************/
 
     # ~
@@ -115,7 +114,7 @@ class yaml {
 
 
     /**
-    * Detecte le type d'encodage d'une chaine
+    * Detect type encode
     * @param $string
     */
     private function detect_encoding( $string ) {
@@ -130,7 +129,7 @@ class yaml {
     }
 
     /**
-    * Encode une chaine en utf-8
+    * Encode utf-8
     * @param $string
     */
     private function encode_utf8( $string ){
@@ -142,8 +141,7 @@ class yaml {
     }
 
     /**
-     * Enlèves les caractères dangereux et Encode les signes < > " ' en valeur html pur.
-     * Usage: stockage dans base json
+     * Escape the dangerous characteres
      */
     private function esc_attr( $value ) {
 
@@ -157,11 +155,11 @@ class yaml {
     }
 
     /**
-    * encode les valeurs d'une au format yaml
+    * encode the value to yaml format
     * @access public
-    * @param $data          string      Table des donnée à encoder
-    * @param $intends       int         nbre d'intendation selon contexte
-    * @param $lenght        array       Table des donnée à encoder
+    * @param $data          string      encode value
+    * @param $intends       int         number intends
+    * @param $offset        int         offset
     */
     private function _yaml_encode_value( $value, $i, $lenght ){
 
@@ -179,9 +177,9 @@ class yaml {
     }
 
     /**
-    * encode une table au format yaml
+    * encode a array to yaml format
     * @access private
-    * @param $data   array      Table des donnée à encoder
+    * @param $data   array      array data
     */
     function _yaml_encode( $data ){
 
@@ -189,10 +187,10 @@ class yaml {
 
         foreach( $data as $k => $v ) {
 
-            // on nettoie le clé uniquement si c'est une chaine de caractère
+            // sainitize key if a string
             $k = is_string($k) ? preg_replace( '/[^a-z0-9\/_-]/', '', strtolower($k) ) : $k;
 
-            // Si v est un tableau et qu'il est vide alors c'est une valeur null
+            // If v a array and is null alse value is null
             if( is_array($v) && empty($v) )   $v = null;
 
             if (  is_array($v) ){
@@ -220,7 +218,7 @@ class yaml {
 
 
     /**
-    * Insert dans un array
+    * Insert in array
     * @access private
     * @param $arr array  tableau d'origine
     * @param $ins array  tableau à insérer

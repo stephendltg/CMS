@@ -299,6 +299,7 @@ function mp_compass( $url, $dependencies ){
         }
         // Compilation sass
         $string_css = $scss->compile('@import "'.$file_name.'.scss";');
+
         // On créer le répertoire
         if( ! is_dir($css_dir) )   @mkdir($css_dir);
         // On enregistre le fichier
