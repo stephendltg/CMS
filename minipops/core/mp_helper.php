@@ -597,6 +597,107 @@ function mp_easy_minify( $str, $comments = true ){
     return apply_filters('mp_easy_minify', $str);
 }
 
+/***********************************************/
+/*                  Template parser            */
+/***********************************************/
+
+function mp_brackets( $string , $args = array() ){
+
+    $args = array(
+        'test' => 'manger',
+        'merde' => 'mlmls',
+        'tests' => array('lelle','lklk', 'mlkmlk'),
+        'papa'  => array('grand'=>'mlmls', 'rtest'=>array('oieoei'=>'mlmlz') )
+
+        );
+
+    $args = parse_args( $args );
+/*
+    function brackets( $array , $keys = ''){
+
+        static $brackets = array();
+
+        foreach ($array as $k => $v) {
+
+            //$keys = $keys . '.' . $k;
+
+            if( is_array($v) ){
+                brackets($v, $keys);
+            }
+            else{
+                $brackets[$keys]= $v;
+            }
+
+        }
+        //$keys = '';
+        return $brackets;
+    }
+
+    _echo( brackets($args) );
+*/
+
+    foreach ($args as $key => $value) {
+
+        // On commence par décharger la clé
+        unset($args[$key]);
+
+        // On nettoie la clé
+        $key = strtolower( preg_replace('/[^a-zA-Z0-9_.]/', '', $key) );
+
+        if ( is_array( $value ) ){
+
+            foreach ($value as $k => $v) {
+                if( !is_array($v) )
+                    $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
+            }
+
+            $args_array['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
+        }
+        else
+            $args['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
+
+    }
+
+    _echo($args);
+
+    _echo($args_array);
+
+    //map_deep($args, )
+/*
+    preg_match_all( '/[{]{2}(.*?)[}]{2}/si', $string, $matches );
+
+    function sanitize_brackets( $args ){
+
+        $args = strtolower( preg_replace('/[^a-zA-Z0-9_.]/', '', $args) );
+
+    }
+
+
+    $matches[1] = map_deep($matches[1], 'sanitize_brackets' );
+
+
+    $test = array_flip( array_combine($matches[0], $matches[1]) );
+
+    _echo($test);
+*/
+    //$test = str_replace(array_keys($args), $args, $string);
+
+    // On finit par ca
+    $string = preg_replace(array_keys($args), $args, $string);
+    //_echo($string);
+
+}
+
+/*
+$file_htaccess = file_get_content(INC . '/data/htaccess.data');
+
+$args = array(
+    '{{ip}}' => 'manger',
+            '{{ko}}' => 'ouf'
+    );
+
+$file_htaccess = str_replace(array_keys($args), $args, $file_htaccess);
+*/
 
 /***********************************************/
 /*                  html Minify                */

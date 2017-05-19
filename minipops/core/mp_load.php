@@ -60,6 +60,9 @@ require( ABSPATH . INC . '/mp_escape.php' );
 require( ABSPATH . INC . '/mp_network.php' );
 require( ABSPATH . INC . '/mp_files.php' );
 
+// On lance le firewall
+require( ABSPATH . INC . '/mp_firewall.php' );
+
 // On vérifier que le cms est bien installer et les droits d'écriture sur les repertoires.
 cms_not_installed();
 
@@ -169,6 +172,9 @@ get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );
+
+$file_htaccess = file_get_content(INC . '/data/htaccess.data');
+mp_brackets($file_htaccess);
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );
