@@ -607,6 +607,7 @@ function mp_brackets( $string , $args = array() ){
         'test' => 'manger',
         'merde' => 'mlmls',
         'tests' => array('lelle','lklk', 'mlkmlk'),
+        'oups' => array('test'=>'mlkmslk', 'lkoklk'=> 'jhksjh' ),
         'papa'  => array('grand'=>'mlmls', 'rtest'=>array('oieoei'=>'mlmlz') )
 
         );
@@ -646,11 +647,18 @@ function mp_brackets( $string , $args = array() ){
 
             if ( is_array( $value ) ){
 
-                foreach ($value as $k => $v) {
-                    if( !is_array($v) && $k === sanitize_tag($k) )
-                        $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
-                }
+                // On nettoie pour que seul les tableaux non multi dimenssionnel soit utilisé
+                $value = array_map(function($value){return !is_array($value)?$value:null;}, $value );
 
+                // On supprime les éléments sans valeurs affichable (null, '', false)
+                $value = array_filter($value);
+
+                // On construit la table des arguments
+                foreach ($value as $k => $v)
+                    $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
+
+
+                // On créer un tableau à scruter
                 $args_array['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
             }
             else
@@ -662,10 +670,6 @@ function mp_brackets( $string , $args = array() ){
 
     // Regex pour supprimer tous les brackets sans valeur definit
     $args['/[{]{2}(.*?)[}]{2}/i'] = '';
-
-    _echo($args);
-
-    _echo($args_array);
 
     //map_deep($args, )
 /*
@@ -692,6 +696,7 @@ function mp_brackets( $string , $args = array() ){
     _echo($string);
 
 }
+
 
 /*
 $file_htaccess = file_get_content(INC . '/data/htaccess.data');
