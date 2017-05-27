@@ -247,10 +247,10 @@ function mp_rewrite_rules(){
 
     // Constante pour reforcer la réécriture d'url
     if( FORCE_RELOCATE )
-        update_option('setting->urlrewrite', true);
+        update_option('setting.urlrewrite', true);
 
     // On récupère la variable dans option
-    $rewrite = get_option('setting->urlrewrite', $is_mod_rewrite);
+    $rewrite = get_option('setting.urlrewrite', $is_mod_rewrite);
 
     // Si mod rewrite déjà activé on arrête la fonction et on définit la constante IS_REWRITE_RULES
     if ( $rewrite === 'enable' ){
@@ -689,7 +689,7 @@ function mp_rewrite_rules(){
         file_marker_contents( ABSPATH . 'php.ini', 'expose_php = on');
     
     // On stock la valeur de réécriture dans option
-    update_option('setting->urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );
+    update_option('setting.urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );
 
     do_action('mp_after_write_rules');
 }
@@ -959,7 +959,7 @@ function get_the_blog( $field, $default = false ){
     switch ($field) {
 
         case 'copyright':
-            $value = get_option('blog->'.$field);
+            $value = get_option('blog.'.$field);
             if( null === $value ) return $default;
             $value = parse_text($value);
             break;
@@ -985,7 +985,7 @@ function get_the_blog( $field, $default = false ){
             $value = get_the_image('name=logo&orderby=type&max=5&order=desc', 'uri');
             break;   
         default:
-            $value = get_option('blog->'.$field, $default);
+            $value = get_option('blog.'.$field, $default);
             break;
     }
     
@@ -1003,10 +1003,10 @@ function init_the_blog(){
     $blog = array(
         'title'=>'miniPops',
         'subtitle'=>'your website',
-        'description'=>'~',
+        'description'=> null,
         'keywords'=>'minipops, cms, website',
         'author'=>'stephen deletang',
-        'author_email'=>'~',
+        'author_email'=> null,
         'copyright'=>'@2015 - MiniPops',
         'lang'=> lang(),
         'theme'=>'default',
@@ -1022,12 +1022,12 @@ function init_the_blog(){
         'api_keysalt'=>random_salt(32) );
 
     $plugins = array(
-        'active_plugins'=>'~');
+        'active_plugins'=> null);
 
     add_option('blog', $blog);
     add_option('setting', $setting);
     add_option('plugins', $plugins);
-    add_option('customize->primary_menu', '~');
+    add_option('customize.primary_menu', null);
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');

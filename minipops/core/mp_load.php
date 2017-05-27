@@ -129,7 +129,7 @@ require( ABSPATH . INC . '/mp_lang.php' );
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = [test, memory, ...]
 @mkdir( MP_PLUGIN_DIR , 0755 , true );
 
-$plugins = get_option('plugins->active_plugins');
+$plugins = get_option('plugins.active_plugins');
 if( !empty($plugins) ){
 	foreach( glob(MP_PLUGIN_DIR .'/{'.implode(',', $plugins).'}', GLOB_BRACE|GLOB_ONLYDIR) as $plugin ){
 		if( glob( $plugin.'/'. basename($plugin).'.php' ) )
@@ -175,6 +175,7 @@ require( ABSPATH . INC . '/mp_template.php' );
 
 $file_htaccess = file_get_content(INC . '/data/htaccess.data');
 mp_brackets($file_htaccess);
+
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );

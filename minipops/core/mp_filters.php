@@ -303,7 +303,9 @@ function mp_compass( $url, $dependencies ){
         // On créer le répertoire
         if( ! is_dir($css_dir) )   @mkdir($css_dir);
         // On enregistre le fichier
-        file_put_content( $css_dir . $file_name . '.css', $string_css );
+        if( !file_put_content( $css_dir . $file_name . '.css', $string_css ) )
+            _doing_it_wrong( __FUNCTION__, 'Error file permission.' );
+
         // On retourne l'url du fichier css compilé
         $url =  $css_url . $file_name . '.css';
     }

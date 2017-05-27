@@ -27,7 +27,7 @@ function get_the_args( $field, $type = null ) {
     if( $__args === null || !is_array($__args) || empty($__args) ) return;
 
     // On créer le noeuds de recherche
-    $array_keys = explode('->', $field);
+    $array_keys = explode('.', $field);
 
     // On récupère la variable selon le noeud
     $ref = &$__args;
@@ -475,7 +475,7 @@ function the_time( $format = '',  $before = '', $after = '', $echo = true ) {
 
 function get_the_menu( $menu_nav = '' ){
 
-    $menu_items = get_option('customize->'. $menu_nav);
+    $menu_items = get_option('customize.'. $menu_nav);
 
     $menu = array();
 

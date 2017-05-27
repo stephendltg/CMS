@@ -143,6 +143,7 @@ class options {
     * @access private
     */
     public function save(){
+
         if( self::$_flag ){
             if( ! yaml_emit_file(MP_PAGES_DIR. '/site.yml', self::$_options) )
                 _doing_it_wrong( __CLASS__, 'Error saving file configuration: site.yaml!');
@@ -161,13 +162,13 @@ class options {
 
         // On récupère le chemin de la table du domain
         if( $domain === null )
-            $node = 'site->'.$node;
-        elseif( is_in( $domain, get_option('plugins->active_plugins') ) )
-            $node = $domain.'->'.$node;
+            $node = 'site.'.$node;
+        elseif( is_in( $domain, get_option('plugins.active_plugins') ) )
+            $node = $domain.'.'.$node;
         else return false;
 
         // On créer le noeuds
-        $nodes = array_map( 'trim', explode('->', $node));
+        $nodes = array_map( 'trim', explode('.', $node));
         // On vérifie les noeuds
         foreach ($nodes as $node)
             if(!is_match($node, '/^[a-z0-9_]+$/i') ) return false;

@@ -641,20 +641,22 @@ function mp_brackets( $string , $args = array() ){
         // On commence par décharger la clé
         unset($args[$key]);
 
-        // On nettoie la clé
-        $key = strtolower( preg_replace('/[^a-zA-Z0-9_.]/', '', $key) );
+        // On verfie si la clé est valide
+        if( $key === sanitize_tag($key) ){
 
-        if ( is_array( $value ) ){
+            if ( is_array( $value ) ){
 
-            foreach ($value as $k => $v) {
-                if( !is_array($v) )
-                    $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
+                foreach ($value as $k => $v) {
+                    if( !is_array($v) && $k === sanitize_tag($k) )
+                        $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
+                }
+
+                $args_array['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
             }
+            else
+                $args['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
 
-            $args_array['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
         }
-        else
-            $args['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
 
     }
 

@@ -152,11 +152,11 @@ function _date( $format = 'Y-m-d H:i:s', $timestamp = false, $translate = true )
     if ( 'U' === $format )  return $i;
 
     // On calcul le décalage horaire
-    if( is_intgr(get_option('setting->timezone')) && is_between(get_the_blog('setting->timezone'), -12, 12) )
-        $gmt_offset = get_option('setting->timezone') * HOUR_IN_SECONDS;
-    elseif( array_key_exists( get_option('setting->timezone', null) , list_timezones_valid() ) ){
+    if( is_intgr(get_option('setting.timezone')) && is_between(get_the_blog('setting.timezone'), -12, 12) )
+        $gmt_offset = get_option('setting.timezone') * HOUR_IN_SECONDS;
+    elseif( array_key_exists( get_option('setting.timezone', null) , list_timezones_valid() ) ){
         $dateTime     = date_create( date('r', $i) );
-        $dateTimeZone = timezone_open( get_option('setting->timezone') );
+        $dateTimeZone = timezone_open( get_option('setting.timezone') );
         $gmt_offset   = timezone_offset_get($dateTimeZone, $dateTime);
     }
     else    $gmt_offset = 0;
@@ -256,7 +256,7 @@ function get_the_date( $format = '', $slug = '' ) {
     $pubdate = get_the_page('pubdate', $slug);
 
     if ( '' == $format )
-        $the_date = _date( get_option( 'setting->date_format', 'F j, Y' ), $pubdate );
+        $the_date = _date( get_option( 'setting.date_format', 'F j, Y' ), $pubdate );
     else
         $the_date = _date( $format, $pubdate );
 
@@ -278,7 +278,7 @@ function get_the_time( $format = '', $slug = '' ) {
     if ( strlen($pubdate) == 0 )  return;
 
     if ( '' == $format )
-        $the_time = _date( get_option( 'setting->time_format', 'g:i a' ), $pubdate );
+        $the_time = _date( get_option( 'setting.time_format', 'g:i a' ), $pubdate );
     else
         $the_time = _date( $format, $pubdate );
 
