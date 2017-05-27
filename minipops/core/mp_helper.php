@@ -660,6 +660,9 @@ function mp_brackets( $string , $args = array() ){
 
     }
 
+    // Regex pour supprimer tous les brackets sans valeur definit
+    $args['/[{]{2}(.*?)[}]{2}/i'] = '';
+
     _echo($args);
 
     _echo($args_array);
@@ -686,7 +689,7 @@ function mp_brackets( $string , $args = array() ){
 
     // On finit par ca
     $string = preg_replace(array_keys($args), $args, $string);
-    //_echo($string);
+    _echo($string);
 
 }
 
