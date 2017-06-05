@@ -1,11 +1,3 @@
-{{ test.mlml / }}
-{{test}}
-{{ #ysey }}
-je le sen pas trop {{  merde }} ce truc
-{{ / mlmlmel }}
-{{test}}
-
-
 # SECURITY:[FILES]
     # htaccess protect
     <Files .htaccess>

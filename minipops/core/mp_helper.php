@@ -598,116 +598,86 @@ function mp_easy_minify( $str, $comments = true ){
 }
 
 /***********************************************/
-/*                  Template parser            */
+/*                  brackets                   */
 /***********************************************/
 
 function mp_brackets( $string , $args = array() ){
 
-    $args = array(
-        'test' => 'manger',
-        'merde' => 'mlmls',
-        'tests' => array('lelle','lklk', 'mlkmlk'),
-        'oups' => array('test'=>'mlkmslk', 'lkoklk'=> 'jhksjh' ),
-        'papa'  => array('grand'=>'mlmls', 'rtest'=>array('oieoei'=>'mlmlz') )
-
-        );
-
     $args = parse_args( $args );
-/*
-    function brackets( $array , $keys = ''){
 
-        static $brackets = array();
+    // init table des boucles
+    $args_array = array();
 
-        foreach ($array as $k => $v) {
-
-            //$keys = $keys . '.' . $k;
-
-            if( is_array($v) ){
-                brackets($v, $keys);
-            }
-            else{
-                $brackets[$keys]= $v;
-            }
-
-        }
-        //$keys = '';
-        return $brackets;
-    }
-
-    _echo( brackets($args) );
-*/
-
+    // On prépare la table des boucles ainsi que celle des variables
     foreach ($args as $key => $value) {
 
         // On commence par décharger la clé
         unset($args[$key]);
 
-        // On verfie si la clé est valide
-        if( $key === sanitize_tag($key) ){
+        if ( is_array( $value ) ){
 
-            if ( is_array( $value ) ){
+            // On nettoie pour que seul les tableaux non multi dimenssionnel soit utilisé et filtre les valeurs ( null, '', false )
+            $value = array_filter( array_map(function($value){return !is_array($value)?$value:null;}, $value ) );
 
-                // On nettoie pour que seul les tableaux non multi dimenssionnel soit utilisé
-                $value = array_map(function($value){return !is_array($value)?$value:null;}, $value );
+            // On construit la table des arguments
+            foreach ($value as $k => $v)
+                $args['/[{]{2}'. sanitize_tag($key) .'.'. sanitize_tag($k) .'[}]{2}/i'] = $v;
 
-                // On supprime les éléments sans valeurs affichable (null, '', false)
-                $value = array_filter($value);
+            // On créer un tableau à scruter
+            $args_array[sanitize_tag($key)] = $value;
 
-                // On construit la table des arguments
-                foreach ($value as $k => $v)
-                    $args['/[{]{2}[ \t]*'. $key .'.'. $k .'[ \t]*[}]{2}/i'] = $v;
+        } else {
 
-
-                // On créer un tableau à scruter
-                $args_array['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
-            }
-            else
-                $args['/[{]{2}[ \t]*'.$key.'[ \t]*[}]{2}/i'] = $value;
-
+            $args['/[{]{2}'.sanitize_tag($key).'[}]{2}/i'] = $value;
         }
-
     }
 
-    // Regex pour supprimer tous les brackets sans valeur definit
+    // on filtre les valeurs ( null, '', false ) des arguments
+    $args = array_filter($args);
+
+    // Ajour Regex pour supprimer tous les brackets sans arguments
     $args['/[{]{2}(.*?)[}]{2}/i'] = '';
 
-    //map_deep($args, )
-/*
-    preg_match_all( '/[{]{2}(.*?)[}]{2}/si', $string, $matches );
+    $string = apply_filters('pre_mp_brackets', $string, $args, $args_array);
 
-    function sanitize_brackets( $args ){
+    // On scrute les boucles foreach
+    foreach ( $args_array as $key => $value) {
 
-        $args = strtolower( preg_replace('/[^a-zA-Z0-9_.]/', '', $args) );
+        preg_match_all( '/[{]{2}[#]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si', $string, $matches, PREG_SET_ORDER );
 
+        foreach ($matches as $match) {
+
+            $result = '';
+
+            foreach ($args_array[$key] as $value) {
+                $temp = preg_replace('/[{]{2}'.$key.'[}]{2}/i', $value, $match[1], -1, $count );
+                $result .= ($count == 0) ? '' : $temp;
+            }
+
+            // On remplace le contenu par le resultat du parsage de variable
+            $string = str_replace($match[0], $result, $string);
+        }
     }
 
+    // On scrute les boucles if invalid et on les supprime
+    preg_match_all( '/[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si', $string, $matches, PREG_SET_ORDER );
 
-    $matches[1] = map_deep($matches[1], 'sanitize_brackets' );
+    foreach ($matches as $match) {
 
+        if( $match[1] !== $match[3] )
+            $string = str_replace($match[0], '', $string);
 
-    $test = array_flip( array_combine($matches[0], $matches[1]) );
+        if( !array_key_exists('/[{]{2}'. $match[3] .'[}]{2}/i', $args) )
+            $string = str_replace($match[0], '', $string);
+    }
 
-    _echo($test);
-*/
-    //$test = str_replace(array_keys($args), $args, $string);
-
-    // On finit par ca
+    // On parse les variables
     $string = preg_replace(array_keys($args), $args, $string);
-    _echo($string);
 
+    return apply_filters('mp_brackets', $string);
 }
 
 
-/*
-$file_htaccess = file_get_content(INC . '/data/htaccess.data');
-
-$args = array(
-    '{{ip}}' => 'manger',
-            '{{ko}}' => 'ouf'
-    );
-
-$file_htaccess = str_replace(array_keys($args), $args, $file_htaccess);
-*/
 
 /***********************************************/
 /*                  html Minify                */

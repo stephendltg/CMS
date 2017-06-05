@@ -806,9 +806,11 @@ function get_http_header() {
     header( 'Content-Type: text/html; charset='.CHARSET );
 
     if( is_404() )
-        http_response_code(404);
+        $response = 404;
     else
-        http_response_code(200);
+        $response = 200;
+
+    http_response_code( apply_filters( 'mp_http_header', $response) );
 }
 
 
@@ -1027,7 +1029,6 @@ function init_the_blog(){
     add_option('blog', $blog);
     add_option('setting', $setting);
     add_option('plugins', $plugins);
-    add_option('customize.primary_menu', null);
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');

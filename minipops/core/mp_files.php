@@ -161,6 +161,50 @@ function rrmdir( $dir ) {
 
 
 
+/**
+* Arborescence d'un répertoire
+* @param  string    $dir     Chemin absolu du répertoire
+*/
+function scan( $dir, $infos = false ){
+
+    $files = array();
+
+    if( file_exists($dir) ){
+
+        foreach( scandir($dir) as $f ) {
+            
+            if( !$f || $f[0] == '.'  )
+                continue;
+            
+            if( is_dir($dir . '/' . $f) ) {
+
+                if( $infos )
+                    $files[$f] = scan($dir . '/' . $f, $infos );
+                else {
+                    $files[] = array(
+                        "name"  => $f,
+                        "type"  => "folder",
+                        "path"  => realpath( $dir . '/' . $f ),
+                        "items" => scan($dir . '/' . $f )
+                    );
+                }
+
+            } else {
+                
+                $files[] = ($infos) ? $f : array(
+                    "name" => $f,
+                    "type" => "file",
+                    "path" => realpath( $dir . '/' . $f ),
+                    "ext"  => pathinfo( $dir . '/' . $f , PATHINFO_EXTENSION), //PATHINFO_DIRNAME | PATHINFO_BASENAME | PATHINFO_EXTENSION | PATHINFO_FILENAME
+                    "size" => filesize($dir . '/' . $f),
+                    "time" => filemtime($dir . '/' . $f)
+                );
+            }
+        }
+    }
+    return $files;
+}
+
 
 /**
 * Parse un fichier au format yaml dans un tableau

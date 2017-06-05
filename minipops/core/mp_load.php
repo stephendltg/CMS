@@ -61,7 +61,7 @@ require( ABSPATH . INC . '/mp_network.php' );
 require( ABSPATH . INC . '/mp_files.php' );
 
 // On lance le firewall
-require( ABSPATH . INC . '/mp_firewall.php' );
+//require( ABSPATH . INC . '/mp_firewall.php' );
 
 // On vérifier que le cms est bien installer et les droits d'écriture sur les repertoires.
 cms_not_installed();
@@ -102,9 +102,9 @@ require( ABSPATH . INC . '/mp_auth.php' );
 register_shutdown_function( 'shutdown_action_hook' );
 
 // On charge les must plugins ( plugins non désactivable ).
-foreach ( glob( MU_PLUGIN_DIR .'/*.php' ) as $mu_plugin ) {
-		include_once( $mu_plugin );
-}
+foreach ( glob( MU_PLUGIN_DIR .'/*.php' ) as $mu_plugin )
+	include_once( $mu_plugin );
+
 unset( $mu_plugin );
 
 do_action( 'muplugins_loaded' );
@@ -124,7 +124,6 @@ require( ABSPATH . INC . '/vendors/SimpleImage.php' );
 require( ABSPATH . INC . '/mp_datei18n.php' );
 // On charge les fonctions gérant la traduction
 require( ABSPATH . INC . '/mp_lang.php' );
-
 
 // On charge les plugins seulement actif recuperer dans option( 'active_plugins' ) = [test, memory, ...]
 @mkdir( MP_PLUGIN_DIR , 0755 , true );
@@ -172,10 +171,6 @@ get_http_header();
 
 // on inclus les fonctions d'optimisation et des templates
 require( ABSPATH . INC . '/mp_template.php' );
-
-$file_htaccess = file_get_content(INC . '/data/htaccess.data');
-mp_brackets($file_htaccess);
-
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );

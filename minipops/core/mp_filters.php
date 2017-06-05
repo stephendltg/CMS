@@ -147,7 +147,7 @@ function do_backup_website() {
         // On check si on peut se servir de l'archive 
         if( $zip->open( $backup_dir . '/' . $backup_file . '.zip' , ZipArchive::CREATE ) === true ){
 
-            $zip->addDirectory(MP_CONTENT_DIR); 
+            $zip->addDirectory(MP_CONTENT_DIR);
             $zip->close(); 
         }
     } 
@@ -303,8 +303,11 @@ function mp_compass( $url, $dependencies ){
         // On créer le répertoire
         if( ! is_dir($css_dir) )   @mkdir($css_dir);
         // On enregistre le fichier
-        if( !file_put_content( $css_dir . $file_name . '.css', $string_css ) )
+        if( !file_put_content( $css_dir . $file_name . '.css', $string_css ) ){
+
             _doing_it_wrong( __FUNCTION__, 'Error file permission.' );
+            return;
+        }
 
         // On retourne l'url du fichier css compilé
         $url =  $css_url . $file_name . '.css';
