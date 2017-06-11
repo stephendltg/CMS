@@ -611,9 +611,6 @@ function mp_brackets( $string , $args = array() ){
     // On prépare la table des boucles ainsi que celle des variables
     foreach ($args as $key => $value) {
 
-        // On commence par décharger la clé
-        unset($args[$key]);
-
         if ( is_array( $value ) ){
 
             // On nettoie pour que seul les tableaux non multi dimenssionnel soit utilisé et filtre les valeurs ( null, '', false )
@@ -621,27 +618,31 @@ function mp_brackets( $string , $args = array() ){
 
             // On construit la table des arguments
             foreach ($value as $k => $v)
-                $args['/[{]{2}'. sanitize_tag($key) .'.'. sanitize_tag($k) .'[}]{2}/i'] = $v;
+                $vars['/[{]{2}'. $key .'.'. $k .'[}]{2}/i'] = $v;
 
             // On créer un tableau à scruter
-            $args_array[sanitize_tag($key)] = $value;
+            $args[$key] = $value;
 
         } else {
-
-            $args['/[{]{2}'.sanitize_tag($key).'[}]{2}/i'] = $value;
+            $vars['/[{]{2}'. $key .'[}]{2}/i'] = $value;
         }
     }
 
     // on filtre les valeurs ( null, '', false ) des arguments
+    $vars = array_filter($vars);
     $args = array_filter($args);
 
+    // Ajour Regex pour supprimer toutes les boucles
+    $vars['/[\s]*[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si'] = '';
     // Ajour Regex pour supprimer tous les brackets sans arguments
-    $args['/[{]{2}(.*?)[}]{2}/i'] = '';
+    $vars['/[{]{2}(.*?)[}]{2}/i'] = '';
+    // On nettoie les commentaires
+    $vars['!/\*[^*]*\*+([^/][^*]*\*+)*/!'] = '';
 
-    $string = apply_filters('pre_mp_brackets', $string, $args, $args_array);
+    $string = apply_filters('pre_mp_brackets', $string, $vars, $args);
 
     // On scrute les boucles foreach
-    foreach ( $args_array as $key => $value) {
+    foreach ( $args as $key => $value) {
 
         preg_match_all( '/[{]{2}[#]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si', $string, $matches, PREG_SET_ORDER );
 
@@ -649,32 +650,26 @@ function mp_brackets( $string , $args = array() ){
 
             $result = '';
 
-            foreach ($args_array[$key] as $value) {
-                $temp = preg_replace('/[{]{2}'.$key.'[}]{2}/i', $value, $match[1], -1, $count );
-                $result .= ($count == 0) ? '' : $temp;
-            }
+            if( is_array($args[$key]) ){
+
+                foreach ($args[$key] as $value) {
+                    $temp = preg_replace('/[{]{2}'.$key.'[}]{2}/i', $value, ltrim($match[1]), -1, $count );
+                    $result .= ($count == 0) ? '' : $temp;
+                }
+
+            } else {
+                $result = $match[1];
+            } 
 
             // On remplace le contenu par le resultat du parsage de variable
-            $string = str_replace($match[0], $result, $string);
+            $string = str_replace($match[0], trim($result), $string);
         }
     }
 
-    // On scrute les boucles if invalid et on les supprime
-    preg_match_all( '/[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si', $string, $matches, PREG_SET_ORDER );
-
-    foreach ($matches as $match) {
-
-        if( $match[1] !== $match[3] )
-            $string = str_replace($match[0], '', $string);
-
-        if( !array_key_exists('/[{]{2}'. $match[3] .'[}]{2}/i', $args) )
-            $string = str_replace($match[0], '', $string);
-    }
-
     // On parse les variables
-    $string = preg_replace(array_keys($args), $args, $string);
+    $string = preg_replace(array_keys($vars), $vars, $string);
 
-    return apply_filters('mp_brackets', $string);
+    return apply_filters('mp_brackets', trim($string) );
 }
 
 

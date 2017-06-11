@@ -259,430 +259,67 @@ function mp_rewrite_rules(){
     }
 
     // Si mod rewrite a déjà été testé invalide désactive le toggle de réécriture et on arrête la fonction. on passe la constante IS_REWRITE_RULES
-    if($rewrite === 'disable'){
+    if( $rewrite === 'disable' ){
         define('IS_REWRITE_RULES', false);
         return;
     }
 
-    // Si pas un serveur apache et pas de mod rewrite actif on affecte la variable stocker dans option à false
-    // if( !$is_apache || !$is_mod_rewrite )
-    //    $rewrite = false;
-
-
-    /**********************
-        Protection 
-    ***********************/
-
-    $header  = '# SECURITY:[FILES]'. PHP_EOL;
-    $header .= '# htaccess protect'. PHP_EOL;
-    $header .= '<Files .htaccess>'. PHP_EOL;
-    $header .= '    order allow,deny'. PHP_EOL;
-    $header .= '    deny from all'. PHP_EOL;
-    $header .= '</Files>'. PHP_EOL;
-    $header .= '# block listing files'. PHP_EOL;
-    $header .= 'Options All -Indexes'. PHP_EOL;
-    $header .= '# Force index.php the others are blocked' . PHP_EOL;
-    $header .= 'DirectoryIndex index.php'. PHP_EOL;
-    $header .= '# block all files begin by index' . PHP_EOL;
-    $header .= '<Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">'. PHP_EOL;
-    $header .= ' order allow,deny'. PHP_EOL;
-    $header .= ' deny from all'. PHP_EOL;
-    $header .= '</Files>'. PHP_EOL. PHP_EOL;
-
-    $header .= '# SECURITY:[SERVEUR]'. PHP_EOL;
-    $header .= '# Masquer les informations du serveur'. PHP_EOL;
-    $header .= 'ServerSignature Off'. PHP_EOL;
-    $header .= '# Activation du suivi des liens symboliques'. PHP_EOL;
-    $header .= 'Options +FollowSymLinks'. PHP_EOL . PHP_EOL;
-
-    $header .= '# SECURITY:[XSS Protection]'. PHP_EOL;
-    $header .= '# XSS Protection & iFrame Protection & Mime Security'. PHP_EOL;
-    $header .= '<IfModule mod_headers.c>'. PHP_EOL;
-    $header .= '    Header set X-XSS-Protection "1; mode=block"'. PHP_EOL;
-    $header .= '    Header always append X-Frame-Options DENY'. PHP_EOL; /* DENY, SAMEORIGIN */
-    $header .= '    Header set X-Content-Type-Options nosniff'. PHP_EOL;
-    $header .= '    Header unset X-Powered-By'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /**********************
-        Firewall 
-    ***********************/
-    $header .= '# 6G FIREWALL/BLACKLIST'. PHP_EOL;
-    $header .= '# @ https://perishablepress.com/6g/'. PHP_EOL . PHP_EOL;
-
-    /*
-        6G:[QUERY STRINGS]
-        Cette partie vérifie que l'URL demandée par le client n'a pas été faite pour profiter de failles sur votre serveur web ou votre code PHP. 
-        Si c'est le cas, il va interdire l'accès à la page grace à (RewriteRule .* - [F]), ou le [F] signifie que l'accès n'est pas autorisé.
-    */
-    $header .= '# 6G:[QUERY STRINGS]'. PHP_EOL;
-    $header .= '<IfModule mod_rewrite.c>'. PHP_EOL;
-    $header .= '    RewriteEngine On'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (eval\() [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (127\.0\.0\.1) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} ([a-z0-9]{2000}) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (javascript:)(.*)(;) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (base64_encode)(.*)(\() [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (GLOBALS|REQUEST)(=|\[|%) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (<|%3C)(.*)script(.*)(>|%3) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (\\|\.\.\.|\.\./|~|`|<|>|\|) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (boot\.ini|etc/passwd|self/environ) [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (thumbs?(_editor|open)?|tim(thumb)?)\.php [NC,OR]'. PHP_EOL;
-    $header .= '    RewriteCond %{QUERY_STRING} (\'|\")(.*)(drop|insert|md5|select|union) [NC]'. PHP_EOL;
-    $header .= '    RewriteRule .* - [F]'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /*
-        6G: [REQUEST METHOD]
-        Cette partie teste les méthodes HTTP envoyées. 
-        Les navigateurs ne prenant en charge que GET et POST, toutes les autres se retrouvent bloquées avec la même méthode que le bloc précédent.
-    */
-    $header .= '# 6G:[REQUEST METHOD]'. PHP_EOL;
-    $header .= '<IfModule mod_rewrite.c>'. PHP_EOL;
-    $header .= '    RewriteCond %{REQUEST_METHOD} ^(connect|debug|delete|move|put|trace|track) [NC]'. PHP_EOL;
-    $header .= '    RewriteRule .* - [F]'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /*
-        6G:[REFERRERS]
-        Ce bloc est là pour bloquer le trafique provenant de certains referers (c'est-à-dire les referents, les sites d'où proviennent les visiteurs).
-        Si vos êtes soumis a dû référer spam, c'est à cet endroit que vous pourrez lister les adresses de spammeur.
-    */
-    // On va cherche la liste des adresse ip à bannir
-    $bad_referrers = file_get_content_array( INC . '/data/bad-referrers.data');
-
-    if( !empty($bad_referrers) ){
-
-        $header .= '# 6G:[REFERRERS]'. PHP_EOL;
-        $header .= '<IfModule mod_rewrite.c>'. PHP_EOL;
-        $header .= '    RewriteCond %{HTTP_REFERER} ([a-z0-9]{2000}) [NC,OR]'. PHP_EOL;
-        $header .= '    RewriteCond %{HTTP_REFERER} ('. join('|', $bad_referrers) .') [NC]'. PHP_EOL;
-        $header .= '    RewriteRule .* - [F]'. PHP_EOL;
-        $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-    }
-    unset($bad_referrers);
-
-    /*
-        6G:[REQUEST STRINGS]
-        Ce bloc est là pour bloquer les appels les plus fréquents fait pas des Bots essayant de déterminer le type de site que vous possédez.
-    */
-    $header .= '# 6G:[REQUEST STRINGS]'. PHP_EOL;
-    $header .= '<IfModule mod_alias.c>'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)([a-z0-9]{2000})'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(https?|ftp|php):/'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(base64_encode)(.*)(\()'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(=\\\'|=\\%27|/\\\'/?)\.'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)/(\$(\&)?|\*|\"|\.|,|&|&amp;?)/?$'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(\{0\}|\(/\(|\.\.\.|\+\+\+|\\\"\\\")'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(~|`|<|>|:|;|,|%|\\|\s|\{|\}|\[|\]|\|)'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)/(=|\$&|_mm|cgi-|etc/passwd|muieblack)'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)(&pws=0|_vti_|\(null\)|\{\$itemURL\}|echo(.*)kae|etc/passwd|eval\(|self/environ)'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)\.(aspx?|bash|bak?|cfg|cgi|dll|exe|git|hg|ini|jsp|log|mdb|out|sql|svn|swp|tar|rar|rdf)$'. PHP_EOL;
-    $header .= '    RedirectMatch 403 (?i)/(^$|(mp-)?config|mobiquo|phpinfo|shell|sqlpatch|thumb|thumb_editor|thumbopen|timthumb|webshell)\.php'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /*
-        6G:[USER AGENTS]
-        Cette ligne bloque les bots dont le nom est dans la grande liste que vous pouvez voir.
-        Notez la présence de archive.org en tout premier. 
-        J'ai personnellement autorise ce bot, car je trouve que la présence d'une copie de son site sur la waybackmachine n'est pas un mal, au contraire.
-    */
-    // On va cherche la liste des adresse ip à bannir
-    $bad_bots = file_get_content_array( INC . '/data/bad-bots.data');
-
-    if( !empty($bad_bots) ){
-
-        $header .= '# 6G:[USER AGENTS]'. PHP_EOL;
-        $header .= '<IfModule mod_setenvif.c>'. PHP_EOL;
-        $header .= '    SetEnvIfNoCase User-Agent ([a-z0-9]{2000}) bad_bot'. PHP_EOL;
-        $header .= '    SetEnvIfNoCase User-Agent ('. join('|', $bad_bots )  .') bad_bot'. PHP_EOL;
-        $header .= '    # Apache < 2.3'. PHP_EOL;
-        $header .= '    <IfModule !mod_authz_core.c>'. PHP_EOL;
-        $header .= '        Order Allow,Deny'. PHP_EOL;
-        $header .= '        Allow from All'. PHP_EOL;
-        $header .= '        Deny from env=bad_bot'. PHP_EOL;
-        $header .= '    </IfModule>'. PHP_EOL;
-        $header .= '    # Apache >= 2.3'. PHP_EOL;
-        $header .= '    <IfModule mod_authz_core.c>'. PHP_EOL;
-        $header .= '        <RequireAll>'. PHP_EOL;
-        $header .= '            Require all Granted'. PHP_EOL;
-        $header .= '            Require not env bad_bot'. PHP_EOL;
-        $header .= '        </RequireAll>'. PHP_EOL;
-        $header .= '    </IfModule>'. PHP_EOL;
-        $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-    }
-    unset($bad_bots);
-
-    /*
-        6G:[BAD IPS]
-        Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques.
-        Si vous subissez les assauts d'un bot ou une tentative de DDOS depuis une IP, c'est à cet endroit qu'il faudra l'inserer !
-    */
-
-    // On va cherche la liste des adresse ip à bannir
-    $bad_ips = file_get_content_array( INC . '/data/bad-ips.data');
-
-    if( !empty($bad_ips) ){
-
-        $header .= '# 6G:[BAD IPS]'. PHP_EOL;
-        $header .= '<Limit GET HEAD OPTIONS POST PUT>'. PHP_EOL;
-        $header .= '    Order Allow,Deny'. PHP_EOL;
-        foreach( $bad_ips as $ip)
-            $header .= '    Deny from '. $ip . PHP_EOL;
-        $header .= '    Allow from All'. PHP_EOL;
-        $header .= '</Limit>'. PHP_EOL . PHP_EOL;
-    }
-    unset($bad_ips);
-
-
-    /**********************
-        Hotlinking
-    ***********************/
-    $header .= '# SECURITY:[hotlinking]'. PHP_EOL;
-    $header .= '# Désactiver le hotlinking de vos images'. PHP_EOL;
-    $header .= 'RewriteEngine On'. PHP_EOL;
-    $header .= 'RewriteCond %{HTTP_REFERER} !^$'. PHP_EOL;
-    $header .= 'RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?'. $_SERVER['HTTP_HOST'] .' [NC]'. PHP_EOL;
-
-    // On va cherche la liste des domain autorise à faire des liens sur les images
-    $hotlinking_whitelist = file_get_content_array( INC . '/data/hotlinking-whitelist.data');
-
-    if( !empty($hotlinking_whitelist) ){
-        foreach ($hotlinking_whitelist as $domain)
-            $header .= 'RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?'. $domain .' [NC]'. PHP_EOL;
-    }
-    unset($hotlinking_whitelist);
-
-    $header .= 'RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]'. PHP_EOL . PHP_EOL;
-
-
-    /**********************
-        Force charset
-    ***********************/
-    $header .= '# CHARSET:[Set default charset utf-8]'. PHP_EOL;
-    $header .= 'AddDefaultCharset UTF-8'. PHP_EOL . PHP_EOL;
-
-    /**********************
-        Addtype
-    ***********************/
-    $header .= '# TYPE:[Format file]'. PHP_EOL;
-    $header .= 'AddType audio/ogg  .ogg'. PHP_EOL;
-    $header .= 'AddType audio/mp3  .mp3'. PHP_EOL;
-    $header .= 'AddEncoding gzip svgz'. PHP_EOL;
-    $header .= 'AddType image/svg+xml svg svgz'. PHP_EOL . PHP_EOL;
-
-    /**********************
-        Mise en cache
-    ***********************/
-    $header .= '# CACHE:[Expires headers (for better cache control)]'. PHP_EOL;
-    $header .= '<IfModule mod_expires.c>'. PHP_EOL;
-    $header .= '    ExpiresActive on'. PHP_EOL;
-
-    $header .= '    # Perhaps better to whitelist expires rules? Perhaps.'. PHP_EOL;
-    $header .= '    ExpiresDefault "access plus 1 month "'. PHP_EOL;
-
-    $header .= '    # cache.appcache needs re-requests in FF 3.6 (thanks Remy ~Introducing HTML5)'. PHP_EOL;
-    $header .= '    ExpiresByType text/cache-manifest "access plus 0 seconds "'. PHP_EOL;
-
-    $header .= '    # Your document html'. PHP_EOL;
-    $header .= '    ExpiresByType text/html  "access plus 0 seconds "'. PHP_EOL;
-
-    $header .= '    # Data'. PHP_EOL;
-    $header .= '    ExpiresByType text/xml  "access plus 0 seconds"'. PHP_EOL;
-    $header .= '    ExpiresByType application/xml  "access plus 0 seconds"'. PHP_EOL;
-    $header .= '    ExpiresByType application/json  "access plus 0 seconds"'. PHP_EOL;
-
-    $header .= '    # Feed'. PHP_EOL;
-    $header .= '    ExpiresByType application/rss+xml "access plus 1 hour"'. PHP_EOL;
-    $header .= '    ExpiresByType application/atom+xml "access plus 1 hour"'. PHP_EOL;
-
-    $header .= '    # Favicon (cannot be renamed)'. PHP_EOL;
-    $header .= '    ExpiresByType image/x-icon "access plus 1 week"'. PHP_EOL;
-
-    $header .= '    # Media: images, video, audio'. PHP_EOL;
-    $header .= '    ExpiresByType image/gif "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType image/png "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType image/jpg "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType image/jpeg "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType video/ogg "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType audio/ogg "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType video/mp4 "access plus 1 month "'. PHP_EOL;
-    $header .= '    ExpiresByType video/webm "access plus 1 month "'. PHP_EOL;
-
-    $header .= '    # HTC files (css3pie)'. PHP_EOL;
-    $header .= '    ExpiresByType text/x-component "access plus 1 month "'. PHP_EOL;
-
-    $header .= '    # Webfonts'. PHP_EOL;
-    $header .= '    ExpiresByType application/x-font-ttf "access plus 1 month"'. PHP_EOL;
-    $header .= '    ExpiresByType font/opentype "access plus 1 month"'. PHP_EOL;
-    $header .= '    ExpiresByType application/x-font-woff "access plus 1 month"'. PHP_EOL;
-    $header .= '    ExpiresByType application/x-font-woff2 "access plus 1 month"'. PHP_EOL;
-    $header .= '    ExpiresByType image/svg+xml "access plus 1 month"'. PHP_EOL;
-    $header .= '    ExpiresByType application/vnd.ms-fontobject "access plus 1 month"'. PHP_EOL;
-
-    $header .= '    # CSS and JavaScript'. PHP_EOL;
-    $header .= '    ExpiresByType text/css "access plus 1 year "'. PHP_EOL;
-    $header .= '    ExpiresByType application/javascript "access plus 1 year "'. PHP_EOL;
-
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-    $header .= '<IfModule mod_headers.c>'. PHP_EOL;
-    $header .= '    <filesMatch "\.(ico|jpe?g|png|gif|swf)$">'. PHP_EOL;
-    $header .= '        Header set Cache-Control "public"'. PHP_EOL;
-    $header .= '    </filesMatch>'. PHP_EOL;
-    $header .= '    <filesMatch "\.(css)$">'. PHP_EOL;
-    $header .= '        Header set Cache-Control "public"'. PHP_EOL;
-    $header .= '    </filesMatch>'. PHP_EOL;
-    $header .= '    <filesMatch "\.(js)$">'. PHP_EOL;
-    $header .= '        Header set Cache-Control "private"'. PHP_EOL;
-    $header .= '    </filesMatch>'. PHP_EOL;
-    $header .= '    <filesMatch "\.(x?html?|php)$">'. PHP_EOL;
-    $header .= '        Header set Cache-Control "private, must-revalidate"'. PHP_EOL;
-    $header .= '    </filesMatch>'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /**********************
-        Compression des fichiers
-    ***********************/
-    $header .= '# COMPRESS:[Compression static file]'. PHP_EOL;
-    $header .= '<IfModule mod_deflate.c>'. PHP_EOL;
-    // $header .= '    DeflateCompressionLevel 9'. PHP_EOL . PHP_EOL; // Ne fonctionne pas sur macos
-    $header .= '    # On force deflate sur certains mauvais headers'. PHP_EOL;
-    $header .= '    # # developer.yahoo.com/blogs/ydn/posts/2010/12/pushing-beyond-gzipping/'. PHP_EOL;
-    $header .= '    <IfModule mod_setenvif.c>'. PHP_EOL;
-    $header .= '        <IfModule mod_headers.c>'. PHP_EOL;
-    $header .= '            SetEnvIfNoCase ^(Accept-EncodXng|X-cept-Encoding|X{15}|~{15}|-{15})$ ^((gzip|deflate)\s*,?\s*)+|[X~-]{4,13}$ HAVE_Accept-Encoding'. PHP_EOL;
-    $header .= '            RequestHeader append Accept-Encoding "gzip,deflate" env=HAVE_Accept-Encoding'. PHP_EOL;
-    $header .= '        </IfModule>'. PHP_EOL;
-    $header .= '    </IfModule>'. PHP_EOL . PHP_EOL;
-
-    $header .= '    # On supprime les Etags'. PHP_EOL;
-    $header .= '    <IfModule mod_headers.c>'. PHP_EOL;
-    $header .= '        Header unset ETag'. PHP_EOL;
-    $header .= '    </IfModule>'. PHP_EOL;
-    $header .= '    FileETag None'. PHP_EOL . PHP_EOL;
-
-    $header .= '    AddOutputFilterByType DEFLATE application/atom_xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/rss+xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/x-httpd-php'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/x-httpd-fastphp'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/x-httpd-eruby'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/vnd.google-earth.kml+xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/javascript'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/x-javascript'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/xhtml+xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE application/json'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE text/html'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE text/xml'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE text/css'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE text/plain'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE image/svg+xml svg svgz'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE text/javascript'. PHP_EOL;
-    $header .= '    AddOutputFilterByType DEFLATE font/opentype'. PHP_EOL . PHP_EOL;
-
-    $header .= '    # On s\'assure que certains types de fichiers ne sont pas pris en compte'. PHP_EOL;
-    $header .= '    SetEnvIfNoCase Request_URI \.(?:exe|t?gz|zip|bz2|sit|rar|gif|jpe?g|svg|png|avi|mpg|swf|flv|mov|mp3|ogv|mp4|pdf|webm|ogg|rm)$ no-gzip dont-vary'. PHP_EOL . PHP_EOL;
-
-    $header .= '    BrowserMatch ^Mozilla/4 gzip-only-text/html'. PHP_EOL;
-    $header .= '    BrowserMatch ^Mozilla/4\.0[678] no-gzip'. PHP_EOL . PHP_EOL;
-
-    $header .= '    # A décommenter car empêche flowplayer de se charger sur Internet Explorer'. PHP_EOL;
-    $header .= '    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html'. PHP_EOL . PHP_EOL;
-
-    $header .= '    # On s\'assure que les proxies envoient le bon contenu'. PHP_EOL;
-    $header .= '    Header append Vary User-Agent env=!dont-vary'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-    /**********************
-        Gestion si fichiers sur serveur differents tel que police et css
-    ***********************/
-    $header .= '<IfModule mod_headers.c>'. PHP_EOL;
-    $header .= '<FilesMatch "\.(ttf|ttc|otf|eot|woff|woff2|font.css|css)$">'. PHP_EOL;
-    $header .= 'Header set Access-Control-Allow-Origin "*"'. PHP_EOL;
-    $header .= '</FilesMatch>'. PHP_EOL;
-    $header .= '</IfModule>'. PHP_EOL . PHP_EOL;
-
-
-    // On affecte le header au règle apache pour le domaine
-    $rules   = apply_filters('mp_apache_rules_header', $header);
-
-    // On modifie le fichier htaccess si le mode rewrite n'est pas active et que nous sommes sur serveur apache
-    if ( $rewrite === true ) {
-
-        // On affecte la variable qui sera stocker dans la table option
-        define('IS_REWRITE_RULES', !$is_apache ? false : true );
-
-        // On definit le repertoire root
-        $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
-        if ( empty( $root ) ) $root = '/';
-
-
-        /**********************
-            REWRITE RULE
-        ***********************/
-        $rules .= '# MINIPOPS:[Rewrite url]' . PHP_EOL;
-        $rules .= '<IfModule mod_rewrite.c>'. PHP_EOL;
-        $rules .= ' RewriteEngine on'. PHP_EOL . PHP_EOL;
-        $rules .= ' # if you homepage is '. MP_HOME . PHP_EOL;
-        $rules .= ' # RewriteBase '. $root . PHP_EOL. PHP_EOL;
-
-        // On récupère les extensions à bloquer
-        $bad_exts = file_get_content_array( INC . '/data/bad-exts.data');
-
-        if( 0 === strpos( MP_CONTENT_DIR, ABSPATH) ){
-
-            $rules .= ' # SECURITY:[FILES]'. PHP_EOL;
-            if( !empty($bad_exts) )
-                $rules .= 'RewriteRule ^'. str_replace( ABSPATH , '' , MP_CONTENT_DIR ) .'/(.*)\.('. join('|', $bad_exts) .')$ error [R=301,L]'. PHP_EOL . PHP_EOL;
-
-        } else {
-            
-            // Règles apache si MP_CONTENT_DIR est en dehors du répertoire ABSPATH
-            $rules_content_dir  = $header;
-            $rules_content_dir .= '# SECURITY:[SERVEUR]'. PHP_EOL;
-            $rules_content_dir .= '# disable ExecCGI'. PHP_EOL;
-            $rules_content_dir .= 'OPTIONS -ExecCGI  -Indexes'. PHP_EOL . PHP_EOL;
-
-            if( !empty($bad_exts) ){
-                $rules_content_dir .= '# SECURITY:[FILES]'. PHP_EOL;
-                $rules_content_dir .= '<Files ~ "\.('. join('|', $bad_exts) .')$">'. PHP_EOL;
-                $rules_content_dir .= ' Deny from all'. PHP_EOL;
-                $rules_content_dir .= '</Files>'. PHP_EOL;
-            }
-
-            // On tente de proteger les fichiers
-            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content_dir);
-        }
-
-        unset($bad_exts);
-
-        // Suite du bloc principale
-        $rules .= ' # SECURITY:[FILES-CORE]'. PHP_EOL;
-        $rules .= ' RewriteRule ^core/(.*) error [R=301,L]'. PHP_EOL;
-        //$rules .= "RewriteCond %{REQUEST_FILENAME} !-f\n\t";
-        //$rules .= "RewriteCond %{REQUEST_FILENAME} !-d\n\t";
-        //$rules .= "RewriteRule ^panel/(.*) panel/index.php [L]\n\n\t";
-        $rules .= ' RewriteCond %{REQUEST_FILENAME} !-f'. PHP_EOL;
-        $rules .= ' RewriteCond %{REQUEST_FILENAME} !-d'. PHP_EOL;
-        $rules .= ' RewriteRule ^(.*) index.php [L]'. PHP_EOL . PHP_EOL;
-        $rules .= ' # Update code bellow for SEO improvements'. PHP_EOL;
-        $rules .= ' # Redirect 301 /index ' . MP_HOME . '/' . PHP_EOL. PHP_EOL;
-        $rules .= '</IfModule>';
-
-
-
-    } else {
-
+    // IS_REWRITE_RULES
+    if ( $rewrite === true )
+        define('IS_REWRITE_RULES', $is_mod_rewrite);
+    else{
         define('IS_REWRITE_RULES', false);
     }
 
-    if( !$is_apache )
-        $rules = '';
+    /* SERVEUR APACHE */
+    if( $is_apache ){
 
-    do_action('mp_before_write_rules');
+        // Template htaccess
+        $htaccess = file_get_content( INC . '/data/htaccess.data');
+
+        // Repertoire Root 
+        $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
+        if ( empty( $root ) ) $root = '/';
+
+        // On verifie si MP_CONTENT_DIR est dans le meme repertoire que minipops
+        $ContentDir = '';
+        if( 0 === strpos( MP_CONTENT_DIR, ABSPATH) ){
+
+            $ContentDir = str_replace( ABSPATH , '' , MP_CONTENT_DIR );
+        }
+        else{
+            $rules_content_dir  = '# SECURITY:[SERVEUR]'. PHP_EOL;
+            $rules_content_dir .= '# disable ExecCGI'. PHP_EOL;
+            $rules_content_dir .= 'OPTIONS -ExecCGI  -Indexes'. PHP_EOL . PHP_EOL;
+            $rules_content_dir .= '# SECURITY:[FILES]'. PHP_EOL;
+            $rules_content_dir .= '<Files ~ "\.('. join('|', file_get_content_array( INC . '/data/bad-exts.data') ) .')$">'. PHP_EOL;
+            $rules_content_dir .= ' Deny from all'. PHP_EOL;
+            $rules_content_dir .= '</Files>'. PHP_EOL;
+            @file_marker_contents( MP_CONTENT_DIR . '/.htaccess', $rules_content_dir);
+        }
+
+        // Aurguments pour parser template
+        $args = array(
+            'bad_referrers'         => join('|', file_get_content_array( INC . '/data/bad-referrers.data') ),
+            'bad_bots'              => join('|', file_get_content_array( INC . '/data/bad-bots.data') ),
+            'bad_ips'               => file_get_content_array( INC . '/data/bad-ips.data'),
+            'ServerHttpHost'        => $_SERVER['HTTP_HOST'],
+            'HotlinkingWhitelist'   => file_get_content_array( INC . '/data/hotlinking-whitelist.data'),
+            'home'                  => MP_HOME,
+            'root'                  => $root,
+            'ContentDir'            => $ContentDir,
+            'bad_exts'              => join('|', file_get_content_array( INC . '/data/bad-exts.data') ),
+            'is_rewrite'            => IS_REWRITE_RULES
+            );
+
+        $htaccess = mp_brackets( $htaccess, $args);
+
+    } else {
+        $htaccess = '';
+    }
 
     // On tent d'écrire les règles principale 
-    if( !file_marker_contents(ABSPATH . '.htaccess', $rules) )
+    if( !file_marker_contents(ABSPATH . '.htaccess', $htaccess) )
          _doing_it_wrong( __FUNCTION__, 'Error file permission .htaccess.' );
 
     if( file_exists( ABSPATH . 'php.ini' ) )
@@ -690,8 +327,6 @@ function mp_rewrite_rules(){
     
     // On stock la valeur de réécriture dans option
     update_option('setting.urlrewrite', IS_REWRITE_RULES ? 'enable' : 'disable' );
-
-    do_action('mp_after_write_rules');
 }
 
 
