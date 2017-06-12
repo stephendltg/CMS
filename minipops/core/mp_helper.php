@@ -600,7 +600,14 @@ function mp_easy_minify( $str, $comments = true ){
 /***********************************************/
 /*                  brackets                   */
 /***********************************************/
-
+/*
+    var :           {{ma_variable}}
+    commentaire:    {{! mon  commentaire }}
+    boucle if :     {{#test}} j'aime la soupe {{/test}}
+    boucle for :    {{#test}} j'aime la soupe à la {{.}} {{/test}} itération automatique
+    test si variable n'existe pas : {{^test}} j'aime la soupe {{/test}}
+    partial:        {{>ma_variable}} non intégrer pour le moment
+*/
 function mp_brackets( $string , $args = array() ){
 
     $args = parse_args( $args );
@@ -632,17 +639,12 @@ function mp_brackets( $string , $args = array() ){
     $vars = array_filter($vars);
     $args = array_filter($args);
 
-    // Ajour Regex pour supprimer toutes les boucles
-    $vars['/[\s]*[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si'] = '';
-    // Ajour Regex pour supprimer tous les brackets sans arguments
-    $vars['/[{]{2}(.*?)[}]{2}/i'] = '';
-    // On nettoie les commentaires
-    $vars['!/\*[^*]*\*+([^/][^*]*\*+)*/!'] = '';
-
     $string = apply_filters('pre_mp_brackets', $string, $vars, $args);
 
     // On scrute les boucles foreach
     foreach ( $args as $key => $value) {
+
+        $vars['/[\s]*[{]{2}[\^]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si'] = ''; 
 
         preg_match_all( '/[{]{2}[#]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si', $string, $matches, PREG_SET_ORDER );
 
@@ -653,7 +655,7 @@ function mp_brackets( $string , $args = array() ){
             if( is_array($args[$key]) ){
 
                 foreach ($args[$key] as $value) {
-                    $temp = preg_replace('/[{]{2}'.$key.'[}]{2}/i', $value, ltrim($match[1]), -1, $count );
+                    $temp = preg_replace('/[{]{2}[.][}]{2}/i', $value, ltrim($match[1]), -1, $count );
                     $result .= ($count == 0) ? '' : $temp;
                 }
 
@@ -665,6 +667,13 @@ function mp_brackets( $string , $args = array() ){
             $string = str_replace($match[0], trim($result), $string);
         }
     }
+
+    // On nettoie les commentaires
+    $vars['/[{]{2}!([^{]*)[}]{2}/'] = '';
+    // Ajour Regex pour supprimer toutes les boucles non utilisé
+    $vars['/[\s]*[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si'] = '';
+    // Ajour Regex pour supprimer tous les brackets sans arguments
+    $vars['/[{]{2}[\w. \/^]*[}]{2}/'] = '';
 
     // On parse les variables
     $string = preg_replace(array_keys($vars), $vars, $string);
