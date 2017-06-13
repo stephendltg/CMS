@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <rss version="2.0"
+    xmlns:content="http://purl.org/rss/1.0/modules/content/"
+    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
+    xmlns:dc="http://purl.org/dc/elements/1.1/"
+    xmlns:atom="http://www.w3.org/2005/Atom"
+    xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+    xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
+    >
+    <channel>
+        <title>{{blog.title}}</title>
+        <atom:link href="{{feed.url}}" rel="self" type="application/rss+xml" />
+        <link>{{blog.home}}</link>
+        <description>{{blog.description}}</description>
+        <lastBuildDate>{{now}}</lastBuildDate>
+        <language>{{blog.lang}}</language>
+        <sy:updatePeriod>hourly</sy:updatePeriod>
+        <sy:updateFrequency>1</sy:updateFrequency>
+        {{#logo}}
+        <image>
+            <url>{{logo}}</url>
+            <title>{{blog.title}}</title>
+            <link>{{blog.home}}</link>
+            <width>32</width>
+            <height>32</height>
+        </image>
+        {{/logo}}
+        {{#pages}}
+        <item>
+            <title>{{title.{{.}}}}</title>
+            <link>{{url.{{.}}}}</link>
+            <pubDate>{{date.{{.}}}}</pubDate>
+            {{#author.{{.}}}}
+            <dc:creator><![CDATA[{{author.{{.}}}}]]></dc:creator>
+            {{/author.{{.}}}}
+            <guid isPermaLink="false">{{url.{{.}}}}</guid>
+            <description><![CDATA[{{#thumbnail.{{.}}}}<div><img src="{{thumbnail.{{.}}}}"/></div>{{/thumbnail.{{.}}}}<p>{{excerpt.{{.}}}}</p>]]></description>
+        </item>
+        {{/pages}}
+    </channel>
+</rss>

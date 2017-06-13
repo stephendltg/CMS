@@ -327,8 +327,7 @@ function get_parent_page( $slug = '' ) {
     unset($slug[size($slug)-1]);
     $slug = join('/', $slug);
 
-    return is_page($slug);
-
+    return $slug;
 }
 
 

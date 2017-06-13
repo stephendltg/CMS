@@ -290,7 +290,7 @@ function mp_rewrite_rules(){
     } else {
 
         // Template htaccess
-        $htaccess = file_get_content( INC . '/data/htaccess.data');
+        $htaccess = file_get_content( realpath(ABSPATH . INC . '/data/htaccess.data') );
 
         // Repertoire Root 
         $root =  str_replace( 'http://' . $_SERVER['HTTP_HOST'] , "" , guess_url() ) ;
@@ -347,20 +347,21 @@ function mp_rewrite_rules(){
  *
  */
 function cms_maintenance( $args = array() ) {
-    
-    header( 'Content-Type: text/html; charset=utf-8' );
-    http_response_code($http_response_code);
- 	header( 'Retry-After: 600' );
 
     $args = parse_args( $args, array( 
         'message'  => 'Service Unavailable !',
         'subtitle' => 'Minipops',
         'http_response_code' => 503,
-        'template' => INC . '/data/maintenance.html') 
+        'template' => ABSPATH . INC . '/data/maintenance.html') 
     );
+    
+    header( 'Content-Type: text/html; charset=utf-8' );
+    http_response_code($args['http_response_code']);
+ 	header( 'Retry-After: 600' );
 
-    $template = @file_get_contents($args['template']);
+    $template = @file_get_contents( realpath($args['template']) );
     unset($args['template']);
+    @ini_set( 'display_errors', 0 );
     die( mp_brackets( $template, $args)?: $message );
 }
 
@@ -601,6 +602,7 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
     $p_args   = $args;
     $args     = parse_args( $args );
     $partials = array_filter( parse_args( $partials ) );
+    $vars     = array();
 
     // init table des boucles
     $args_array = array();
@@ -614,8 +616,10 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
             $value = array_filter( array_map(function($value){return !is_array($value)?$value:null;}, $value ) );
 
             // On construit la table des arguments
-            foreach ($value as $k => $v)
+            foreach ($value as $k => $v){
                 $vars['/[{]{2}'. $key .'.'. $k .'[}]{2}/i'] = $v;
+                $args[$key.'.'.$k] = $v;
+            }
 
             // On créer un tableau à scruter
             $args[$key] = $value;

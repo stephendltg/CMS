@@ -166,14 +166,14 @@
 
     # SECURITY:[hotlinking]
     {{! Disable hotlinking of images }}
-    RewriteEngine On
-    RewriteCond %{HTTP_REFERER} !^$
-    RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{ServerHttpHost}}[NC]
+    # RewriteEngine On
+    # RewriteCond %{HTTP_REFERER} !^$
+    # RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{ServerHttpHost}}[NC]
     {{#HotlinkingWhitelist}}
-    RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{.}}[NC]
+    # RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{.}}[NC]
     {{/HotlinkingWhitelist}}
-    RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
-
+    # RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
+    
 
     # CHARSET:[Set default charset utf-8]
     AddDefaultCharset UTF-8

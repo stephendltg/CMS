@@ -46,13 +46,10 @@ function mp_load_default_style(){
  * Création d'un extrait si ce dernier n'existe pas dans la page
  * @return
  */
-add_filter('the_page_excerpt', function($value){ 
-
-    if( strlen($value) === 0 )
-        return mp_easy_minify( excerpt( get_the_page('content'), 140, 'words' ), false );
-    return $value; 
-} );
-
+add_filter('default_page_excerpt', 'mp_default_the_page_excerpt', 10, 3);
+function mp_default_the_page_excerpt($value, $field, $slug){ 
+    return mp_easy_minify( excerpt( get_the_page('content', $slug), 140, 'words' ), false );
+}
 
 /***********************************************/
 /*        Filter pour liens tag                */
@@ -492,16 +489,15 @@ function mp_doing_sitemap(){
     header( 'Content-Type: text/xml; charset='.CHARSET );
     header("X-Robots-Tag: noindex", true);
 
-    $sitemap    = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
-    $sitemap   .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
-    $sitemap   .= "\t<url>\n\t\t<loc>".MP_HOME."</loc>\n\t\t<priority>0.9</priority>\n\t</url>\n";
-    $pages      = apply_filters('sitemap_pages', get_all_page() );
-    foreach( $pages as $url )
-        $sitemap .= "\t<url>\n\t\t<loc>".get_permalink($url)."</loc>\n\t</url>\n";
-    $sitemap   .= '</urlset>';
+    $pages = apply_filters('sitemap_pages', get_all_page() );
 
-    echo apply_filters( 'the_sitemap', $sitemap );
-    exit();
+    $args = array(
+        'home'  => MP_HOME,
+        'pages' => map_deep( $pages, function($value){ return get_permalink($value);} )
+        );
+
+    $template = file_get_content(ABSPATH . INC .'/data/sitemap.xml');
+    die( apply_filters( 'the_sitemap', mp_brackets( $template, $args ) ) );
 }
 
 
@@ -513,53 +509,39 @@ function mp_doing_sitemap(){
 function mp_doing_feed(){
 
     // on déclarerle bon header
-    header( 'Content-Type: text/xml; charset='.CHARSET );
+    header('Cache-Control: must-revalidate, pre-check=0, post-check=0, max-age=0');
+    header('Content-Type: application/rss+xml; charset=utf-8');
 
     // Boucle pour flux rss
-    the_loop('max=5&order=desc', 'my_feed'); 
+    $pages = the_loop('max=5&order=desc', 'my_feed');
 
-    // Déclaration du document
-    echo '<?xml version="1.0" encoding="UTF-8" ?>';
-?>
-    
-    <rss version="2.0"
-    xmlns:content="http://purl.org/rss/1.0/modules/content/"
-    xmlns:wfw="http://wellformedweb.org/CommentAPI/"
-    xmlns:dc="http://purl.org/dc/elements/1.1/"
-    xmlns:atom="http://www.w3.org/2005/Atom"
-    xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
-    xmlns:slash="http://purl.org/rss/1.0/modules/slash/"
-    >
-    <channel>
-        <title><?php the_blog('title') ?></title>
-        <atom:link href="<?php echo get_permalink('rss','feed') ?>" rel="self" type="application/rss+xml" />
-        <link><?php the_blog('home') ?></link>
-        <description><?php the_blog('description') ?></description>
-        <lastBuildDate><?php echo _date('D, d M y H:i:s O') ?></lastBuildDate>
-        <language><?php the_blog('lang') ?></language>
-        <sy:updatePeriod>hourly</sy:updatePeriod>
-        <sy:updateFrequency>1</sy:updateFrequency>
-<?php while( have_pages('my_feed') ):?>
-        <item>
-            <title><?php the_page('title') ?></title>
-            <link><?php the_page('url') ?></link>
-            <pubDate><?php the_date('D, d M y H:i:s O') ?></pubDate>
-            <dc:creator><?php the_page('author','<![CDATA[', ']]>') ?></dc:creator>
-<?php 
-if( strlen(get_the_page('tag') ) === 0 ):
-else :
-    foreach ( explode(',',get_the_page('tag') ) as $category ):
-?>
-            <category><![CDATA[<?php echo $category ?>]]></category>
-<?php endforeach; endif;?>
-            <guid isPermaLink="false"><?php the_page('url') ?></guid>
-            <description><![CDATA[<?php the_thumbnail()?><p><?php the_page('excerpt')?></p>]]></description>
-        </item>
-<?php endwhile; ?>
-    </channel>
-</rss>
+    $title     = map_deep($pages, function($value){ return get_the_page('title',$value);} );
+    $url       = map_deep($pages, function($value){ return get_the_page('url',$value);} );
+    $author    = map_deep($pages, function($value){ return get_the_page('author',$value);} );
+    $date      = map_deep($pages, function($value){ return get_the_date('D, d M y H:i:s O',$value);} );
+    $excerpt   = map_deep($pages, function($value){ return get_the_page('excerpt',$value);} );
+    $thumbnail = map_deep($pages, function($value){ return get_the_image('size=medium&file='.get_the_page('thumbnail',$value), 'uri'); } );
 
-<?php
+    // On enlève les slash des slugs pour brackets
+    $pages = map_deep($pages, function($value){ return str_replace('/', '_', $value); } );
 
-    exit();
+    $args = array(
+        'blog.title' => get_the_blog('title'),
+        'blog.home'  => get_the_blog('home'),
+        'blog.description' => get_the_blog('description'),
+        'blog.lang'  => get_the_blog('lang'),
+        'now'        => _date('D, d M y H:i:s O'),
+        'feed.url'   => get_permalink('rss','feed'),
+        'pages'      => $pages,
+        'title'      => array_combine($pages, $title),
+        'url'        => array_combine($pages, $url),
+        'author'     => array_combine($pages, $author),
+        'date'       => array_combine($pages, $date),
+        'excerpt'    => array_combine($pages, $excerpt),
+        'thumbnail'  => array_combine($pages, $thumbnail),
+        'logo'       => get_the_image('name=logo&orderby=type&max=1&order=desc', 'uri')
+        );
+
+    $template = file_get_content(ABSPATH . INC .'/data/feed.xml');
+    die( mp_brackets( $template, $args ) );
 }

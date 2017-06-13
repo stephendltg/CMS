@@ -1,0 +1,7 @@
+wikio\..*(/)?.*$
+netvibes\..*(/)?.*$
+google\.com/reader(/)?.*$
+feedburner\.com/.*$ 
+feeds2\.feedburner\.com/Websourcingfr-LeBlog$
+feeds2\.feedburner\.com/websourcingfr/comments$
+images\.google\..*(/)?.*$ 

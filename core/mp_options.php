@@ -16,7 +16,6 @@
 mp_cache_data('mp_options', new OPTIONS() );
 
 
-
 /**
  * Récuperer un champs de configuration du site
  * @return string valeur du champ

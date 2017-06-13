@@ -100,7 +100,6 @@ function the_loop( $args = array(), $pattern = null ){
         }
     }
 
-
     /* Boucle principal de recherche */
     foreach ($where as $page => $key){
 
@@ -125,7 +124,6 @@ function the_loop( $args = array(), $pattern = null ){
             else                             $where[$page] = $order_by;
         }
     }
-
   
     /* On filtre par "order" uniquement */
     if( is_same($order, 'ASC' ) ) asort($where);
