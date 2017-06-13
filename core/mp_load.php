@@ -36,7 +36,7 @@ require( ABSPATH . INC . '/mp_load_functions.php' );
 // On inclus les fichier pour l'initialisation du CMS.
 require( ABSPATH . INC . '/mp_default_constants.php' );
 
-// On initialise les constantes: DEBUG, MP_CONTENT_DIR et DATABASE_DIR.
+// On initialise les constantes
 mp_init_constants();
 
 // On vérifie la version de PHP.
@@ -174,3 +174,5 @@ require( ABSPATH . INC . '/mp_template.php' );
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );
+
+die( mp_brackets('{{>header}}', 'test=bonjour', 'header={{test}}') );

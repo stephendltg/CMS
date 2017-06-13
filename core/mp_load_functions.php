@@ -88,12 +88,57 @@ if (!function_exists('http_response_code')) {
 
 
 /**
+* PArse arguments
+* @param $array
+*/
+function parse_args( $args, $defaults = '' ) {
+
+    if ( is_object( $args ) )
+        $r = get_object_vars( $args );
+    elseif ( is_array( $args ) )
+        $r =& $args;
+    else{
+        parse_str( $args, $r );
+        if ( get_magic_quotes_gpc() )
+            $r = map_deep( $r, 'stripslashes_str' );
+    }
+
+    if ( is_array( $defaults ) )
+        return array_merge( $defaults, $r );
+    return $r;
+}
+
+
+/**
+* Applique une fonction callback de façon recursive
+* @param $array
+*/
+function map_deep( $value, $callback ) {
+
+    if ( is_array( $value ) ) {
+        foreach ( $value as $index => $item ) {
+            $value[ $index ] = map_deep( $item, $callback );
+        }
+    } elseif ( is_object( $value ) ) {
+        $object_vars = get_object_vars( $value );
+        foreach ( $object_vars as $property_name => $property_value ) {
+            $value->$property_name = map_deep( $property_value, $callback );
+        }
+    } else {
+        $value = call_user_func( $callback, $value );
+    }
+
+    return $value;
+}
+
+
+/**
  * On vérifie la version de php utilisé si non compatible on fait un die
  */
 function mp_check_php_versions() {
 
     if ( version_compare( phpversion() , "5.2.0", "<" ) )
-        cms_maintenance( '<p>Server PHP version ' . phpversion() . ' .</p><p>this cms need PHP version 5.2 .</p>' );
+        cms_maintenance( 'message=<p>Server PHP version ' . phpversion() . ' .</p><p>this cms need PHP version 5.2 .</p>' );
 }
 
 
@@ -194,15 +239,15 @@ function cms_not_installed() {
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
     if ( !is_writable( ABSPATH ) ) 
-        cms_maintenance( 'Error directory permissions !' );
+        cms_maintenance( 'message=Error directory permissions !' );
 
     @mkdir( MP_CONTENT_DIR , 0755 , true );
     if ( !is_writable( MP_CONTENT_DIR ) ) 
-        cms_maintenance( 'Error directory permissions : '.  MP_CONTENT_DIR .' !' );
+        cms_maintenance( 'message=Error directory permissions : '.  MP_CONTENT_DIR .' !' );
 
     @mkdir( MP_PAGES_DIR , 0755 , true );
     if ( !is_writable( MP_PAGES_DIR ) ) 
-        cms_maintenance( 'Error directory permissions : '. MP_PAGES_DIR .' !' );
+        cms_maintenance( 'message=Error directory permissions : '. MP_PAGES_DIR .' !' );
 
     @mkdir( MP_THEMES_DIR , 0755 , true );
 }
@@ -238,7 +283,11 @@ function mp_rewrite_rules(){
     }
 
     /* SERVEUR APACHE */
-    if( $is_apache ){
+    if( !$is_apache ){
+
+        $htaccess = '';
+
+    } else {
 
         // Template htaccess
         $htaccess = file_get_content( INC . '/data/htaccess.data');
@@ -279,9 +328,6 @@ function mp_rewrite_rules(){
             );
 
         $htaccess = mp_brackets( $htaccess, $args);
-
-    } else {
-        $htaccess = '';
     }
 
     // On tent d'écrire les règles principale 
@@ -300,72 +346,22 @@ function mp_rewrite_rules(){
  * Mise en maintenance de CMS
  *
  */
-function cms_maintenance( $message = 'Service Unavailable !' , $subtitle='Service Unavailable' , $http_response_code = 503 ) {
-
-    //ini_set( 'display_errors', 0 );
+function cms_maintenance( $args = array() ) {
+    
     header( 'Content-Type: text/html; charset=utf-8' );
     http_response_code($http_response_code);
  	header( 'Retry-After: 600' );
-?>
-	<!DOCTYPE html>
-	<html>
-	<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $http_response_code ?></title>
-    <style>
-        body {
-            background-color: #1b8caf;
-            font-family: Helvetica, Arial, sans-serif;
-        }
-        h1, div {
-            color: #fff;
-            margin: auto;
-            max-width: 400px;
-            text-align: center;
-        }
-        h1 {
-            padding-top: 15%;
-            padding-bottom: 40px;
-            text-transform: uppercase;
-        }
-        h2 {
-            font-size: 1.2em;
-        }
-        hr {
-            border: 1px solid white;
-            width : 90%;
-        }
-        ul {
-            list-style: none;
-        }
-        li {
-            padding: 5px;
-            text-align: left;
-        }
-        p {
-            padding: 5px;
-        }
-        div {
-            background-color: #242424;
-            border-radius: 5px;
-            padding: 20px 0;
-        }
-    </style>
-    </head>
-	<body>
-        <h1><?php echo $http_response_code ?></h1>
-        <div>
-            <h2><?php echo $subtitle ?></h2>
-            <hr>
-            <br>
-            <?php echo $message ?>
-        </div>
-	</body>
-	</html>
-<?php
-	die();
+
+    $args = parse_args( $args, array( 
+        'message'  => 'Service Unavailable !',
+        'subtitle' => 'Minipops',
+        'http_response_code' => 503,
+        'template' => INC . '/data/maintenance.html') 
+    );
+
+    $template = @file_get_contents($args['template']);
+    unset($args['template']);
+    die( mp_brackets( $template, $args)?: $message );
 }
 
 
@@ -550,53 +546,6 @@ function get_template_directory( $mode = 'directory' ){
 
 
 /**
- * Récuperer un champs de configuration du site
- * @return string valeur du champ
- */
-function get_the_blog( $field, $default = false ){
-
-    $field = (string) $field;
-
-    $field = strtolower(trim($field));
-
-    switch ($field) {
-
-        case 'copyright':
-            $value = get_option('blog.'.$field);
-            if( null === $value ) return $default;
-            $value = parse_text($value);
-            break;
-        case 'home':
-            $value = esc_url_raw( get_permalink() );
-            break;
-        case 'rss':
-            $value = esc_url_raw( get_permalink('rss', 'feed') );
-            break;
-        case 'template_url':
-            $value = esc_url_raw( MP_TEMPLATE_URL );
-            break;
-        case 'charset':
-            $value = CHARSET;
-            break;
-        case 'version':
-            $value = MP_VERSION;
-            break;
-        case 'language':
-            $value = get_the_lang();
-            break;
-        case 'logo':
-            $value = get_the_image('name=logo&orderby=type&max=5&order=desc', 'uri');
-            break;   
-        default:
-            $value = get_option('blog.'.$field, $default);
-            break;
-    }
-    
-    return apply_filters( 'get_the_blog_'. $field, $value, $field );
-}
-
-
-/**
  * On init le blog
  */
 function init_the_blog(){
@@ -633,4 +582,96 @@ function init_the_blog(){
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');
+}
+
+
+/***********************************************/
+/*                  brackets                   */
+/***********************************************/
+/*
+    var :           {{ma_variable}}
+    commentaire:    {{! mon  commentaire }}
+    boucle if :     {{#test}} j'aime la soupe {{/test}}
+    boucle for :    {{#test}} j'aime la soupe à la {{.}} {{/test}} itération automatique
+    test si variable n'existe pas : {{^test}} j'aime la soupe {{/test}}
+    partial:        {{>ma_variable}}
+*/
+function mp_brackets( $string , $args = array() , $partials = array() ){
+
+    $p_args   = $args;
+    $args     = parse_args( $args );
+    $partials = array_filter( parse_args( $partials ) );
+
+    // init table des boucles
+    $args_array = array();
+
+    // On prépare la table des boucles ainsi que celle des variables
+    foreach ($args as $key => $value) {
+
+        if ( is_array( $value ) ){
+
+            // On nettoie pour que seul les tableaux non multi dimenssionnel soit utilisé et filtre les valeurs ( null, '', false )
+            $value = array_filter( array_map(function($value){return !is_array($value)?$value:null;}, $value ) );
+
+            // On construit la table des arguments
+            foreach ($value as $k => $v)
+                $vars['/[{]{2}'. $key .'.'. $k .'[}]{2}/i'] = $v;
+
+            // On créer un tableau à scruter
+            $args[$key] = $value;
+
+        } else {
+            $vars['/[{]{2}'. $key .'[}]{2}/i'] = $value;
+        }
+    }
+
+    // on filtre les valeurs ( null, '', false ) des arguments
+    $vars = array_filter($vars);
+    $args = array_filter($args);
+
+    // On scrute les boucles foreach
+    foreach ( $args as $key => $value) {
+
+        // On nettoie les boucles not si varaibles existes
+        $vars['/[\s]*[{]{2}[\^]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si'] = ''; 
+
+        preg_match_all( '/[{]{2}[#]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si', $string, $matches, PREG_SET_ORDER );
+
+        foreach ($matches as $match) {
+
+            $result = '';
+
+            if( is_array($args[$key]) ){
+
+                foreach ($args[$key] as $value) {
+                    $temp = preg_replace('/[{]{2}[.][}]{2}/i', $value, ltrim($match[1]), -1, $count );
+                    $result .= ($count == 0) ? '' : $temp;
+                }
+
+            } else {
+                $result = $match[1];
+            } 
+
+            // On remplace le contenu par le resultat du parsage de variable
+            $string = str_replace($match[0], trim($result), $string);
+        }
+    }
+
+    /// On parse les patriales
+    foreach ($partials as $k => $v) {
+        if( is_string($v) )
+            $string = preg_replace( '/[{]{2}>'.$k.'[}]{2}/i', mp_brackets( $v, $p_args), $string );
+    }
+
+    // On nettoie les commentaires
+    $vars['/[\s]*[{]{2}!([^{]*)[}]{2}/'] = '';
+    // Ajour Regex pour supprimer toutes les boucles non utilisé
+    $vars['/[\s]*[{]{2}[#](.*?)[}]{2}(.*?)[{]{2}[\/](.*?)[}]{2}/si'] = '';
+    // Ajour Regex pour supprimer tous les brackets sans arguments
+    $vars['/[{]{2}[\w. \/^]*[}]{2}/'] = '';
+
+    // On parse les variables
+    $string = preg_replace(array_keys($vars), $vars, $string);
+
+    return trim($string);
 }

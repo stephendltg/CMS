@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{{http_response_code}}></title>
+        <style>
+            body {
+                background-color: #1b8caf;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+            h1, div {
+                color: #fff;
+                margin: auto;
+                max-width: 400px;
+                text-align: center;
+            }
+            h1 {
+                padding-top: 15%;
+                padding-bottom: 40px;
+                text-transform: uppercase;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
+            hr {
+                border: 1px solid white;
+                width : 90%;
+            }
+            ul {
+                list-style: none;
+            }
+            li {
+                padding: 5px;
+                text-align: left;
+            }
+            p {
+                padding: 5px;
+            }
+            div {
+                background-color: #242424;
+                border-radius: 5px;
+                padding: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>{{http_response_code}}</h1>
+        <div>
+            <h2>{{subtitle}}</h2>
+            <hr>
+            <br>
+            {{message}}
+        </div>
+	</body>
+</html>

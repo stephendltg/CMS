@@ -9,8 +9,59 @@
  * @version 1
  */
 
+
+
+
 // On charge la classe
 mp_cache_data('mp_options', new OPTIONS() );
+
+
+
+/**
+ * Récuperer un champs de configuration du site
+ * @return string valeur du champ
+ */
+function get_the_blog( $field, $default = false ){
+
+    $field = (string) $field;
+
+    $field = strtolower(trim($field));
+
+    switch ($field) {
+
+        case 'copyright':
+            $value = get_option('blog.'.$field);
+            if( null === $value ) return $default;
+            $value = parse_text($value);
+            break;
+        case 'home':
+            $value = esc_url_raw( get_permalink() );
+            break;
+        case 'rss':
+            $value = esc_url_raw( get_permalink('rss', 'feed') );
+            break;
+        case 'template_url':
+            $value = esc_url_raw( MP_TEMPLATE_URL );
+            break;
+        case 'charset':
+            $value = CHARSET;
+            break;
+        case 'version':
+            $value = MP_VERSION;
+            break;
+        case 'language':
+            $value = get_the_lang();
+            break;
+        case 'logo':
+            $value = get_the_image('name=logo&orderby=type&max=5&order=desc', 'uri');
+            break;   
+        default:
+            $value = get_option('blog.'.$field, $default);
+            break;
+    }
+    
+    return apply_filters( 'get_the_blog_'. $field, $value, $field );
+}
 
 
 // Les fonctions d'utilisations de la classe
@@ -97,7 +148,7 @@ function sanitize_option($option, $value){
             break;
         case 'site_setting_urlrewrite':
             if( is_notin($value, array(true, false, 'disable', 'enable') ) )
-                $value = null;
+                $value = true;
             break;
         case 'site_crons':
             if( ! is_array($value) )
@@ -108,6 +159,7 @@ function sanitize_option($option, $value){
     }
     return $value;
 }
+
 
 
 # ~
