@@ -493,10 +493,14 @@ function mp_doing_sitemap(){
 
     $args = array(
         'home'  => MP_HOME,
-        'pages' => map_deep( $pages, function($value){ return get_permalink($value);} )
+        'pages' => map_deep( $pages, function($value){ return get_the_page('url',$value);} )
         );
 
-    $template = file_get_content(ABSPATH . INC .'/data/sitemap.xml');
+    $args = apply_filters('sitemap_args', $args);
+
+    $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/sitemap.xml' );
+    $template = file_get_content( realpath($template) );
+
     die( apply_filters( 'the_sitemap', mp_brackets( $template, $args ) ) );
 }
 
@@ -513,7 +517,7 @@ function mp_doing_feed(){
     header('Content-Type: application/rss+xml; charset=utf-8');
 
     // Boucle pour flux rss
-    $pages = the_loop('max=5&order=desc', 'my_feed');
+    $pages = the_loop( apply_filters('feed_loop', 'max=5&order=desc') , 'my_feed');
 
     $title     = map_deep($pages, function($value){ return get_the_page('title',$value);} );
     $url       = map_deep($pages, function($value){ return get_the_page('url',$value);} );
@@ -526,12 +530,13 @@ function mp_doing_feed(){
     $pages = map_deep($pages, function($value){ return str_replace('/', '_', $value); } );
 
     $args = array(
-        'blog.title' => get_the_blog('title'),
-        'blog.home'  => get_the_blog('home'),
-        'blog.description' => get_the_blog('description'),
-        'blog.lang'  => get_the_blog('lang'),
+        'blog'       => array( 'title' => get_the_blog('title'),
+                               'home'  => get_the_blog('home'),
+                               'description' => get_the_blog('description'),
+                               'lang'  => get_the_blog('lang')
+                               ),
         'now'        => _date('D, d M y H:i:s O'),
-        'feed.url'   => get_permalink('rss','feed'),
+        'feed_url'   => get_permalink('rss','feed'),
         'pages'      => $pages,
         'title'      => array_combine($pages, $title),
         'url'        => array_combine($pages, $url),
@@ -542,6 +547,10 @@ function mp_doing_feed(){
         'logo'       => get_the_image('name=logo&orderby=type&max=1&order=desc', 'uri')
         );
 
-    $template = file_get_content(ABSPATH . INC .'/data/feed.xml');
+    $args = apply_filters('feed_args', $args);
+
+    $template = apply_filters('feed_template', ABSPATH . INC .'/data/feed.xml' );
+
+    $template = file_get_content( realpath($template) );
     die( mp_brackets( $template, $args ) );
 }
