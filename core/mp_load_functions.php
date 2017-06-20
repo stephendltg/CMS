@@ -617,7 +617,7 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
 
             // On construit la table des arguments
             foreach ($value as $k => $v){
-                $vars['/[{]{2}'. $key .'.'. $k .'[}]{2}/i'] = $v;
+                $vars['/[{]{2}'. trim( json_encode($key. '.' .$k), '"') .'[}]{2}/i'] = $v;
                 $args[$key.'.'.$k] = $v;
             }
 
@@ -625,7 +625,7 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
             $args[$key] = $value;
 
         } else {
-            $vars['/[{]{2}'. $key .'[}]{2}/i'] = $value;
+            $vars['/[{]{2}'. trim(json_encode($key),'"') .'[}]{2}/i'] = $value;
         }
     }
 
@@ -635,6 +635,8 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
 
     // On scrute les boucles foreach
     foreach ( $args as $key => $value) {
+
+        $key = trim( json_encode($key), '"');
 
         // On nettoie les boucles not si varaibles existes
         $vars['/[\s]*[{]{2}[\^]'.$key.'[}]{2}(.*?)[{]{2}[\/]'.$key.'[}]{2}/si'] = ''; 
@@ -664,7 +666,7 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
     /// On parse les patriales
     foreach ($partials as $k => $v) {
         if( is_string($v) )
-            $string = preg_replace( '/[{]{2}>'.$k.'[}]{2}/i', mp_brackets( $v, $p_args), $string );
+            $string = preg_replace( '/[{]{2}>'.trim(json_encode($k),'"').'[}]{2}/i', mp_brackets( $v, $p_args), $string );
     }
 
     // On nettoie les commentaires

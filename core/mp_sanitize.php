@@ -145,7 +145,6 @@ function sanitize_tag( $tag_name ) {
     return $tag_name;
 }
 
-
 function sanitize_html_class( $class ) {
 
     $class = (string) $class;

@@ -507,9 +507,6 @@ function mp_doing_feed(){
     $excerpt   = map_deep($pages, function($value){ return get_the_page('excerpt',$value);} );
     $thumbnail = map_deep($pages, function($value){ return get_the_image('size=medium&file='.get_the_page('thumbnail',$value), 'uri'); } );
 
-    // On enlève les slash des slugs pour brackets
-    $pages = map_deep($pages, function($value){ return str_replace('/', '_', $value); } );
-
     $args = array(
         'blog'       => array( 'title' => get_the_blog('title'),
                                'home'  => get_the_blog('home'),
