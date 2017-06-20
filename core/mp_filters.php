@@ -440,42 +440,20 @@ function mp_doing_robots(){
     $robot = sanitize_words( get_the_blog('robots') );
     $robot = str_replace(' ', ',' , $robot);
 
-    $robots     = "# www.robotstxt.org/\n\n";
+    $args = array(
+        'noindex'     => is_in($robot, array('noindex', 'noindex,nofollow') ),
+        'sitemap_url' => get_permalink('sitemap')
+        );
 
-    // on desindex le site si noindex declaré
-    if( is_in($robot, array('noindex', 'noindex,nofollow',) ) )
-        $robots .= "User-agent: *\nDisallow: /\n";
+    $args     = apply_filters('robots_args', $args);
+    $template = apply_filters('robots_template', ABSPATH . INC .'/data/robots.txt' );
+    $template = file_get_content( realpath($template) );
+    $robots   = apply_filters( 'the_robots', mp_brackets( $template, $args ) );
 
-    else{
+    if( strlen($robots) == 0 )
+        redirect( get_the_blog('home') );
 
-        $robots    .= "User-agent: *\n";
-        $robots    .= "Disallow: /*?\n";
-        // On désindexe tous les URL ayant des paramètres (duplication de contenu) sauf les fichier css et js ( numero de version après le ? de l'url)
-        $robots    .= "Allow: /*css?*\n";
-        $robots    .= "Allow: /*js?*\n";
-        // On bloque les URL de ping et de trackback
-        $robots    .= "Disallow: */trackback\n";
-        // On bloque tous les flux RSS sauf celui principal (enlevez /* pour bloquer TOUS les flux)
-        $robots    .= "Disallow: /*/feed\n";
-        // On élimine ce répertoire sensible présent sur certains serveurs 
-        $robots    .= "Disallow: /cgi-bin\n";
-        // On désindexe tous les fichiers qui n'ont pas lieu de l'être
-        $robots    .= "Disallow: /*.php$\n";
-        $robots    .= "Disallow: /*.inc$\n";
-        $robots    .= "Disallow: /*.gz\n";
-        $robots    .= "Disallow: /*.cgi\n";
-        // ne pas indexer des pages, mais de faire en sorte que les images qu’elles contiennent soient quand même ajoutées dans le moteur de recherche google
-        $robots    .= "# Google Image\n";
-        $robots    .= "User-agent: Googlebot-Image\n";
-        $robots    .= "Disallow:\n";
-        $robots    .= "User-agent: Mediapartners-Google\n";
-        $robots    .= "Disallow:\n";
-        // Sitemap: Google : href="http://www.google.fr/webmasters/ | Yahoo & Bing: href="http://www.bing.com/toolbox/webmaster
-        $robots    .= 'Sitemap: '.MP_HOME.'/sitemap.xml';
-    }
-
-    echo apply_filters( 'the_robots', $robots);
-    exit();
+    echo $robots;
 }
 
 
@@ -496,12 +474,15 @@ function mp_doing_sitemap(){
         'pages' => map_deep( $pages, function($value){ return get_the_page('url',$value);} )
         );
 
-    $args = apply_filters('sitemap_args', $args);
-
+    $args     = apply_filters('sitemap_args', $args);
     $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/sitemap.xml' );
     $template = file_get_content( realpath($template) );
+    $sitemap  = apply_filters( 'the_sitemap', mp_brackets( $template, $args ) );
 
-    die( apply_filters( 'the_sitemap', mp_brackets( $template, $args ) ) );
+    if( strlen($sitemap) == 0 )
+        redirect( get_the_blog('home') );
+
+    echo $sitemap;
 }
 
 
@@ -547,10 +528,13 @@ function mp_doing_feed(){
         'logo'       => get_the_image('name=logo&orderby=type&max=1&order=desc', 'uri')
         );
 
-    $args = apply_filters('feed_args', $args);
-
+    $args     = apply_filters('feed_args', $args);
     $template = apply_filters('feed_template', ABSPATH . INC .'/data/feed.xml' );
-
     $template = file_get_content( realpath($template) );
-    die( mp_brackets( $template, $args ) );
+    $feed     = apply_filters( 'the_feed', mp_brackets( $template, $args ) );
+
+    if( strlen($feed) == 0 )
+        redirect( get_the_blog('home') );
+
+    echo $feed;
 }
