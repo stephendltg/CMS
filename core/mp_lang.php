@@ -121,7 +121,7 @@ function esc_attr_e( $text , $domain = null ){
 }
 
 
-function esc_html_( $text , $domain = null ){
+function esc_html__( $text , $domain = null ){
     return esc_html( __( $text, $domain ) );
 }
 

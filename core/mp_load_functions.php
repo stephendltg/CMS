@@ -665,11 +665,11 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
         }
     }
 
-    /// On parse les patriales
-    foreach ($partials as $k => $v) {
-        if( is_string($v) )
-            $string = preg_replace( '/[{]{2}>'.trim(json_encode($k),'"').'[}]{2}/i', mp_brackets( $v, $p_args), $string );
-    }
+    // On filtre les traductions
+    preg_match_all( '/[{]{2}\@(.*?)\@[}]{2}/i', $string, $matches );
+    // On traduit le texte ($matches[1]) selon le domaine ($matches[2])
+    $matches[1] = array_map( function($v){ return esc_html__( trim($v) ); } , $matches[1] );
+    $string     = str_replace( $matches[0], $matches[1], $string );
 
     // On nettoie les commentaires
     $vars['/[\s]*[{]{2}!([^{]*)[}]{2}/'] = '';
