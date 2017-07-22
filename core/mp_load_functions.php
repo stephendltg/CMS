@@ -599,13 +599,9 @@ function init_the_blog(){
 */
 function mp_brackets( $string , $args = array() , $partials = array() ){
 
-    $p_args   = $args;
     $args     = parse_args( $args );
     $partials = array_filter( parse_args( $partials ) );
     $vars     = array();
-
-    // init table des boucles
-    $args_array = array();
 
     // On prépare la table des boucles ainsi que celle des variables
     foreach ($args as $key => $value) {
@@ -632,6 +628,12 @@ function mp_brackets( $string , $args = array() , $partials = array() ){
     // on filtre les valeurs ( null, '', false ) des arguments
     $vars = array_filter($vars);
     $args = array_filter($args);
+
+    // On parse les patriales
+    foreach ($partials as $k => $v) {
+        if( is_string($v) )
+            $string = preg_replace( '/[{]{2}>'.trim(json_encode($k),'"').'[}]{2}/i', $v, $string );
+    }
 
     // On scrute les boucles foreach
     foreach ( $args as $key => $value) {
