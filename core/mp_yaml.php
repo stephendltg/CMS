@@ -591,7 +591,7 @@ class yaml {
     * @param $ndocs  int         Nombre de documents recherche
     * @param $cached bool        Activation du cache
     */
-    public function parse_file( $path, $pos = 0, $ndocs = null, $cached = false ){
+    public function parse_file( $path, $pos = 0, $ndocs = null, $cached = true ){
 
         if( is_readable($path) ){
 
@@ -603,14 +603,14 @@ class yaml {
                 && $text = file_get_contents($cache)
                 ){
 
-                return @unserialize($text);
-            }
-            elseif( $text = file_get_contents($path) ){
+                return @unserialize( gzinflate($text) );
+            
+            } elseif( $text = file_get_contents($path) ){
 
-                $text = yaml_parse( $text, $pos, $ndocs );
+                $text = $this->parse( $text, $pos, $ndocs );
 
                 if( $cached ){
-                    @file_put_contents($cache, serialize($text), LOCK_EX);
+                    @file_put_contents($cache, gzdeflate( serialize($text) ), LOCK_EX);
                     @touch($cache, filemtime($path) );
                     @chmod($cache, 0644);
                 }

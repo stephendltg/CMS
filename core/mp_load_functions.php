@@ -597,6 +597,66 @@ function init_the_blog(){
     test si variable n'existe pas : {{^test}} j'aime la soupe {{/test}}
     partial:        {{>ma_variable}}
 */
+
+
+/**
+* 
+*/
+class mp_brackets
+{
+    
+    # ~
+
+    const VERSION = '1.0.0';
+
+    # ~
+
+
+    /**#@+
+    * @access private
+    * @var array
+    */
+    private $template;
+    private $partials = array(), $brackets = array();
+    private $private  = array();
+
+    /**
+    * getter et setter
+    */
+    function __call($function,$args) {
+
+        $v = strtolower(substr($function,3));
+        if (!strncasecmp($function,'get',3) && !in_array($v,$this->private) ) return $this->$v;
+        if (!strncasecmp($function,'set',3) && !in_array($v,$this->private) ) $this->$v = $args[0];
+        if (!strncasecmp($function,'add',3) && !in_array($v,$this->private) ) 
+            $this->$v = array_merge( $this->$v , array($args[0] => $args[1]) );
+    }
+
+
+    /**
+    * render
+    */
+    public function render( $string , $args = array() , $partials = array() ){
+
+        $string = (string) $string;
+
+        _echo($this->brackets,1);
+
+    }
+
+}
+
+$test = new mp_brackets();
+
+$test ->setTemplate('nojojojd');
+
+$test->setBrackets( array('test'=> 'popop') );
+$test->addBrackets('testset', 56565);
+$test->addBrackets('lkdlkd', 56565);
+
+$test->render();
+
+
 function mp_brackets( $string , $args = array() , $partials = array() ){
 
     $args     = parse_args( $args );
