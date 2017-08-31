@@ -620,6 +620,13 @@ class brackets {
 
     # ~
 
+    /*
+    * ex: $this->set_brackets( array('title'=>'mon titre') )
+    * ex: $this->add_brackets('title', 'mon titre')
+    * ex: $this->set_template('index.html')   nom du template
+    * ex: $this->set_template_directory('/')  répertoire ou se situe les templates
+    * ex: $this->add_partials('header', 'header.html')   // selon le répertoire ou se situe les templates
+    */
 
     /**#@+
     * @access private
@@ -641,11 +648,6 @@ class brackets {
 
     /**
     * getter et setter
-    *
-    * ex: $this->set_brackets( array('title'=>'mon titre') )
-    * ex: $this->add_brackets('title', 'mon titre')
-    * ex: $this->set_template('index.html')   nom du template
-    * ex: $this->set_template_directory('/')  répertoire ou se situe les templates
     */
     function __call($function,$args) {
 
@@ -657,8 +659,13 @@ class brackets {
         if (!strncasecmp($function,'set_',4) && !in_array($v,$this->private) ) 
             $this->$v = $this->_apply_filter($v, $args[0]);
 
-        if (!strncasecmp($function,'add_',4) && !in_array($v,$this->private) ) 
-            $this->$v = array_merge( $this->$v , array($args[0] => $args[1]) );
+        if (!strncasecmp($function,'add_',4) && !in_array($v,$this->private) ) {
+
+            if(!is_array($args[0]))
+                $args[0] = array( $args[0] => $args[1] );
+
+            $this->$v = array_merge( $this->$v , $args[0] );
+        }
     }
 
     /**
@@ -688,8 +695,6 @@ class brackets {
 
     /**
     * partials 
-    * 
-    * ex: $this->add_partials('header', 'header.html')   // selon le répertoire ou se situe les templates
     */
     public function add_partials( $name, $template ){
 
@@ -699,6 +704,22 @@ class brackets {
         $this->partials[$name] = @file_get_contents( current( glob($this->template_directory.$template) ) );
     }
 
+
+    /**
+    * ob_get_func: attraper la sortie d'une fonction.
+    * ob_get_func( 'var_dump', 'bonjour' )
+    */
+    public function ob_get_func( $function_name ){
+
+        $function_name = (string) $function_name;
+        $params        = array_slice(func_get_args(),1);
+
+        if( !is_callable($function_name) ) return;
+
+        ob_start();
+        call_user_func_array( $function_name, $params);
+        return ob_get_clean();
+    }
 
     /**
     * render
