@@ -574,8 +574,7 @@ function init_the_blog(){
         'api_key'=>random_salt(32),
         'api_keysalt'=>random_salt(32) );
 
-    $plugins = array(
-        'active_plugins'=> null);
+    $plugins = array('active_plugins'=> null);
 
     add_option('blog', $blog);
     add_option('setting', $setting);

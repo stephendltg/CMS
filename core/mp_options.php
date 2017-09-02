@@ -329,9 +329,9 @@ class options {
             else
                 $value = self::$_db->query_single("SELECT value FROM options WHERE name='$option' AND domain='$domain'", false);
 
-            if( false === $value )  $value = null;
+            if( false === $value )  
+                $value = null;
 
-            // On de-serialize les données
             if( is_serialized($value) )
                 $value = unserialize($value);
 
@@ -394,11 +394,13 @@ class options {
 
                 $option = self::$_db->esc_sql($option);
                 $domain = self::$_db->esc_sql($domain);
-                $value  = self::$_db->esc_sql($value);
-                $autoload  = self::$_db->esc_sql($autoload);
 
                 if( is_array($value) || is_object($value) )      
                     $value = serialize($value);
+                
+                $value  = self::$_db->esc_sql($value);
+
+                $autoload  = self::$_db->esc_sql($autoload);
 
                 self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$value','$domain','$autoload')");
 
@@ -457,11 +459,11 @@ class options {
 
                 $option = self::$_db->esc_sql($option);
                 $domain = self::$_db->esc_sql($domain);
-                $value  = self::$_db->esc_sql($value);
 
-                // On serialize les données si tableau ou object
                 if( is_array($value) || is_object($value) )      
                     $value = serialize($value);
+
+                $value  = self::$_db->esc_sql($value);
 
                 // On met à jour le cache autoload
                 if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
@@ -601,9 +603,9 @@ function set_transient( $transient, $value, $expiration = 0 ) {
              $autoload = 'no';
              add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
         }
-        
-        $result = add_option( $transient_option, $value, 'mp_transient', $autoload );
     
+        $result = add_option( $transient_option, $value, 'mp_transient', $autoload );
+
     } else {
 
         $update = true;
