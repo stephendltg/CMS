@@ -40,7 +40,7 @@ function do_event( $timestamp, $recurrence = false , $hook, $args = null ) {
     if ( $next || abs( $next - $timestamp ) <= 10 * MINUTE_IN_SECONDS )
         return false;
 
-    $crons = get_option('crons');
+    $crons = get_option('crons', array(), 'cron');
     $key   = md5(serialize($args));
 
     if( false == $recurrence ){
@@ -60,7 +60,10 @@ function do_event( $timestamp, $recurrence = false , $hook, $args = null ) {
     uksort( $crons, "strnatcasecmp" );
 
     // Mise à jour des tâches
-    update_option( 'crons', $crons );
+    if( null === get_option('crons', null, 'cron') )
+        add_option( 'crons', $crons, 'cron', 'yes' );
+    else
+        update_option( 'crons', $crons, 'cron' );
 }
 
 
@@ -91,7 +94,7 @@ function get_schedules(){
  */
 function get_scheduled( $hook, $args = null, $mode = 'timestamp' ) {
 
-    $crons = get_option('crons');
+    $crons = get_option('crons', array() , 'cron');
 
     if ( empty($crons) )  return false;
 
@@ -129,7 +132,7 @@ function reschedule_event( $timestamp, $recurrence, $hook, $args = null ) {
     if ( ! is_numeric( $timestamp ) || $timestamp <= 0 )
         return false;
 
-    $crons     = get_option('crons');
+    $crons     = get_option('crons', array(), 'cron');
     $schedules = get_schedules();
     $key       = md5( serialize( $args ) );
     $interval  = 0;
@@ -169,7 +172,7 @@ function unschedule_event( $timestamp, $hook, $args = null ) {
     if ( ! is_numeric( $timestamp ) || $timestamp <= 0 )
         return false;
 
-    $crons = get_option('crons');
+    $crons = get_option('crons', array(), 'cron');
     $key   = md5(serialize($args));
 
     unset( $crons[ '_'. $timestamp][$hook][$key] );
@@ -180,7 +183,7 @@ function unschedule_event( $timestamp, $hook, $args = null ) {
     if ( empty($crons[ '_'. $timestamp]) )
         unset( $crons[ '_'. $timestamp] );
         
-    update_option( 'crons', $crons );
+    update_option( 'crons', $crons, 'cron' );
 }
 
 
@@ -192,7 +195,7 @@ function unschedule_event( $timestamp, $hook, $args = null ) {
  */
 function clear_scheduled_event( $hook, $args = null ) {
 
-    $crons = get_option('crons');
+    $crons = get_option('crons', array(), 'cron');
 
     if ( empty( $crons ) )
         return;
@@ -213,18 +216,18 @@ function clear_scheduled_event( $hook, $args = null ) {
  */
 function mp_cron() {
 
-    if ( false === $crons = get_option('crons') )
+    if ( false === $crons = get_option('crons', array(), 'cron') )
         return; 
 
     $gmt_time = microtime( true );
     $keys     = array_keys( $crons );
 
     // On laisse 10 minutes entre chaque action
-    if( $gmt_time < ( get_option('doing_cron', 0 ) + 10 * MINUTE_IN_SECONDS ) )
+    if( $gmt_time < ( get_option('doing_cron', 0, 'cron' ) + 10 * MINUTE_IN_SECONDS ) )
         return;
 
     // On supprime l'option
-    delete_option('doing_cron');
+    delete_option('doing_cron', 'cron');
 
     // Toogle
     $cron = false;
@@ -262,7 +265,7 @@ function mp_cron() {
     if($cron){
 
         // On créer une option pour surveiller l'esapce temps entre chaque actions 
-        add_option('doing_cron', sprintf( '%.22F', $gmt_time ) );
+        add_option('doing_cron', sprintf( '%.22F', $gmt_time ), 'cron', 'yes' );
 
         // On prépare la redirection avant de lancer le script principal
         add_action('loaded', function(){ 

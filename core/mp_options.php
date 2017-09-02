@@ -69,9 +69,9 @@ function get_option( $option, $default = null, $domain = null ){
     return mp_cache_data('mp_options')->get($option, $default, $domain);
 }
 
-function add_option( $option, $value = null, $domain = null ){
+function add_option( $option, $value = null, $domain = null, $autoload = 'no' ){
 
-    return mp_cache_data('mp_options')->add($option, $value, $domain);
+    return mp_cache_data('mp_options')->add($option, $value, $domain, $autoload);
 }
 
 function update_option( $option, $value = null, $domain = null ){
@@ -148,11 +148,7 @@ function sanitize_option($option, $value){
         case 'site_setting_urlrewrite':
             if( is_notin($value, array(true, false, 'disable', 'enable') ) )
                 $value = true;
-            break;
-        case 'site_crons':
-            if( ! is_array($value) )
-                $value = false;
-            break;   
+            break;  
         default:
             break;
     }
@@ -175,12 +171,34 @@ class options {
     * @access private
     * @var
     */
-    private static $_options;
-    private static $_flag = false;
+    private static $_options, $_db, $_autoload = array();
+    private static $_flag = false, $_is_sqlite = true;
 
 
     function __construct(){
 
+        // On charge la base de donnée
+        self::$_db = new sqlite( MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db' );
+
+        // On valide l'utilisation de sqlite        
+        if( false === self::$_db)
+            self::$_is_sqlite = false;
+
+        // On créer la table si la base est vide et on charge les données autoload
+        if( self::$_is_sqlite ){
+
+            if( fileSize(MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db') == 0 )
+                self::$_db->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
+
+
+            // On charge les table autoload
+            $_autoload = self::$_db->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
+            foreach ($_autoload as $v)
+                self::$_autoload[$v['domain']][$v['name']] = $v['value'];
+            unset($_autoload); 
+
+        }
+        
         // On charge la table option dans la variable static
         $options = yaml_parse_file(MP_PAGES_DIR. '/site.yml', 0, null, apply_filters('mp_options_cache',CACHE) );
         self::$_options = !$options ? array():$options;
@@ -194,6 +212,8 @@ class options {
     * @access private
     */
     public function save(){
+
+        //_echo( self::$_db->query("SELECT * FROM options") );
 
         if( self::$_flag ){
             if( ! yaml_emit_file(MP_PAGES_DIR. '/site.yml', self::$_options) )
@@ -214,16 +234,15 @@ class options {
         // On récupère le chemin de la table du domain
         if( $domain === null )
             $node = 'site.'.$node;
-        elseif( is_in( $domain, get_option('plugins.active_plugins') ) )
+        else
             $node = $domain.'.'.$node;
-        else return false;
 
         // On créer le noeuds
         $nodes = array_map( 'trim', explode('.', $node));
         // On vérifie les noeuds
         foreach ($nodes as $node)
             if(!is_match($node, '/^[a-z0-9_]+$/i') ) return false;
-        
+
         return $nodes;
     }
 
@@ -300,7 +319,26 @@ class options {
         if ( false !== $pre ) return $pre;
 
         // On récupère la variable selon le noeud
-        $value = $this->_GetValueByNodeFromArray($node, self::$_options);
+        if( self::$_is_sqlite && $domain != null ){
+
+            $option = self::$_db->esc_sql($option);
+            $domain = self::$_db->esc_sql($domain);
+
+            if( !empty(self::$_autoload[$domain]) && array_key_exists( $option, self::$_autoload[$domain]) )
+                $value = self::$_autoload[$domain][$option];
+            else
+                $value = self::$_db->query_single("SELECT value FROM options WHERE name='$option' AND domain='$domain'", false);
+
+            if( false === $value )  $value = null;
+
+            // On de serialize les données
+            if( is_serialized($value) )
+                $value = unserialize($value);
+        
+        } else{
+
+            $value = $this->_GetValueByNodeFromArray($node, self::$_options);
+        }
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
@@ -326,7 +364,7 @@ class options {
     * @param $value     valeur à insérer
     * @param $domain    Domaine de recherche ( null: site, name: plugins actif et valid )
     */
-    public function add( $option, $value = null, $domain = null ){
+    public function add( $option, $value = null, $domain = null, $autoload = 'no' ){
 
         $option = (string) $option;
 
@@ -352,8 +390,23 @@ class options {
             do_action( 'add_option', $_option, $value );
 
             // On insère la nouvelle valeur
-            $this->_SetValueByNodeToArray($node, self::$_options, $value);
-            self::$_flag = true;
+            if( self::$_is_sqlite && $domain != null ){
+
+                $option = self::$_db->esc_sql($option);
+                $domain = self::$_db->esc_sql($domain);
+                $value  = self::$_db->esc_sql($value);
+                $autoload  = self::$_db->esc_sql($autoload);
+
+                if( is_array($value) || is_object($value) )      
+                    $value = serialize($value);
+
+                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$value','$domain','$autoload')");
+
+            } else {
+
+                $this->_SetValueByNodeToArray($node, self::$_options, $value);
+                self::$_flag = true;
+            }
 
             // On ajoute des actions
             do_action( 'added_option_'.$_option, $_option, $value );
@@ -400,11 +453,29 @@ class options {
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option );
 
-            // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
-            $this->_SetValueByNodeToArray($node, self::$_options, null);
-            // On met à jour la nouvelle valeur
-            $this->_SetValueByNodeToArray($node, self::$_options, $value);
-            self::$_flag = true;
+            if( self::$_is_sqlite && $domain != null ){
+
+                $option = self::$_db->esc_sql($option);
+                $domain = self::$_db->esc_sql($domain);
+                $value  = self::$_db->esc_sql($value);
+
+                // On serialize les données si tableau ou object
+                if( is_array($value) || is_object($value) )      
+                    $value = serialize($value);
+
+                // On met à jour le cache autoload
+                if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
+                    self::$_autoload[$domain][$option] = $value;
+
+                self::$_db->query("UPDATE options SET value = '$value' WHERE name='$option' AND domain='$domain'");
+
+            } else{
+                // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
+                $this->_SetValueByNodeToArray($node, self::$_options, null);
+                // On met à jour la nouvelle valeur
+                $this->_SetValueByNodeToArray($node, self::$_options, $value);
+                self::$_flag = true;
+            }
 
             // On ajoute des actions
             do_action( 'updated_option_'.$_option, $old_value, $value, $_option );
@@ -439,7 +510,21 @@ class options {
         $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain );
         if ( null !== $pre ) return $pre;
 
-        $delete = update_option( $option , null, $domain );
+        if( self::$_is_sqlite && $domain != null ){
+
+            $option = self::$_db->esc_sql($option);
+            $domain = self::$_db->esc_sql($domain);
+
+            // On met à jour le cache autoload
+            if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
+                unset(self::$_autoload[$domain][$option]);
+
+            $delete = self::$_db->query("DELETE from options where name = '$option' AND domain='$domain'");
+        }
+        else{
+
+            $delete = update_option( $option , null, $domain );
+        }
 
         // On ajoute des actions
         do_action( 'deleted_option_' . $_option, $_option, $domain, $delete );
@@ -447,4 +532,300 @@ class options {
 
         return $delete;
     }
+}
+
+
+
+
+
+/**
+* Supprime un transient
+*/
+function delete_transient( $transient ){
+    
+    $option_timeout = '_transient_timeout_' . $transient;
+    $option = '_transient_' . $transient;
+    $result = delete_option( $option, 'transient' );
+
+    if ( $result )
+        delete_option( $option_timeout, 'transient' );
+
+    return $result;
+}
+
+
+
+
+/**
+* Récupère un transient
+*/
+function get_transient( $transient ) {
+
+    $transient_option = '_transient_' . $transient;
+    
+                                 
+    $transient_timeout = '_transient_timeout_' . $transient;
+    $timeout = get_option( $transient_timeout, false, 'transient' );
+            
+    if ( false !== $timeout && $timeout < time() ) {
+        delete_option( $transient_option, 'transient' );
+        delete_option( $transient_timeout, 'transient' );
+        $value = false;
+    }
+        
+    if ( ! isset( $value ) )
+        $value = get_option( $transient_option, false, 'transient' );
+
+    return $value;
+}
+
+
+
+
+
+/**
+* ajoute un transient
+*/
+function set_transient( $transient, $value, $expiration = 0 ) {
+
+    $expiration = (int) $expiration;
+
+    $transient_timeout = '_transient_timeout_' . $transient;
+    $transient_option = '_transient_' . $transient;
+    
+    if ( null === get_option( $transient_option, null, 'transient' ) ) {
+
+        $autoload = 'yes';
+        
+        if ( $expiration ) {
+             $autoload = 'no';
+             add_option( $transient_timeout, time() + $expiration, 'transient', 'no' );
+        }
+        
+        $result = add_option( $transient_option, $value, 'transient', $autoload );
+    
+    } else {
+
+        $update = true;
+
+        if ( $expiration ) {
+            
+            if ( null === get_option( $transient_timeout, null, 'transient' ) ) {
+
+                delete_option( $transient_option, 'transient' );
+                add_option( $transient_timeout, time() + $expiration, 'transient', 'no' );
+                $result = add_option( $transient_option, $value, 'transient', 'no' );
+                $update = false;
+
+            } else {
+
+                update_option( $transient_timeout, time() + $expiration, 'transient' );
+            }
+        }
+        
+        if ( $update )
+            $result = update_option( $transient_option, $value, 'transient' );
+    }
+         
+    return $result;
+}
+
+
+
+
+/**
+* Systeme de cache transient
+*/
+function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
+
+    $transient  = (string) $transient;
+    $expiration = (int) $expiration;
+
+    if( null === $function){
+        delete_transient( $transient );
+        return;
+    }
+
+    if ( false === ( $value = get_transient( $transient ) ) ) {
+        set_transient( $transient, call_user_func_array( $function, $params ) , $expiration );
+        $value = get_transient( $transient );
+    }
+
+    return $value; 
+}
+
+
+
+
+/**
+* SQLITE
+*/
+class sqlite
+{
+    
+
+    private $sqlite;
+
+    /*
+    * Constructeur
+    */
+    function __construct( $path = '' ) {
+
+        if(!class_exists('SQLite3'))        
+            return false;   
+
+        $this->sqlite = new SQLite3($path);
+    }
+
+
+    /*
+    * destructeur
+    */
+    function __destruct() {
+
+        $this->sqlite->close();
+    }
+
+    /*
+    * Escape data
+    */
+    public function esc_sql( $data ) {
+        if ( is_array( $data ) ) {
+            foreach ( $data as $k => $v ) {
+                if ( is_array( $v ) )
+                    $data[$k] = $this->esc_sql( $v );
+                else
+                    $data[$k] = $this->sqlite->escapeString( $v );
+            }
+        } else {
+            $data = $this->sqlite->escapeString( $data );
+        }
+
+        return $data;
+    }
+
+    /*
+    * Error sqlite  output code or message
+    */
+    public function error( $mode = 'code' ){
+
+        switch ($mode) {
+            case 'code':
+                return $this->sqlite->lastErrorCode();
+                break;
+            case 'msg':
+                return $this->sqlite->lastErrorMsg();
+                break;
+            default:
+                return array($this->sqlite->lastErrorCode() => $this->sqlite->lastErrorMsg() );
+                break;
+        }
+    }
+
+
+    /*
+    * query
+    *
+    *
+    * ex:
+    *
+    * DROP a table: 'DROP TABLE mytable'
+    *
+    * CREATE a table: "CREATE TABLE mytable( 
+    *                       ID INTEGER PRIMARY KEY, 
+    *                       post_author INTEGER NOT NULL,            
+    *                       post_date TEXT,
+    *                       post_content TEXT,
+    *                       post_title TEXT,
+    *                       guid TEXT            
+    *                   )"
+    *
+    * READ: "SELECT ID, post_title, post_content, post_author, post_date, guid FROM mytable"
+    *
+    * INSERT: "INSERT INTO mytable(ID, post_title, post_content, post_author, post_date, guid) VALUES ('$number', '$title', '$content', '$author', '$date', '$url')"
+    *
+    * UPDATE: "UPDATE mytable SET post_content = '$changed' WHERE (id=1)"
+    *
+    * DELETE: "DELETE from mytable where ID = 10"
+    *
+    * STATISTIC: "SELECT * FROM sqlite_master"
+    *
+    */
+    public function query( $query, $output = 'ARRAY' ){
+
+        $query = (string) $query;
+
+        /*
+        * MODE
+        * ====
+        *
+        * CREATE TABLE, SELECT, INSERT INTO, UPDATE, DELETE, DROP TABLE
+        *
+        */
+
+
+        /*
+        * CREATE TABLE
+        *
+        *
+        * TYPE
+        * ====
+        *
+        * TEXT: CHARACTER(20) VARCHAR(255) VARYING CHARACTER(255) NCHAR(55) NATIVE CHARACTER(70) NVARCHAR(100) TEXT CLOB
+        * NUMERIC: NUMERIC DECIMAL(10,5) BOOLEAN DATE DATETIME
+        * INTEGER: INT INTEGER TINYINT SMALLINT MEDIUMINT BIGINT UNSIGNED BIG INT INT2 INT8
+        * REAL: REAL DOUBLE DOUBLE PRECISION FLOAT
+        * BLOB: BLOB
+        *
+        *
+        *
+        * CONSTRAINTS
+        * ===========
+        * 
+        * PRIMARY KEY, CHECK, NOT NULL, UNIQUE, FOREIGN KEY
+        *
+        */
+
+        // verify if query is good
+        if( !@$this->sqlite->prepare($query) )   
+            return false;
+
+        // If not SELECT query
+        if( !preg_match('|\bSELECT\b|', $query ) )
+            return @$this->sqlite->exec($query);
+
+
+        $results = @$this->sqlite->query($query);
+
+        // Mode output SELECT
+        if( strtoupper($output) === 'OBJECT' )
+            return $results->fetchArray(1);
+
+        // Create array to keep all results
+        $data= array();
+
+        //F etch Associated Array (1 for SQLITE3_ASSOC)
+        while ($res= $results->fetchArray(1))
+            array_push($data, $res);
+
+        return $data;
+    }
+
+    /*
+    * Query single
+    * 
+    * ex: "SELECT post_author, id FROM mytable"
+    */
+    public function query_single( $query, $entire_row = true ){
+
+        $query        = (string) $query;
+        $entire_row   = (bool) $entire_row;
+
+        // If not SELECT query
+        if( !preg_match('|\bSELECT\b|', $query ) )
+            return false;
+
+        return @$this->sqlite->querySingle($query, $entire_row );
+    }
+
 }

@@ -79,13 +79,17 @@ function __( $text, $domain = null ){
 
         // On vérifie que la lang n'est pas déjà chargé dans la variable static
         if( !empty( $set_domain[$name] ) ){
+
             $domain = $set_domain[$name];
-        }
-        elseif( $temp = yaml_parse_file($path, 0, null, apply_filters('mp_lang_cache',CACHE) ) ){
+
+        } elseif( $temp = yaml_parse_file($path) ){
+
+            //mp_transient_data('lang', 'yaml_parse_file', 5, array($path) )
+
             $domain = !empty($temp['lang']) ? $temp['lang'] : array(null); // array(null): on évite de reboucle à chaque requete
             $set_domain[$name] = $domain;
-        }
-        else return $text;
+
+        } else return $text;
 
     }
 
