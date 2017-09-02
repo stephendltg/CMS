@@ -204,7 +204,7 @@ class options {
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
-        add_action('after_setup_theme', function (){ mp_cache_data('mp_options')->save(); });
+        add_action('shutdown', function (){ mp_cache_data('mp_options')->save(); });
     }
 
     /**
@@ -331,10 +331,10 @@ class options {
 
             if( false === $value )  $value = null;
 
-            // On de serialize les données
+            // On de-serialize les données
             if( is_serialized($value) )
                 $value = unserialize($value);
-        
+
         } else{
 
             $value = $this->_GetValueByNodeFromArray($node, self::$_options);
@@ -545,10 +545,10 @@ function delete_transient( $transient ){
     
     $option_timeout = '_transient_timeout_' . $transient;
     $option = '_transient_' . $transient;
-    $result = delete_option( $option, 'transient' );
+    $result = delete_option( $option, 'mp_transient' );
 
     if ( $result )
-        delete_option( $option_timeout, 'transient' );
+        delete_option( $option_timeout, 'mp_transient' );
 
     return $result;
 }
@@ -565,16 +565,16 @@ function get_transient( $transient ) {
     
                                  
     $transient_timeout = '_transient_timeout_' . $transient;
-    $timeout = get_option( $transient_timeout, false, 'transient' );
+    $timeout = get_option( $transient_timeout, false, 'mp_transient' );
             
     if ( false !== $timeout && $timeout < time() ) {
-        delete_option( $transient_option, 'transient' );
-        delete_option( $transient_timeout, 'transient' );
+        delete_option( $transient_option, 'mp_transient' );
+        delete_option( $transient_timeout, 'mp_transient' );
         $value = false;
     }
         
     if ( ! isset( $value ) )
-        $value = get_option( $transient_option, false, 'transient' );
+        $value = get_option( $transient_option, false, 'mp_transient' );
 
     return $value;
 }
@@ -593,16 +593,16 @@ function set_transient( $transient, $value, $expiration = 0 ) {
     $transient_timeout = '_transient_timeout_' . $transient;
     $transient_option = '_transient_' . $transient;
     
-    if ( null === get_option( $transient_option, null, 'transient' ) ) {
+    if ( null === get_option( $transient_option, null, 'mp_transient' ) ) {
 
         $autoload = 'yes';
         
         if ( $expiration ) {
              $autoload = 'no';
-             add_option( $transient_timeout, time() + $expiration, 'transient', 'no' );
+             add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
         }
         
-        $result = add_option( $transient_option, $value, 'transient', $autoload );
+        $result = add_option( $transient_option, $value, 'mp_transient', $autoload );
     
     } else {
 
@@ -610,21 +610,21 @@ function set_transient( $transient, $value, $expiration = 0 ) {
 
         if ( $expiration ) {
             
-            if ( null === get_option( $transient_timeout, null, 'transient' ) ) {
+            if ( null === get_option( $transient_timeout, null, 'mp_transient' ) ) {
 
-                delete_option( $transient_option, 'transient' );
-                add_option( $transient_timeout, time() + $expiration, 'transient', 'no' );
-                $result = add_option( $transient_option, $value, 'transient', 'no' );
+                delete_option( $transient_option, 'mp_transient' );
+                add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
+                $result = add_option( $transient_option, $value, 'mp_transient', 'no' );
                 $update = false;
 
             } else {
 
-                update_option( $transient_timeout, time() + $expiration, 'transient' );
+                update_option( $transient_timeout, time() + $expiration, 'mp_transient' );
             }
         }
         
         if ( $update )
-            $result = update_option( $transient_option, $value, 'transient' );
+            $result = update_option( $transient_option, $value, 'mp_transient' );
     }
          
     return $result;

@@ -84,8 +84,6 @@ function __( $text, $domain = null ){
 
         } elseif( $temp = yaml_parse_file($path) ){
 
-            //mp_transient_data('lang', 'yaml_parse_file', 5, array($path) )
-
             $domain = !empty($temp['lang']) ? $temp['lang'] : array(null); // array(null): on évite de reboucle à chaque requete
             $set_domain[$name] = $domain;
 
