@@ -223,7 +223,7 @@ class options {
         if( self::$_flag ){
             if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_options) )
                 _doing_it_wrong( __CLASS__, 'Error saving file configuration: config.yaml!');
-            @chmod(MP_PAGES_DIR. '/config.yml', 0644);
+            @chmod(MP_CONFIG_DIR. '/config.yml', 0644);
         }
         self::$_flag = null;
     }
@@ -320,8 +320,9 @@ class options {
         $_option = implode('_', $node);
 
         // On court-circuit le résultat
-        $pre = apply_filters( 'pre_option_' . $_option, false, $_option );
+        $pre = apply_filters( 'pre_option_' . $_option, false, $_option, $domain );
         if ( false !== $pre ) return $pre;
+
 
         // On récupère la variable selon le noeud
         if( self::$_is_sqlite && $domain != null ){
@@ -337,13 +338,14 @@ class options {
             if( false === $value )  
                 $value = null;
 
-            if( is_serialized($value) )
-                $value = unserialize($value);
-
         } else{
 
             $value = $this->_GetValueByNodeFromArray($node, self::$_options);
+                        
         }
+
+        if( is_serialized($value) )
+            $value = unserialize($value);
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
@@ -355,11 +357,11 @@ class options {
         $type = 'is_'.$type;
         if( function_exists($type) ){
             if( $type($value) )
-                return apply_filters( 'option_' . $_option, $value, $_option );
+                return apply_filters( 'option_' . $_option, $value, $_option, $domain );
             else return $default;
         }
 
-        return apply_filters( 'option_' . $_option, $value, $_option );
+        return apply_filters( 'option_' . $_option, $value, $_option, $domain );
     }
 
     /**
@@ -383,8 +385,8 @@ class options {
         $_option = implode('_', $node);
 
         // On ajoute des filtres
-        $value = apply_filters( 'pre_add_option_' . $_option, $value, $_option );
-        $value = apply_filters( 'pre_add_option', $value, $_option );
+        $value = apply_filters( 'pre_add_option_' . $_option, $value, $_option, $domain );
+        $value = apply_filters( 'pre_add_option', $value, $_option, $domain );
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
@@ -394,30 +396,35 @@ class options {
             // On ajoute des actions
             do_action( 'add_option', $_option, $value );
 
-            // On insère la nouvelle valeur
-            if( self::$_is_sqlite && $domain != null ){
-
-                $option = self::$_db->esc_sql($option);
-                $domain = self::$_db->esc_sql($domain);
-
-                if( is_array($value) || is_object($value) )      
-                    $value = serialize($value);
+            // On serialize si domain existe
+            if( $domain != null && (is_array($value) || is_object($value) ) ){     
                 
-                $value  = self::$_db->esc_sql($value);
-
-                $autoload  = self::$_db->esc_sql($autoload);
-
-                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$value','$domain','$autoload')");
+                $pre_value = serialize($value);
 
             } else {
 
-                $this->_SetValueByNodeToArray($node, self::$_options, $value);
+                $pre_value = $value;
+            }
+
+            // On insère la nouvelle valeur
+            if( self::$_is_sqlite && $domain != null ){
+
+                $option    = self::$_db->esc_sql($option);
+                $domain    = self::$_db->esc_sql($domain);
+                $pre_value = self::$_db->esc_sql($pre_value);
+                $autoload  = self::$_db->esc_sql($autoload);
+
+                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$pre_value','$domain','$autoload')");
+
+            } else {
+
+                $this->_SetValueByNodeToArray($node, self::$_options, $pre_value);
                 self::$_flag = true;
             }
 
             // On ajoute des actions
-            do_action( 'added_option_'.$_option, $_option, $value );
-            do_action( 'added_option', $_option, $value );
+            do_action( 'added_option_'.$_option, $_option, $value, $domain );
+            do_action( 'added_option', $_option, $value, $domain );
 
             return true;
         }
@@ -449,44 +456,55 @@ class options {
         $_option = implode('_', $node);
 
         // On ajoute des filtres
-        $value = apply_filters( 'pre_update_option_' . $_option, $value, $old_value, $_option );
-        $value = apply_filters( 'pre_update_option', $value, $_option, $old_value );
+        $value = apply_filters( 'pre_update_option_' . $_option, $value, $old_value, $_option, $domain );
+        $value = apply_filters( 'pre_update_option', $value, $_option, $old_value, $domain );
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
 
-        if ( $old_value !== $value && $old_value !== null){
+        // On serialize si value is a array
+        if( is_array($value) || is_object($value) )   
+            $pre_value = serialize($value);
+        else
+            $pre_value = $value;
+
+        // On serialize si old_value is a array
+        if ( is_array($old_value) || is_object($old_value) )
+            $old_value = serialize($old_value);
+
+
+        if ( $old_value !== $pre_value && $old_value !== null){
+
+            // Si domaine pas nul on force l'utilisation de la value initiale
+            if( $domain == null )
+                $pre_value = $value;
 
             // On ajoute des actions
-            do_action( 'update_option', $old_value, $value, $_option );
+            do_action( 'update_option', $old_value, $value, $_option, $domain );
 
             if( self::$_is_sqlite && $domain != null ){
 
                 $option = self::$_db->esc_sql($option);
                 $domain = self::$_db->esc_sql($domain);
-
-                if( is_array($value) || is_object($value) )      
-                    $value = serialize($value);
-
-                $value  = self::$_db->esc_sql($value);
+                $pre_value  = self::$_db->esc_sql($pre_value);
 
                 // On met à jour le cache autoload
                 if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
-                    self::$_autoload[$domain][$option] = $value;
+                    self::$_autoload[$domain][$option] = $pre_value;
 
-                self::$_db->query("UPDATE options SET value = '$value' WHERE name='$option' AND domain='$domain'");
+                self::$_db->query("UPDATE options SET value = '$pre_value' WHERE name='$option' AND domain='$domain'");
 
             } else{
                 // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
                 $this->_SetValueByNodeToArray($node, self::$_options, null);
                 // On met à jour la nouvelle valeur
-                $this->_SetValueByNodeToArray($node, self::$_options, $value);
+                $this->_SetValueByNodeToArray($node, self::$_options, $pre_value);
                 self::$_flag = true;
             }
 
             // On ajoute des actions
-            do_action( 'updated_option_'.$_option, $old_value, $value, $_option );
-            do_action( 'updated_option', $_option, $old_value, $value );
+            do_action( 'updated_option_'.$_option, $old_value, $value, $_option, $domain );
+            do_action( 'updated_option', $_option, $old_value, $value, $domain );
 
             return true;
         }
@@ -514,7 +532,7 @@ class options {
         $_option = implode('_', $node);
 
         // On court-circuit le résultat
-        $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain );
+        $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain, $domain );
         if ( null !== $pre ) return $pre;
 
         if( self::$_is_sqlite && $domain != null ){
@@ -534,8 +552,8 @@ class options {
         }
 
         // On ajoute des actions
-        do_action( 'deleted_option_' . $_option, $_option, $domain, $delete );
-        do_action( 'deleted_option', $_option, $domain, $delete );
+        do_action( 'deleted_option_' . $_option, $_option, $domain, $delete, $domain );
+        do_action( 'deleted_option', $_option, $domain, $delete, $domain );
 
         return $delete;
     }
