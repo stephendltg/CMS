@@ -177,8 +177,14 @@ class options {
 
     function __construct(){
 
-        // On charge la base de donnée
-        self::$_db = new sqlite( MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db' );
+        /*
+        * On charge la base de donnée
+        * self::$_db = new sqlite( MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db' );
+        *
+        * https://sqlite.org/inmemorydb.html
+        * self::$_db = new sqlite(':memory:');
+        */
+        self::$_db = new sqlite(MP_SQLITE_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.sqlite3');
 
         // On valide l'utilisation de sqlite        
         if( false === self::$_db)
@@ -187,9 +193,8 @@ class options {
         // On créer la table si la base est vide et on charge les données autoload
         if( self::$_is_sqlite ){
 
-            if( fileSize(MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db') == 0 )
+            if( fileSize(MP_SQLITE_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.sqlite3') == 0 )
                 self::$_db->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
-
 
             // On charge les table autoload
             $_autoload = self::$_db->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
@@ -200,7 +205,7 @@ class options {
         }
         
         // On charge la table option dans la variable static
-        $options = yaml_parse_file(MP_PAGES_DIR. '/site.yml', 0, null, apply_filters('mp_options_cache',CACHE) );
+        $options = yaml_parse_file(MP_CONFIG_DIR. '/config.yml', 0, null, apply_filters('mp_options_cache',CACHE) );
         self::$_options = !$options ? array():$options;
 
         // On ajoute un hook pour la sauvegarde du fichier
@@ -216,9 +221,9 @@ class options {
         //_echo( self::$_db->query("SELECT * FROM options") );
 
         if( self::$_flag ){
-            if( ! yaml_emit_file(MP_PAGES_DIR. '/site.yml', self::$_options) )
-                _doing_it_wrong( __CLASS__, 'Error saving file configuration: site.yaml!');
-            @chmod(MP_PAGES_DIR. '/site.yml', 0644);
+            if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_options) )
+                _doing_it_wrong( __CLASS__, 'Error saving file configuration: config.yaml!');
+            @chmod(MP_PAGES_DIR. '/config.yml', 0644);
         }
         self::$_flag = null;
     }
@@ -543,6 +548,7 @@ class options {
 /**
 * Supprime un transient
 */
+/*
 function delete_transient( $transient ){
     
     $option_timeout = '_transient_timeout_' . $transient;
@@ -555,12 +561,13 @@ function delete_transient( $transient ){
     return $result;
 }
 
-
+*/
 
 
 /**
 * Récupère un transient
 */
+/*
 function get_transient( $transient ) {
 
     $transient_option = '_transient_' . $transient;
@@ -581,13 +588,14 @@ function get_transient( $transient ) {
     return $value;
 }
 
-
+*/
 
 
 
 /**
 * ajoute un transient
 */
+/*
 function set_transient( $transient, $value, $expiration = 0 ) {
 
     $expiration = (int) $expiration;
@@ -633,12 +641,13 @@ function set_transient( $transient, $value, $expiration = 0 ) {
 }
 
 
-
+*/
 
 /**
 * Systeme de cache transient
 */
-function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
+/*
+function mp_transient_data_old( $transient , $function , $expiration = 60 , $params = array() ){
 
     $transient  = (string) $transient;
     $expiration = (int) $expiration;
@@ -655,9 +664,100 @@ function mp_transient_data( $transient , $function , $expiration = 60 , $params 
 
     return $value; 
 }
+*/
+
+/**
+* Systeme de cache transient
+*/
+function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
+
+    $transient  = (string) $transient;
+    $expiration = (int) $expiration;
+
+    $transient_timeout = '_transient_timeout_' . $transient;
+    $transient_option  = '_transient_' . $transient;
+
+
+    // On supprime le cache si la variable function vaut null
+    if( null === $function){
+
+        $result = delete_option( $transient_option, 'mp_transient' );
+
+        if ( $result )
+            delete_option( $transient_timeout, 'mp_transient' );
+
+        return $result;
+    }
+
+
+    // On récupère le  timeout du  cache
+    $timeout = get_option( $transient_timeout, false, 'mp_transient' );
+            
+    // Si le timeout est dépasse on supprime le cache et son timeout
+    if ( false !== $timeout && $timeout < time() ) {
+
+        delete_option( $transient_option, 'mp_transient' );
+        delete_option( $transient_timeout, 'mp_transient' );
+        $value = false;
+    }
+        
+    // On récupère la valeur du cache
+    if ( ! isset( $value ) )
+        $value = get_option( $transient_option, false, 'mp_transient' );
 
 
 
+    // Si valeur du cache est false, on créer le cache
+    if ( false === $value ) {
+
+        // Nouvelle valeur du cache
+        $value = @call_user_func_array( $function, $params );
+
+        if( null === $value )
+            _doing_it_wrong('mp_transient_data', 'error parameters or function not found.');
+        
+
+        // On vérifie si le transient n'a pas été créer
+        if ( null === get_option( $transient_option, null, 'mp_transient' ) ) {
+
+            $autoload = 'yes';
+        
+            if ( $expiration ) {
+                 $autoload = 'no';
+                 add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
+            }
+    
+            add_option( $transient_option, $value, 'mp_transient', $autoload );
+
+        } else {
+
+            $update = true;
+
+            if ( $expiration ) {
+            
+                // On vérifie que le timeout du cache existe sinon on le créer
+                if ( null === get_option( $transient_timeout, null, 'mp_transient' ) ) {
+
+                    delete_option( $transient_option, 'mp_transient' );
+                    add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
+                    add_option( $transient_option, $value, 'mp_transient', 'no' );
+                    $update = false;
+
+                } else {
+
+                    // On met à jour le time out du cache
+                    update_option( $transient_timeout, time() + $expiration, 'mp_transient' );
+                }
+            }
+        
+            // On met à jour la valeur du cache
+            if ( $update )
+                update_option( $transient_option, $value, 'mp_transient' );
+        }
+    }
+
+    return $value;
+}
 
 /**
 * SQLITE
@@ -676,7 +776,7 @@ class sqlite
         if(!class_exists('SQLite3'))        
             return false;   
 
-        $this->sqlite = new SQLite3($path);
+        $this->sqlite = new SQLite3( $path, SQLITE3_OPEN_READWRITE  | SQLITE3_OPEN_CREATE | SQLITE3_OPEN_SHAREDCACHE );
     }
 
 

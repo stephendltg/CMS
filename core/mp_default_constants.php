@@ -27,8 +27,10 @@ function mp_init_constants() {
 	if ( !defined('FORCE_RELOCATE') )
 		define( 'FORCE_RELOCATE', false );
 
-	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages' );
+	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages'   );
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );
+	define( 'MP_SQLITE_DIR',  MP_CONTENT_DIR . '/sqlite'  );
+	define( 'MP_CONFIG_DIR',  MP_CONTENT_DIR . '/config'  );
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
@@ -46,6 +48,9 @@ function mp_init_constants() {
 
     // Definit l'encodage des documents.
     define( 'CHARSET', 'UTF-8' );
+
+    // Definit open shared sqlite3
+    define( 'SQLITE3_OPEN_SHAREDCACHE' , 0x00020000 );
 
 	// Constantes de temps
 	define( 'MINUTE_IN_SECONDS', 60 );

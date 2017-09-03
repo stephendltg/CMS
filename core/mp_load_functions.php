@@ -218,11 +218,11 @@ function _echo( $var, $var_dump = 0 ){
 * @param string $function The function that was called.
 * @param string $message  A message explaining what has been done incorrectly.
 */
-function _doing_it_wrong( $function, $message ) {
+function _doing_it_wrong( $function, $message, $mode = false ) {
  
     if ( DEBUG ) {
 
-        if ( function_exists( '__' ) ) {
+        if ( $mode === true && function_exists( '__' ) ) {
             trigger_error( sprintf( __( '%1$s was called <strong>incorrectly</strong>. %2$s' ), $function, $message ) );
         } else {
             trigger_error( sprintf( '%1$s was called <strong>incorrectly</strong>. %2$s', $function, $message ) );
@@ -248,6 +248,14 @@ function cms_not_installed() {
     @mkdir( MP_PAGES_DIR , 0755 , true );
     if ( !is_writable( MP_PAGES_DIR ) ) 
         cms_maintenance( 'message=Error directory permissions : '. MP_PAGES_DIR .' !' );
+
+    @mkdir( MP_SQLITE_DIR , 0755 , true );
+    if ( !is_writable( MP_SQLITE_DIR ) ) 
+        cms_maintenance( 'message=Error directory permissions : '. MP_SQLITE_DIR .' !' );
+
+    @mkdir( MP_CONFIG_DIR , 0755 , true );
+    if ( !is_writable( MP_CONFIG_DIR ) ) 
+        cms_maintenance( 'message=Error directory permissions : '. MP_CONFIG_DIR .' !' );
 
     @mkdir( MP_THEMES_DIR , 0755 , true );
 }
