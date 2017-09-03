@@ -679,7 +679,7 @@ function mp_transient_data( $transient , $function , $expiration = 60 , $params 
 
 
     // On supprime le cache si la variable function vaut null
-    if( null === $function){
+    if( null === $function || !is_callable($function) ){
 
         $result = delete_option( $transient_option, 'mp_transient' );
 
@@ -711,11 +711,7 @@ function mp_transient_data( $transient , $function , $expiration = 60 , $params 
     if ( false === $value ) {
 
         // Nouvelle valeur du cache
-        $value = @call_user_func_array( $function, $params );
-
-        if( null === $value )
-            _doing_it_wrong('mp_transient_data', 'error parameters or function not found.');
-        
+        $value = call_user_func_array( $function, $params );        
 
         // On vérifie si le transient n'a pas été créer
         if ( null === get_option( $transient_option, null, 'mp_transient' ) ) {
