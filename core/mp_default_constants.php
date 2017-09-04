@@ -86,10 +86,6 @@ function mp_plugin_directory_constants() {
 	define( 'MP_PLUGIN_URL',  MP_CONTENT_URL  . '/plugins' );
 	define( 'MU_PLUGIN_DIR',  MP_CONTENT_DIR  . '/mu-plugins' );
 	define( 'MU_PLUGIN_URL',  MP_CONTENT_URL  . '/mu-plugins' );
-
-	// Constante pour optimisation des images et fichier svg
-	if ( !defined('IMAGIFY') )
-		define( 'IMAGIFY', true );
 }
 
 

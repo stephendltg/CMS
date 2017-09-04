@@ -169,9 +169,9 @@ class yaml {
         elseif( $value === false )                  return "false";
         elseif( $value === null  )                  return "~";
         elseif( strpos($value, "\n") !== false )
-            return '|'. $indents . str_replace("\n", "$indents", $value);
+            return '| '. $indents . str_replace("\n", "$indents", $value) ."\n";
         elseif( strlen($value) > 70 )
-            return '>'. $indents . str_replace( "\n", "$indents", wordwrap($value, 70, "\n") );
+            return '> '. $indents . str_replace( "\n", "$indents", wordwrap($value, 70, "\n") ) ."\n";
 
         return $value;
     }

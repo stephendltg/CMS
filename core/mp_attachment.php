@@ -241,33 +241,30 @@ function get_the_image( $args, $mode = 'scheme' ){
 
     if( $mode === 'uri' ){
 
-        if( IMAGIFY ){
+        switch ($size) {
 
-            switch ($size) {
-
-                case 'small':
-                    $imagify_args = apply_filters('mp_imagify_small', 'width=320');
-                    break;
-                case 'medium':
-                    $imagify_args = apply_filters('mp_imagify_medium', 'width=800');
-                    break;
-                case 'large':
-                    $imagify_args = apply_filters('mp_imagify_large', 'width=1024');
-                    break;
-                case 'thumbnail':
-                    $imagify_args = apply_filters('mp_imagify_thumbnail', 'width=480&height=480');
-                    break;
-                case '16/9':
-                    $imagify_args = apply_filters('mp_imagify_16/9', 'keep=top&width=800&height='. ceil(600/(16/9)));
-                    break;
-                default:
-                    $imagify_args = $args;
-                    break;
-            }
-            
-            // On charge l'image recalculée par imagify
-            $images = array_map( function($image) use ($imagify_args){ return imagify( $image, $imagify_args); }, $images );
+            case 'small':
+                $imagify_args = get_option('customize.images.small','width=320');
+                break;
+            case 'medium':
+                $imagify_args = get_option('customize.images.medium','width=800');
+                break;
+            case 'large':
+                $imagify_args = get_option('customize.images.large', 'width=1024');
+                break;
+            case 'thumbnail':
+                $imagify_args = get_option('customize.images.thumbnail','width=480&height=480');
+                break;
+            case '16/9':
+                $imagify_args = get_option('customize.images.16/9', 'keep=top&width=800&height='. ceil(600/(16/9)) );
+                break;
+            default:
+                $imagify_args = $args;
+                break;
         }
+            
+        // On charge l'image recalculée par imagify
+        $images = array_map( function($image) use ($imagify_args){ return imagify( $image, $imagify_args); }, $images );
 
         $images = array_map( function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); } , $images );
     }

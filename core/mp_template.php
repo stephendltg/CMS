@@ -226,18 +226,20 @@ function mp_meta_favicon(){
     $meta_favicon = '';
 
     // <!-- Use Iconifyer to generate all the favicons and touch icons you need: http://iconifier.net -->
-    $favicon = apply_filters( 'mp_meta_favicon_path', 'favicon.ico' );
+    $favicon = esc_url_raw( get_option( 'customize.meta.favicon_url' ) );
 
     if ( strlen($favicon) != 0 )
         $meta_favicon .= '<link rel="shortcut icon" href="'.$favicon.'" type="image/x-icon">'."\n";
 
     // <!-- Apple icon: no error 404 for safari and ios -->
-    $apple_icon_touch = apply_filters( 'mp_meta_apple_touch_icon_path', 'apple-touch-icon.png' );
+    $apple_icon_touch = esc_url_raw( get_option( 'customize.meta.apple_touch_icon_url' ) );
+
     if ( strlen($apple_icon_touch) != 0 )
         $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch.'" type= "text/plain">'."\n";
 
     // <!-- Because the humans is important! -->
-    $humans = apply_filters( 'mp_meta_humans_path', 'humans.txt' );
+    $humans = esc_url_raw( get_option( 'customize.meta.humans_txt_url' ) );
+
     if ( strlen($humans) != 0 )
         $meta_favicon .= '<link rel="author" href="'.$humans.'">'."\n";
 
@@ -268,14 +270,14 @@ function mp_meta_viewport(){
 function mp_meta_google_site_verification(){
 
     // Don't forget to set your site up: http://google.com/webmasters
-    $google_check = apply_filters('mp_meta_google_check', '');
+    $google_check = esc_html( get_option( 'customize.meta.google_check' ) );
     if ( strlen($google_check) == 0 )  return;
     echo '<meta name="google-site-verification" content="'.$google_check.'" />'."\n";
 }
 
 function mp_meta_opengraph(){
 
-    if( is_404() )
+    if( is_404() || is_tag() )
         return;
 
     $description = excerpt( apply_filters('meta_description', get_the_blog('description') ) );
@@ -554,6 +556,9 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
 
     if( is_home() )
         $breadcrumb = get_the_blog('title');
+
+    if( is_tag() )
+        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , MP_HOME ) . $breadcrumb_schema_separator . __('tag'). ': ' . get_query_vars()['tag'];
 
     if( is_404() )
         $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , MP_HOME ) . $breadcrumb_schema_separator . '404';

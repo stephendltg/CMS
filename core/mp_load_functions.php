@@ -218,11 +218,11 @@ function _echo( $var, $var_dump = 0 ){
 * @param string $function The function that was called.
 * @param string $message  A message explaining what has been done incorrectly.
 */
-function _doing_it_wrong( $function, $message, $mode = false ) {
+function _doing_it_wrong( $function, $message ) {
  
     if ( DEBUG ) {
 
-        if ( $mode === true && function_exists( '__' ) ) {
+        if ( function_exists( '__' ) ) {
             trigger_error( sprintf( __( '%1$s was called <strong>incorrectly</strong>. %2$s' ), $function, $message ) );
         } else {
             trigger_error( sprintf( '%1$s was called <strong>incorrectly</strong>. %2$s', $function, $message ) );
@@ -585,11 +585,24 @@ function init_the_blog(){
     $plugins = array('active_plugins'=> null);
 
     $customize = array(
-        'pages-content'=> array(
-            'shortcode' => true,
-            'markdown'  => true
+        'meta' => array(
+            'favicon_url' => MP_HOME . '/favicon.ico',
+            'apple_touch_icon_url' => MP_HOME . '/apple-touch-icon.png',
+            'humans_txt_url' => MP_HOME . '/humans.txt',
+            'google_check'   => null
             ),
-        'menu'      => '' );
+        'images' => array(
+            'small'     => 'width=320',
+            'medium'    => 'width=800',
+            'large'     => 'width=1024',
+            'thumbnail' => 'width=480&height=480',
+            '16/9'      => 'keep=top&width=800&height='. ceil(600/(16/9))
+            ),
+        'pages'         => array( 'content' => array(
+                                'shortcode' => true,
+                                'markdown'  => false
+                                ) ),
+        'menu'          => null );
 
     add_option('blog', $blog);
     add_option('setting', $setting);

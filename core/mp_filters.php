@@ -84,10 +84,10 @@ add_filter('the_page_tag', function($value){
  */
 add_filter('get_the_page_content', function($value, $slug){
 
-    if( true === get_option('customize.shortcode', false) )
+    if( true === get_option('customize.pages.content.shortcode', false) )
         $value = mp_pops($value, $slug);
 
-    if( true === get_option('customize.markdown', false) )
+    if( true === get_option('customize.pages.content.markdown', false) )
         $value = parse_markdown( $value);
     else
         $value = parse_text( $value);
@@ -258,8 +258,6 @@ add_action('loaded', 'mp_lazy_load');
  * @return
  */
 function mp_lazy_load(){
-
-    if ( !IMAGIFY ) return;
 
     // On ajoute le script lazyload
     add_inline_script('lazyload', '(function(a,e){function f(){var d=0;if(e.body&&e.body.offsetWidth){d=e.body.offsetHeight}if(e.compatMode=="CSS1Compat"&&e.documentElement&&e.documentElement.offsetWidth){d=e.documentElement.offsetHeight}if(a.innerWidth&&a.innerHeight){d=a.innerHeight}return d}function b(g){var d=ot=0;if(g.offsetParent){do{d+=g.offsetLeft;ot+=g.offsetTop}while(g=g.offsetParent)}return{left:d,top:ot}}function c(){var l=e.querySelectorAll("[data-lazy-original]");var j=a.pageYOffset||e.documentElement.scrollTop||e.body.scrollTop;var d=f();for(var k=0;k<l.length;k++){var h=l[k];var g=b(h).top;if(g<(d+j)){h.src=h.getAttribute("data-lazy-original");h.removeAttribute("data-lazy-original")}}}if(a.addEventListener){a.addEventListener("DOMContentLoaded",c,false);a.addEventListener("scroll",c,false)}else{a.attachEvent("onload",c);a.attachEvent("onscroll",c)}})(window,document);' );

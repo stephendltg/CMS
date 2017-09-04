@@ -9,15 +9,46 @@ Author URI:
 */
 
 
-// On compile la feuille de style
-$url = mp_compass(MP_TEMPLATE_URL.'/assets/sass/style.scss', array('css-mode'=>'crunched') );
+/**
+ * Implement the scss compiler.for this theme
+ */
+function mp_compass( $scss_name = 'style', $mode = 'compressed' ){
+
+        // On charge la librairie
+        require_once ( ABSPATH . INC . '/vendors/scss.inc.php' );
+
+        $scss = new \Leafo\ScssPhp\Compiler();
+
+        // On import le repertoire à la librairie
+        $scss->setImportPaths(MP_TEMPLATE_DIR .'/assets/sass/');
+
+        // mode
+        switch ($mode) {
+            case 'expanded':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Expanded');
+                break;
+            case 'compressed':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Compressed');
+                break;
+            case 'compact':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Compact');
+                break;
+            case 'crunched':
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Crunched');
+                break;
+            default:
+                $scss->setFormatter('Leafo\ScssPhp\Formatter\Nested');
+                break;
+        }
+
+        // Compilation sass
+        return $scss->compile('@import "'.$scss_name.'.scss";');
+}
+
 
 // Déclaration de la feuille de style uniquement si la compilation c'est bien passé.
-if( $url != null )
-	add_inline_style('defaut-style', file_get_content(MP_TEMPLATE_DIR.'/assets/sass/style.css') );
-
-// On ajoute animation
-// add_inline_style('animate', file_get_content(MP_TEMPLATE_DIR.'/assets/css/animate.css') );
+//mp_transient_data('style_css', null);
+add_inline_style('defaut-style', mp_transient_data('style_css', 'mp_compass', 0 ) );
 
 // Déclaration script pour gérér les prefix naviguateur
 add_inline_script('prefix-style', file_get_content(MP_TEMPLATE_DIR.'/assets/js/prefixfree.min.js') );

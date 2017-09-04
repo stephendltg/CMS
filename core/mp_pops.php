@@ -171,7 +171,7 @@ function pops_email( $args ){
     $text   = strlen($text) == 0 ? '@'. sanitize_words(substr( $email , 0 , strpos($email,'@') ) ) : $text;
     $rel    = !empty($args['rel']) && is_same($args['rel'] , 'me') ? ' rel="'. $args['rel'] .'"' : '';
 
-    $email  = str_replace('@', '(at)', $email);
+    $email  = str_replace('@', '[at]', $email);
 
     // Scheme du shortcode
     $schema_with_rel = apply_filters('pops_email_schema_with_rel','<address%3$s><a href="mailto:?to=%1$s"%4$s>%2$s</a></address>');

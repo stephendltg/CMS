@@ -143,8 +143,8 @@ function mp_set_the_page( $slug , $args = array() ) {
     $slug = trim($slug, '/');
 
     $args = parse_args( $args, array(
-        'title' => '',
-        'author' => '',
+        'title' => __('New page'),
+        'author' => get_the_blog('author'),
         'tag' => '',
         'description' => '',
         'content' => ''

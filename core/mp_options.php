@@ -396,29 +396,22 @@ class options {
             // On ajoute des actions
             do_action( 'add_option', $_option, $value );
 
-            // On serialize si domain existe
-            if( $domain != null && (is_array($value) || is_object($value) ) ){     
-                
-                $pre_value = serialize($value);
-
-            } else {
-
-                $pre_value = $value;
-            }
 
             // On insère la nouvelle valeur
             if( self::$_is_sqlite && $domain != null ){
 
                 $option    = self::$_db->esc_sql($option);
                 $domain    = self::$_db->esc_sql($domain);
-                $pre_value = self::$_db->esc_sql($pre_value);
+                if(is_array($value) || is_object($value) )
+                    $value = serialize($value);
+                $value = self::$_db->esc_sql($value);
                 $autoload  = self::$_db->esc_sql($autoload);
 
-                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$pre_value','$domain','$autoload')");
+                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$value','$domain','$autoload')");
 
             } else {
 
-                $this->_SetValueByNodeToArray($node, self::$_options, $pre_value);
+                $this->_SetValueByNodeToArray($node, self::$_options, $value);
                 self::$_flag = true;
             }
 
@@ -475,10 +468,6 @@ class options {
 
         if ( $old_value !== $pre_value && $old_value !== null){
 
-            // Si domaine pas nul on force l'utilisation de la value initiale
-            if( $domain == null )
-                $pre_value = $value;
-
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option, $domain );
 
@@ -495,10 +484,12 @@ class options {
                 self::$_db->query("UPDATE options SET value = '$pre_value' WHERE name='$option' AND domain='$domain'");
 
             } else{
+
                 // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
                 $this->_SetValueByNodeToArray($node, self::$_options, null);
+
                 // On met à jour la nouvelle valeur
-                $this->_SetValueByNodeToArray($node, self::$_options, $pre_value);
+                $this->_SetValueByNodeToArray($node, self::$_options, $value);
                 self::$_flag = true;
             }
 
@@ -808,15 +799,15 @@ class sqlite
         */
 
         // verify if query is good
-        if( !@$this->sqlite->prepare($query) )   
+        if( !$this->sqlite->prepare($query) )   
             return false;
 
         // If not SELECT query
         if( !preg_match('|\bSELECT\b|', $query ) )
-            return @$this->sqlite->exec($query);
+            return $this->sqlite->exec($query);
 
 
-        $results = @$this->sqlite->query($query);
+        $results = $this->sqlite->query($query);
 
         // Mode output SELECT
         if( strtoupper($output) === 'OBJECT' )
@@ -846,7 +837,7 @@ class sqlite
         if( !preg_match('|\bSELECT\b|', $query ) )
             return false;
 
-        return @$this->sqlite->querySingle($query, $entire_row );
+        return $this->sqlite->querySingle($query, $entire_row );
     }
 
 }
