@@ -30,6 +30,7 @@ function sanitize_page($field, $value, $slug){
 
         case 'title':
         case 'description':
+        case 'content':
             $value = esc_html($value);
             break;
         case 'tag':
@@ -43,11 +44,6 @@ function sanitize_page($field, $value, $slug){
             break;
         case 'template':
             $value = sanitize_file_name($value);
-            break;
-        case 'content':
-            $value = esc_html($value);
-            $value = mp_pops($value, $slug);
-            $value = parse_markdown( $value);
             break;
         case 'thumbnail':
             $value = $slug .'/'. ltrim(esc_html($value),'/');

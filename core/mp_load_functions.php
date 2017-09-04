@@ -584,9 +584,17 @@ function init_the_blog(){
 
     $plugins = array('active_plugins'=> null);
 
+    $customize = array(
+        'pages-content'=> array(
+            'shortcode' => true,
+            'markdown'  => true
+            ),
+        'menu'      => '' );
+
     add_option('blog', $blog);
     add_option('setting', $setting);
     add_option('plugins', $plugins);
+    add_option('customize', $customize);
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');

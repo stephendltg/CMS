@@ -566,7 +566,6 @@ class options {
 /**
 * Supprime un transient
 */
-/*
 function delete_transient( $transient ){
     
     $option_timeout = '_transient_timeout_' . $transient;
@@ -579,13 +578,12 @@ function delete_transient( $transient ){
     return $result;
 }
 
-*/
+
 
 
 /**
 * Récupère un transient
 */
-/*
 function get_transient( $transient ) {
 
     $transient_option = '_transient_' . $transient;
@@ -606,14 +604,11 @@ function get_transient( $transient ) {
     return $value;
 }
 
-*/
-
 
 
 /**
 * ajoute un transient
 */
-/*
 function set_transient( $transient, $value, $expiration = 0 ) {
 
     $expiration = (int) $expiration;
@@ -659,18 +654,16 @@ function set_transient( $transient, $value, $expiration = 0 ) {
 }
 
 
-*/
-
 /**
 * Systeme de cache transient
 */
-/*
-function mp_transient_data_old( $transient , $function , $expiration = 60 , $params = array() ){
+
+function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
 
     $transient  = (string) $transient;
     $expiration = (int) $expiration;
 
-    if( null === $function){
+    if( null === $function || !is_callable($function) ){
         delete_transient( $transient );
         return;
     }
@@ -682,96 +675,8 @@ function mp_transient_data_old( $transient , $function , $expiration = 60 , $par
 
     return $value; 
 }
-*/
-
-/**
-* Systeme de cache transient
-*/
-function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
-
-    $transient  = (string) $transient;
-    $expiration = (int) $expiration;
-
-    $transient_timeout = '_transient_timeout_' . $transient;
-    $transient_option  = '_transient_' . $transient;
 
 
-    // On supprime le cache si la variable function vaut null
-    if( null === $function || !is_callable($function) ){
-
-        $result = delete_option( $transient_option, 'mp_transient' );
-
-        if ( $result )
-            delete_option( $transient_timeout, 'mp_transient' );
-
-        return $result;
-    }
-
-
-    // On récupère le  timeout du  cache
-    $timeout = get_option( $transient_timeout, false, 'mp_transient' );
-            
-    // Si le timeout est dépasse on supprime le cache et son timeout
-    if ( false !== $timeout && $timeout < time() ) {
-
-        delete_option( $transient_option, 'mp_transient' );
-        delete_option( $transient_timeout, 'mp_transient' );
-        $value = false;
-    }
-        
-    // On récupère la valeur du cache
-    if ( ! isset( $value ) )
-        $value = get_option( $transient_option, false, 'mp_transient' );
-
-
-
-    // Si valeur du cache est false, on créer le cache
-    if ( false === $value ) {
-
-        // Nouvelle valeur du cache
-        $value = call_user_func_array( $function, $params );        
-
-        // On vérifie si le transient n'a pas été créer
-        if ( null === get_option( $transient_option, null, 'mp_transient' ) ) {
-
-            $autoload = 'yes';
-        
-            if ( $expiration ) {
-                 $autoload = 'no';
-                 add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
-            }
-    
-            add_option( $transient_option, $value, 'mp_transient', $autoload );
-
-        } else {
-
-            $update = true;
-
-            if ( $expiration ) {
-            
-                // On vérifie que le timeout du cache existe sinon on le créer
-                if ( null === get_option( $transient_timeout, null, 'mp_transient' ) ) {
-
-                    delete_option( $transient_option, 'mp_transient' );
-                    add_option( $transient_timeout, time() + $expiration, 'mp_transient', 'no' );
-                    add_option( $transient_option, $value, 'mp_transient', 'no' );
-                    $update = false;
-
-                } else {
-
-                    // On met à jour le time out du cache
-                    update_option( $transient_timeout, time() + $expiration, 'mp_transient' );
-                }
-            }
-        
-            // On met à jour la valeur du cache
-            if ( $update )
-                update_option( $transient_option, $value, 'mp_transient' );
-        }
-    }
-
-    return $value;
-}
 
 /**
 * SQLITE
