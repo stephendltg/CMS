@@ -562,34 +562,35 @@ function init_the_blog(){
     global $is_mod_rewrite;
 
     $blog = array(
-        'title'=>'miniPops',
-        'subtitle'=>'your website',
-        'description'=> null,
-        'keywords'=>'minipops, cms, website',
-        'author'=>'stephen deletang',
-        'author_email'=> null,
-        'copyright'=>'@2015 - MiniPops',
-        'lang'=> lang(),
-        'theme'=>'default',
-        'robots'=>'index' );
+        'title'         =>'miniPops',
+        'subtitle'      =>'your website',
+        'description'   => null,
+        'keywords'      =>'minipops, cms, website',
+        'author'        =>'stephen deletang',
+        'author_email'  => null,
+        'copyright'     =>'@2015 - MiniPops',
+        'lang'          => lang(),
+        'theme'         =>'default',
+        'robots'        =>'index' );
 
     $setting = array(
-        'home'=> esc_url_raw(MP_HOME),
-        'urlrewrite'=> $is_mod_rewrite,
-        'timezone'=> 'Europe/London',
-        'date_format' => 'F j, Y',
-        'time_format' => 'g:i a',
-        'api_key'=>random_salt(32),
-        'api_keysalt'=>random_salt(32) );
+        'home'          => esc_url_raw(MP_HOME),
+        'urlrewrite'    => $is_mod_rewrite,
+        'timezone'      => 'Europe/London',
+        'date_format'   => 'F j, Y',
+        'time_format'   => 'g:i a',
+        'api_key'       => base32_encode( random_salt(32) ),
+        'api_keysalt'   => base32_encode( random_salt(32) ) 
+        );
 
     $plugins = array('active_plugins'=> null);
 
     $customize = array(
         'meta' => array(
-            'favicon_url' => MP_HOME . '/favicon.ico',
-            'apple_touch_icon_url' => MP_HOME . '/apple-touch-icon.png',
-            'humans_txt_url' => MP_HOME . '/humans.txt',
-            'google_check'   => null
+            'favicon_url'           => MP_HOME . '/favicon.ico',
+            'apple_touch_icon_url'  => MP_HOME . '/apple-touch-icon.png',
+            'humans_txt_url'        => MP_HOME . '/humans.txt',
+            'google_check'          => null
             ),
         'images' => array(
             'small'     => 'width=320',
