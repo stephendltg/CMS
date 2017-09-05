@@ -228,6 +228,31 @@ function sanitize_file_name( $filename ) {
     return $filename;
 }
 
+
+/**
+ * Nettoie une color et sortie en rgb ou rgba
+ */
+function sanitize_color( $color ){
+
+    $color = (string) $color;
+
+    $special_chars = array("?", "%", "[", "]", "/", "\\", "=", "<", ">", ":", ";", "'", "\"", "&", "$", "*", "|", "~", "`", "!", "{", "}", chr(0) );
+    $color = preg_replace( "#\x{00a0}#siu", ' ', $color );
+    $color = str_replace( $special_chars, '', $color );
+    $color = str_replace( array( '%20', '+' ), ' ', $color );
+    $color = preg_replace( '/[\r\n\t ]+/', '', $color );
+
+    $pattern = "/^(#[0-9a-f]{3}|#(?:[0-9a-f]{2}){2,4}|(rgb)a?\((-?\d+%?[,\s]+){2,3}\s*[\d\.]+%?\))$/";
+    
+    if( $result = is_match( $color , $pattern ) ){
+        if (substr(trim($color), 0, 1) === '#')
+            return 'rgb('. join(',', array_map( function($v){return is_null($v)?0:$v;}, sscanf($color, "#%02x%02x%02x") ) ) .')';
+        return $color;
+    }
+    return null;
+}
+
+
 /**
  * Nettoie un mot de tout caractères
  */
