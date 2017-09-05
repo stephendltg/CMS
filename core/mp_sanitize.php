@@ -241,15 +241,11 @@ function sanitize_color( $color ){
     $color = str_replace( $special_chars, '', $color );
     $color = str_replace( array( '%20', '+' ), ' ', $color );
     $color = preg_replace( '/[\r\n\t ]+/', '', $color );
-
     $pattern = "/^(#[0-9a-f]{3}|#(?:[0-9a-f]{2}){2,4}|(rgb)a?\((-?\d+%?[,\s]+){2,3}\s*[\d\.]+%?\))$/";
-    
-    if( $result = is_match( $color , $pattern ) ){
-        if (substr(trim($color), 0, 1) === '#')
-            return 'rgb('. join(',', array_map( function($v){return is_null($v)?0:$v;}, sscanf($color, "#%02x%02x%02x") ) ) .')';
-        return $color;
-    }
-    return null;
+    if( !is_match( $color , $pattern ) ) return '';
+    if( substr($color, 0, 1) === '#' )
+        $color = 'rgb('. join(',', array_map( function($v){return is_null($v)?0:$v;}, sscanf($color, "#%02x%02x%02x") ) ) .')';
+    return $color;
 }
 
 

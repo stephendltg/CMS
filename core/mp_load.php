@@ -61,7 +61,7 @@ require( ABSPATH . INC . '/mp_network.php' );
 require( ABSPATH . INC . '/mp_files.php' );
 
 // On lance le firewall
-//require( ABSPATH . INC . '/mp_firewall.php' );
+require( ABSPATH . INC . '/mp_firewall.php' );
 
 // On vérifier que le cms est bien installer et les droits d'écriture sur les repertoires.
 cms_not_installed();
