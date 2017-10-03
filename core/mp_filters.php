@@ -369,6 +369,10 @@ function mp_doing_robots(){
     // On déclarer le bon header
     header( 'Content-Type: text/plain; charset='.CHARSET );
     header("X-Robots-Tag: noindex", true);
+    $expires = DAY_IN_SECONDS;
+    header('Pragma: public');
+    header('Cache-Control: maxage='.$expires);
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
 
     $robot = sanitize_words( get_the_blog('robots') );
     $robot = str_replace(' ', ',' , $robot);
@@ -386,6 +390,9 @@ function mp_doing_robots(){
     if( strlen($robots) == 0 )
         redirect( get_the_blog('home') );
 
+    // On donne le bon header
+    http_response_code(200);
+
     echo $robots;
 }
 
@@ -399,6 +406,11 @@ function mp_doing_sitemap(){
     // On déclare le bon header
     header( 'Content-Type: text/xml; charset='.CHARSET );
     header("X-Robots-Tag: noindex", true);
+    $expires = DAY_IN_SECONDS;
+    header('Pragma: public');
+    header('Cache-Control: maxage='.$expires);
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
+
 
     $pages = apply_filters('sitemap_pages', get_all_page() );
 
@@ -414,6 +426,9 @@ function mp_doing_sitemap(){
 
     if( strlen($sitemap) == 0 )
         redirect( get_the_blog('home') );
+
+    // On donne le bon header
+    http_response_code(200);
 
     echo $sitemap;
 }
@@ -466,6 +481,9 @@ function mp_doing_feed(){
     if( strlen($feed) == 0 )
         redirect( get_the_blog('home') );
 
+    // On donne le bon header
+    http_response_code(200);
+
     echo $feed;
 }
 
@@ -477,12 +495,19 @@ function mp_doing_feed(){
 function mp_doing_humans(){
 
     header( 'Content-Type: text/plain; charset='.CHARSET );
+    $expires = DAY_IN_SECONDS;
+    header('Pragma: public');
+    header('Cache-Control: maxage='.$expires);
+    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
 
     $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/humans.txt' );
-    $humans   = readfile(realpath($template));
+    $humans   = file_get_content( realpath($template) );
 
     if( strlen($humans) == 0 )
         redirect( get_the_blog('home') );
+
+    // On donne le bon header
+    http_response_code(200);
 
     echo $humans;
 }

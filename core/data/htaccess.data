@@ -158,9 +158,7 @@
     # 6G:[BAD IPS]
     <Limit GET HEAD OPTIONS POST PUT>
         Order Allow,Deny
-        {{#bad_ips}}
-        Deny from {{.}}
-        {{/bad_ips}}
+        {{#bad_ips}}Deny from {{.}}{{/bad_ips}}
         Allow from All
     </Limit>
 
@@ -311,7 +309,7 @@
             Header set Access-Control-Allow-Origin "*"
         </FilesMatch>
     </IfModule>
-
+    
     {{#is_rewrite}}
     # MINIPOPS:[Rewrite url]
     <IfModule mod_rewrite.c>

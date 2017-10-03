@@ -122,10 +122,6 @@ function is_404(){
     if( is_same( $query , 'error') ) return true;
     if( is_home() )         return false;
     if( is_page() )         return false;
-    if( is_robots() )       return false;
-    if( is_feed() )         return false;
-    if( is_sitemap() )      return false;
-    if( is_humans() )      return false;
     if( is_tag() )          return false;
 
     else return true;
