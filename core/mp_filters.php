@@ -204,7 +204,6 @@ if( CACHE && !DEBUG ){
         }
 
         // Hook qui va créer le cache
-        //add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
         add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
     }
 
@@ -357,6 +356,9 @@ add_action('do_feed' , 'mp_doing_feed');
 // On ajoute la fonction d'appel de construction du fichier sitempa.xml
 add_action('do_sitemap' , 'mp_doing_sitemap');
 
+// On ajoute la fonction d'appel de construction du fichier humans
+add_action('do_humans' , 'mp_doing_humans');
+
 
 /**
  * Générer un fichier robots.txt
@@ -465,4 +467,22 @@ function mp_doing_feed(){
         redirect( get_the_blog('home') );
 
     echo $feed;
+}
+
+
+/**
+ * Générer un fichier humans.txt
+ * @return
+ */
+function mp_doing_humans(){
+
+    header( 'Content-Type: text/plain; charset='.CHARSET );
+
+    $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/humans.txt' );
+    $humans   = readfile(realpath($template));
+
+    if( strlen($humans) == 0 )
+        redirect( get_the_blog('home') );
+
+    echo $humans;
 }

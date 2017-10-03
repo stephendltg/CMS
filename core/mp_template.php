@@ -182,6 +182,13 @@ function mp_meta_author(){
     echo '<meta name="author" content="'.$author.'">'."\n";
 }
 
+
+function mp_meta_humans(){
+    // <!-- Because the humans is important! -->
+    echo '<link rel="author" href="'.get_permalink('humans').'">'."\n";
+}
+
+
 function mp_meta_robots(){
     $robots = apply_filters('meta_robots', get_the_blog('robots') );
     $robots_authorized = apply_filters('meta_robots_authorized', array(
@@ -236,12 +243,6 @@ function mp_meta_favicon(){
 
     if ( strlen($apple_icon_touch) != 0 )
         $meta_favicon .= '<link rel="apple-touch-icon" href="'.$apple_icon_touch.'" type= "text/plain">'."\n";
-
-    // <!-- Because the humans is important! -->
-    $humans = esc_url_raw( get_option( 'customize.meta.humans_txt_url' ) );
-
-    if ( strlen($humans) != 0 )
-        $meta_favicon .= '<link rel="author" href="'.$humans.'">'."\n";
 
     echo $meta_favicon;
 
@@ -325,6 +326,7 @@ add_action('mp_head', 'mp_meta_title', 3);
 add_action('mp_head', 'mp_meta_description', 4);
 add_action('mp_head', 'mp_meta_keywords', 5);
 add_action('mp_head', 'mp_meta_author', 6);
+add_action('mp_head', 'mp_meta_humans', 6);
 add_action('mp_head', 'mp_meta_robots', 7);
 add_action('mp_head', 'mp_meta_viewport', 8);
 add_action('mp_head', 'mp_meta_favicon', 9 );

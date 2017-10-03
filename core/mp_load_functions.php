@@ -589,7 +589,6 @@ function init_the_blog(){
         'meta' => array(
             'favicon_url'           => MP_HOME . '/favicon.ico',
             'apple_touch_icon_url'  => MP_HOME . '/apple-touch-icon.png',
-            'humans_txt_url'        => MP_HOME . '/humans.txt',
             'google_check'          => null
             ),
         'images' => array(

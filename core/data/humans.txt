@@ -5,15 +5,15 @@
 /* TEAM */
 
     Developer: Stephen Deletang
-	Twitter: @stephendltg
-	Contact: s.deletang(at)laposte.net
-	Location: Conquereuil, France
+    Twitter: @stephendltg
+    Contact: s.deletang(at)laposte.net
+    Location: Conquereuil, France
 
 
 /* THANKS */
-					
+                    
     Graphic: Fabienne Deletang
-	Location: Conquereuil, France
+    Location: Conquereuil, France
 
                                
 /* SITE */
@@ -25,4 +25,3 @@
     Components: VanillaJs, PHP5, Yaml, markdown
                       
     Software: Sublimtext for the back-end, brackets for the front-end
-       

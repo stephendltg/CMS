@@ -21,6 +21,9 @@ elseif ( is_feed() ) :
 elseif ( is_sitemap() ) :
 	do_action( 'do_sitemap' );
 	return;
+elseif ( is_humans() ) :
+	do_action( 'do_humans' );
+	return;
 endif;
 
 if     ( is_404()            && $template = get_template('templates/404')     	) :

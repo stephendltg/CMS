@@ -83,6 +83,7 @@ require( ABSPATH . INC . '/mp_yaml.php' );
 require( ABSPATH . INC . '/mp_options.php' );
 require( ABSPATH . INC . '/mp_cron.php' );
 
+
 // On définit les url pour plugins
 mp_plugin_directory_constants();
 

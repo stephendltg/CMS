@@ -65,19 +65,8 @@ function get_url_queries(){
 
     if ( IS_REWRITE_RULES )
         return get_current_url('uri');
-
-    $args = get_query_vars();
-
-    if( !$args)
-        return '';
-
-    $value = reset($args);
-    $key   = key($args);
-
-    if( is_same('page', $key) )
-        return trim( $value , '/' );
-
-    return '';
+    else
+        return trim( str_replace('index.php', '', get_current_url('uri') ) , '/');
 }
 
 
@@ -96,14 +85,18 @@ function get_permalink( $slug ='' , $type ='page' ){
     // Un coup de ménage
     $slug = sanitize_key($slug);
 
+    $url_rewrite = ( IS_REWRITE_RULES ) ? MP_HOME : MP_HOME .'/index.php';
+
     if( is_same($type , 'page') &&  is_page($slug) )
-        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. $slug : MP_HOME .'/index.php?page='.$slug;
+        $link = $url_rewrite .'/'. $slug;
     if( is_same($type, 'feed') && is_same($slug , 'rss') )
-        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/'. 'feed' : MP_HOME .'/index.php?page='. 'feed';
+        $link = $url_rewrite .'/'. 'feed';
     if( is_same($type , 'page') &&  is_same($slug , 'sitemap') )
-        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/sitemap.xml' : MP_HOME .'/index.php?page=sitemap.xml';
+        $link = $url_rewrite .'/sitemap.xml';
+    if( is_same($type , 'page') &&  is_same($slug , 'humans') )
+        $link = $url_rewrite .'/humans.txt';
     if( is_same($type , 'tag') )
-        $link = ( IS_REWRITE_RULES ) ? MP_HOME .'/?tag='.$slug : MP_HOME .'/index.php?tag='.$slug;
+        $link = $url_rewrite .'/?tag='.$slug;
 
     if(!empty($link) ) return $link;
     else return false;
@@ -132,6 +125,7 @@ function is_404(){
     if( is_robots() )       return false;
     if( is_feed() )         return false;
     if( is_sitemap() )      return false;
+    if( is_humans() )      return false;
     if( is_tag() )          return false;
 
     else return true;
@@ -231,6 +225,20 @@ function is_sitemap(){
         return false;
 
     return is_same( $query , 'sitemap.xml');
+}
+
+/**
+ * Vérifie si la requête passé à l'url est le fichier humans.txt
+ * @return boolean
+ */
+function is_humans(){
+
+    global $query;
+
+    if( !isset($query) )
+        return false;
+
+    return is_same( $query , 'humans.txt');
 }
 
 /**
