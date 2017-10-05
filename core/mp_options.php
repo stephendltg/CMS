@@ -620,19 +620,22 @@ class options {
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
 
-            $node_name = $node[0];
-            $node_name = self::$_db->esc_sql($node_name);
-            $domain    = self::$_db->esc_sql($domain);
+            if( count($node) > 1 ){
 
-            // On met à jour le cache autoload
-            if( !empty(self::$_autoload[$domain]) && array_key_exists( $node[0],self::$_autoload[$domain]) )
-                unset(self::$_autoload[$domain][$node_name]);
+                $delete = $this->update($option, null, $domain);
 
-            // Si plusieurs noeud on récupère la valeur du noeud
-            if( count($node) > 1 )
-                $this->update($option, null, $domain);
-            else
+            } else {
+
+                $node_name = $node[0];
+                $node_name = self::$_db->esc_sql($node_name);
+                $domain    = self::$_db->esc_sql($domain);
+
+                // On met à jour le cache autoload
+                if( !empty(self::$_autoload[$domain]) && array_key_exists( $node[0],self::$_autoload[$domain]) )
+                    unset(self::$_autoload[$domain][$node_name]);
+
                 $delete = self::$_db->query("DELETE from options where name = '$node_name' AND domain='$domain'");
+            }
         
         } else {
 
