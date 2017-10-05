@@ -415,7 +415,7 @@ function mp_doing_sitemap(){
     $pages = apply_filters('sitemap_pages', get_all_page() );
 
     $args = array(
-        'home'  => MP_HOME,
+        'home'  => guess_url(),
         'pages' => map_deep( $pages, function($value){ return get_the_page('url',$value);} )
         );
 

@@ -328,7 +328,7 @@ function mp_rewrite_rules(){
             'bad_ips'               => file_get_content_array( INC . '/data/bad-ips.data'),
             'ServerHttpHost'        => $_SERVER['HTTP_HOST'],
             'HotlinkingWhitelist'   => file_get_content_array( INC . '/data/hotlinking-whitelist.data'),
-            'home'                  => MP_HOME,
+            'home'                  => guess_url(),
             'root'                  => $root,
             'ContentDir'            => $ContentDir,
             'bad_exts'              => join('|', file_get_content_array( INC . '/data/bad-exts.data') ),
@@ -604,6 +604,21 @@ function init_the_blog(){
                                 ) ),
         'menu'          => null );
 
+
+/*
+    foreach ($blog as $k => $v)
+        add_option('blog.' . $k, $v);
+
+    foreach ($setting as $key => $v)
+        add_option('setting.' . $key, $v);
+
+    foreach ($plugins as $k => $v)
+        add_option('plugins.' . $k, $v);
+
+    foreach ($customize as $k => $v)
+        add_option('customize.' . $k, $v);
+*/
+    
     add_option('blog', $blog);
     add_option('setting', $setting);
     add_option('plugins', $plugins);

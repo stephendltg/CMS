@@ -165,7 +165,7 @@ do_action( 'after_setup_theme' );
 
 // Requête passer à l'url
 global $query;
-$query = get_url_queries();
+$query = get_current_url('uri');
 
 // On charge le bon http header selon la requête
 get_http_header();
@@ -175,3 +175,10 @@ require( ABSPATH . INC . '/mp_template.php' );
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );
+
+add_option('test.po', array('stephen'), 'test', 'yes');
+add_option('test.pooupa', array('stephen'), 'test');
+add_option('test.nom.pere', 'michel', 'test', 'yes');
+
+update_option('test.po', array('fabiennes'), 'test');
+delete_option('test.nom.pere','test');

@@ -109,7 +109,7 @@ function get_the_page( $field, $slug = '' ){
         $page[$slug]['pubdate']     = isset($page[$slug]['pubdate']) && is_date($page[$slug]['pubdate']) ? gmdate( 'Y-m-d H:i:s', strtotime($page[$slug]['pubdate']) ) : $page[$slug]['edit_date'];
         $page[$slug]['slug']        = $slug;
 
-        if( is_same($slug,'home') )         $page[$slug]['url'] = MP_HOME;
+        if( is_same($slug,'home') )         $page[$slug]['url'] = guess_url();
         elseif( is_same($slug,'error') )    $page[$slug]['url'] = null;
         else                                $page[$slug]['url'] = get_permalink( $slug );
 

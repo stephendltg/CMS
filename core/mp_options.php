@@ -87,7 +87,8 @@ function delete_option( $option, $domain = null ){
 function form_option( $option, $domain = null ){
     
     $value = get_option($option, null, $domain);
-    if( is_array($value) ) return;
+    if(is_array($value) || is_object($value) )
+        $value = serialize($value);
     echo sanitize_allspecialschars($value);
 }
 
@@ -194,7 +195,7 @@ class options {
         if( self::$_is_sqlite ){
 
             if( fileSize(MP_SQLITE_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.sqlite3') == 0 )
-                self::$_db->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
+                self::$_db->query("CREATE TABLE options( /*id INTEGER PRIMARY KEY,*/ name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
 
             // On charge les table autoload
             $_autoload = self::$_db->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
@@ -218,7 +219,7 @@ class options {
     */
     public function save(){
 
-        //_echo( self::$_db->query("SELECT * FROM options") );
+         _echo( self::$_db->query("SELECT * FROM options") );
 
         if( self::$_flag ){
             if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_options) )
@@ -327,31 +328,44 @@ class options {
         // On récupère la variable selon le noeud
         if( self::$_is_sqlite && $domain != null ){
 
-            $option = self::$_db->esc_sql($option);
-            $domain = self::$_db->esc_sql($domain);
+            // On supprime le domaine devant le noeud
+            $domain = array_shift($node);
 
-            if( !empty(self::$_autoload[$domain]) && array_key_exists( $option, self::$_autoload[$domain]) )
-                $value = self::$_autoload[$domain][$option];
+            // Nom de l'option racine
+            $node_name = $node[0];
+
+            $node_name = self::$_db->esc_sql($node_name);
+            $domain    = self::$_db->esc_sql($domain);
+
+            // On lit la valeur de l'option soit la table autolaod, soit sqlite
+            if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name, self::$_autoload[$domain]) )
+                $value = self::$_autoload[$domain][$node_name];
             else
-                $value = self::$_db->query_single("SELECT value FROM options WHERE name='$option' AND domain='$domain'", false);
+                $value = self::$_db->query_single("SELECT value FROM options WHERE name='$node_name' AND domain='$domain'", false);
 
+            // On corrige la sortie de l'option
             if( false === $value )  
                 $value = null;
 
-        } else{
+            // On unserialize la valeur si besoin
+            if( is_serialized($value) )
+                $value = unserialize($value);
+
+            // On récupère la valeur du noeud si celui ci est complexe
+            if( count($node) > 1 )
+                $value = is_array($value) ? $this->_GetValueByNodeFromArray($node, array( $node_name => $value ) ) : null;
+
+        } else {
 
             $value = $this->_GetValueByNodeFromArray($node, self::$_options);
-                        
-        }
 
-        if( is_serialized($value) )
-            $value = unserialize($value);
+        }
 
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
 
         // Si null on retourne la valeur par défaut
-        if(is_null($value) ) return $default;
+        if( is_null($value) ) return $default;
 
         // On filtre le résultat si la fonction de validation existe
         $type = 'is_'.$type;
@@ -391,28 +405,69 @@ class options {
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
 
-        if ( $value !== null && $this->get($option, null, $domain) === null ){
+
+        // On récupère la valeur de l'option
+        if( self::$_is_sqlite && $domain != null ){
+
+            // On met de côté le domain et on le supprime du noeud
+            $domain = array_shift($node);
+
+            // Nom de l'option racine
+            $node_name = $node[0];
+
+            // On lit les données du premier noeud
+            $get_value = $node_value = $this->get($node_name, null, $domain);
+
+            // Si plusieurs noeud on récupère la valeur du noeud
+            if( count($node) > 1 )
+                $get_value = $this->_GetValueByNodeFromArray($node, array($node_name=>$node_value) );
+
+        } else {
+
+            $get_value = $this->get($option, null, $domain);
+        }
+
+
+        // Si la valeur de l'option est null on peut créer l'option
+        if( $value != null && $get_value == null ){
 
             // On ajoute des actions
             do_action( 'add_option', $_option, $value );
 
 
-            // On insère la nouvelle valeur
             if( self::$_is_sqlite && $domain != null ){
 
-                $option    = self::$_db->esc_sql($option);
-                $domain    = self::$_db->esc_sql($domain);
-                if(is_array($value) || is_object($value) )
-                    $value = serialize($value);
-                $value = self::$_db->esc_sql($value);
-                $autoload  = self::$_db->esc_sql($autoload);
+                // On construit la variable qui va recevoir les données
+                $node_value = array( $node_name => $node_value );
 
-                self::$_db->query("INSERT INTO options(name,value,domain,autoload) VALUES ('$option','$value','$domain','$autoload')");
+                // On affecte les données
+                $this->_SetValueByNodeToArray($node, $node_value , $value);
+
+                // On prepare les données pour sqlite
+                $node_name  = self::$_db->esc_sql($node_name);
+                $domain     = self::$_db->esc_sql($domain);
+                $autoload   = self::$_db->esc_sql($autoload);
+                $node_value = $node_value[$node_name];
+
+                if( is_array($node_value) || is_object($node_value) )
+                    $node_value = serialize($node_value);
+
+                $node_value = self::$_db->esc_sql($node_value);
+
+                // On met à jour le cache autoload
+                if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name,self::$_autoload[$domain]) ){
+                    
+                    self::$_autoload[$domain][$node_name] = $node_value;
+                    $autoload = 'yes';
+                }
+                
+                self::$_db->query("INSERT OR REPLACE INTO options(name,value,domain,autoload) VALUES ('$node_name','$node_value','$domain','$autoload')");
 
             } else {
 
                 $this->_SetValueByNodeToArray($node, self::$_options, $value);
                 self::$_flag = true;
+
             }
 
             // On ajoute des actions
@@ -420,9 +475,10 @@ class options {
             do_action( 'added_option', $_option, $value, $domain );
 
             return true;
-        }
-        else return false;
+
+        } else return false;
     }
+
 
 
     /**
@@ -439,11 +495,32 @@ class options {
         // Si table enregistrer on ne peut plus rien inclure
         if( self::$_flag === null ) return false;
 
-        // On récupère la valeur existente
-        $old_value = $this->get($option, null, $domain);
-
         // On récupère le noeuds passer en option
         if( !$node = $this->_node($option, $domain) ) return false;
+
+        // On récupère la valeur existente
+        //$old_value = $this->get($option, null, $domain);
+
+        // On récupère la valeur de l'option
+        if( self::$_is_sqlite && $domain != null ){
+
+            // On met de côté le domain et on le supprime du noeud
+            $domain = array_shift($node);
+
+            // Nom de l'option racine
+            $node_name = $node[0];
+
+            // On lit les données du premier noeud
+            $old_value = $node_value = $this->get($node_name, null, $domain);
+
+            // Si plusieurs noeud on récupère la valeur du noeud
+            if( count($node) > 1 )
+                $old_value = $this->_GetValueByNodeFromArray($node, array($node_name=>$node_value) );
+
+        } else {
+
+            $old_value = $this->get($option, null, $domain);
+        }
 
         // On reconstruit l'option
         $_option = implode('_', $node);
@@ -466,24 +543,36 @@ class options {
             $old_value = serialize($old_value);
 
 
-        if ( $old_value !== $pre_value && $old_value !== null){
+        // On met à jour si les conditions sont correct
+        if ( $old_value !== $pre_value && $old_value != null ){
 
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option, $domain );
 
             if( self::$_is_sqlite && $domain != null ){
 
-                $option = self::$_db->esc_sql($option);
-                $domain = self::$_db->esc_sql($domain);
-                $pre_value  = self::$_db->esc_sql($pre_value);
+                // On construit la variable qui va recevoir les données
+                $node_value = array( $node_name => $node_value );
+
+                // On affecte les données
+                $this->_SetValueByNodeToArray($node, $node_value , $value);
+
+                $node_name  = self::$_db->esc_sql($node_name);
+                $domain     = self::$_db->esc_sql($domain);
+                $node_value = filter_me($node_value[$node_name]);
+
+                if( is_array($node_value) || is_object($node_value) )
+                    $node_value = serialize($node_value);
+
+                $node_value = self::$_db->esc_sql($node_value);
 
                 // On met à jour le cache autoload
-                if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
-                    self::$_autoload[$domain][$option] = $pre_value;
+                if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name,self::$_autoload[$domain]) )
+                    self::$_autoload[$domain][$node_name] = $node_value;
 
-                self::$_db->query("UPDATE options SET value = '$pre_value' WHERE name='$option' AND domain='$domain'");
+                self::$_db->query("UPDATE options SET value = '$node_value' WHERE name='$node_name' AND domain='$domain'");
 
-            } else{
+            } else {
 
                 // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
                 $this->_SetValueByNodeToArray($node, self::$_options, null);
@@ -528,18 +617,26 @@ class options {
 
         if( self::$_is_sqlite && $domain != null ){
 
-            $option = self::$_db->esc_sql($option);
-            $domain = self::$_db->esc_sql($domain);
+            // On met de côté le domain et on le supprime du noeud
+            $domain = array_shift($node);
+
+            $node_name = $node[0];
+            $node_name = self::$_db->esc_sql($node_name);
+            $domain    = self::$_db->esc_sql($domain);
 
             // On met à jour le cache autoload
-            if( !empty(self::$_autoload[$domain]) && array_key_exists( $option,self::$_autoload[$domain]) )
-                unset(self::$_autoload[$domain][$option]);
+            if( !empty(self::$_autoload[$domain]) && array_key_exists( $node[0],self::$_autoload[$domain]) )
+                unset(self::$_autoload[$domain][$node_name]);
 
-            $delete = self::$_db->query("DELETE from options where name = '$option' AND domain='$domain'");
-        }
-        else{
+            // Si plusieurs noeud on récupère la valeur du noeud
+            if( count($node) > 1 )
+                $this->update($option, null, $domain);
+            else
+                $delete = self::$_db->query("DELETE from options where name = '$node_name' AND domain='$domain'");
+        
+        } else {
 
-            $delete = update_option( $option , null, $domain );
+            $delete = $this->update($option, null, $domain);
         }
 
         // On ajoute des actions
@@ -577,6 +674,8 @@ function delete_transient( $transient ){
 */
 function get_transient( $transient ) {
 
+    $transient  = (string) $transient;
+
     $transient_option = '_transient_' . $transient;
     
                                  
@@ -602,6 +701,7 @@ function get_transient( $transient ) {
 */
 function set_transient( $transient, $value, $expiration = 0 ) {
 
+    $transient  = (string) $transient;
     $expiration = (int) $expiration;
 
     $transient_timeout = '_transient_timeout_' . $transient;

@@ -137,7 +137,7 @@ function mp_login( $user, $password, $remember = false ) {
       $expire = 0;
     }
  
-    $secure = is_ssl() && 'https' === parse_url( MP_HOME, PHP_URL_SCHEME );
+    $secure = is_ssl() && 'https' === parse_url( guess_url(), PHP_URL_SCHEME );
     
     $algo = function_exists( 'hash' ) ? 'sha256' : 'sha1';
     $hash_user = hash_hmac( $algo, $password . '|' . $expiration . '|' . SECRET_KEY, SECRET_SALT );

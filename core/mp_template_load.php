@@ -8,7 +8,7 @@
  * @version 1
  */
 
-//echo '<a href="webcal://'.MP_HOME.'/ical.php">calendar</a>';
+//echo '<a href="webcal://'.guess_url().'/ical.php">calendar</a>';
 
 if ( 'HEAD' === $_SERVER['REQUEST_METHOD'] ) exit(); // shutdown
 

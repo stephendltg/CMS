@@ -34,7 +34,8 @@ function get_current_url( $mode = 'base' ){
             $url  = explode( '?', $url, 2 );
             $url  = reset( $url );
             $url  = str_replace( $home, '', $url );
-            return trim( $url, '/' );
+            return trim( str_replace('index.php', '', $url ) , '/');
+            //return trim( $url, '/' );
         default :
             $url  = explode( '?', $url, 2 );
             return reset( $url );
@@ -57,18 +58,6 @@ function get_query_vars(){
 }
 
 
-/**
- * Récuperer la requête url si mod rewrite actif ( apache )
- * @return string retourne la requete passer par l'url
- */
-function get_url_queries(){
-
-    if ( IS_REWRITE_RULES )
-        return get_current_url('uri');
-    else
-        return trim( str_replace('index.php', '', get_current_url('uri') ) , '/');
-}
-
 
 /**
  * On réécrit l'url selon si mod rewrite actif ( apache ) ou pas
@@ -80,12 +69,12 @@ function get_permalink( $slug ='' , $type ='page' ){
     $slug = (string) $slug;
 
     if( is_same($type , 'page') && ( empty($slug) || 'home' === $slug )  )
-        return MP_HOME;
+        return guess_url();
 
     // Un coup de ménage
     $slug = sanitize_key($slug);
 
-    $url_rewrite = ( IS_REWRITE_RULES ) ? MP_HOME : MP_HOME .'/index.php';
+    $url_rewrite = ( IS_REWRITE_RULES ) ? guess_url() : guess_url() .'/index.php';
 
     if( is_same($type , 'page') &&  is_page($slug) )
         $link = $url_rewrite .'/'. $slug;
@@ -242,20 +231,22 @@ function is_humans(){
  * @param  boolean  mode de sortie si boolean ou valeur du tag
  * @return boolean
  */
-function is_tag( $mode = false ){
+function is_tag(){
 
     global $query;
 
     $args = get_query_vars();
 
-    if( !isset($query) || strlen($query) !== 0 || !$args)
+    if( !isset($query) || !$args)
         return false;
 
     $value = reset($args);
     $key   = key($args);
 
-    if( is_same('tag', $key) )
-        return $mode ? $args[$key] : true;
+    if( is_same('tag', $key) && $value = sanitize_tag($value) ){
+        $query = $value;
+        return true;
+    }
 
     return false;
 }

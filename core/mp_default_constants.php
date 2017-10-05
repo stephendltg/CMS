@@ -22,7 +22,7 @@ function mp_init_constants() {
 
     // Definit les constantes pour les répertoires de stockage du site
 	if ( !defined('MP_CONTENT_DIR') )
-		define( 'MP_CONTENT_DIR', ABSPATH . 'mp-content-' . substr( md5( __FILE__ ), 0, 8 ) );
+		define( 'MP_CONTENT_DIR', ABSPATH . 'mp-content' );
 
 	if ( !defined('FORCE_RELOCATE') )
 		define( 'FORCE_RELOCATE', false );
@@ -34,7 +34,7 @@ function mp_init_constants() {
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
-		define( 'DEBUG', false );
+		define( 'DEBUG', true );
 
 	// Constante de mise en cache
 	if ( !defined('CACHE') )
@@ -119,7 +119,7 @@ function mp_cookies_constants() {
     define('SESSION_COOKIE', 'minipops_' . COOKIEHASH);
 
     // Modifie les paramètres du cookie de session
-    $secure = is_ssl() && 'https' === parse_url( MP_HOME, PHP_URL_SCHEME );
+    $secure = is_ssl() && 'https' === parse_url( guess_url(), PHP_URL_SCHEME );
     session_set_cookie_params ( SESSION_COOKIE_LIFE, COOKIEPATH, COOKIE_DOMAIN, $secure, true);
     session_name(SESSION_COOKIE);
 }

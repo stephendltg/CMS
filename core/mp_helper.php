@@ -66,7 +66,18 @@ function arrayToObject($array){
 }
 
 
-
+/**
+* on filtre les valeurs ( null, '', false ) d'un tableau
+* @param $array
+*/
+function filter_me(&$array) {
+    foreach ( $array as $key => $item ) {
+        is_array ( $item ) && $array [$key] = filter_me ( $item );
+        if (empty ( $array [$key] ))
+            unset ( $array [$key] );
+    }
+    return $array;
+}
 /***********************************************/
 /*               path                          */
 /***********************************************/

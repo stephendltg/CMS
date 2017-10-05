@@ -38,6 +38,10 @@
 
                 <?php endwhile ?>
 
+                <?php if( have_not_pages('tag') ) : ?>
+                    <p><?php _e('Tag not found!') ?></p>
+                <?php endif ?>
+
                 </main>
 
             </td>

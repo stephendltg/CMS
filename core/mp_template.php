@@ -427,15 +427,17 @@ function the_thumbnail( $before = '', $after = '' ) {
 
 function search_tag( $before = '', $after = '' ){
 
-    $before = (string) $before;
-    $after = (string) $after;
+    global $query;
 
-    if( !$tag = is_tag('tag') )
+    $before = (string) $before;
+    $after  = (string) $after;
+
+    if( !$tag = sanitize_tag($query) )
         return;
 
-    the_loop( 'tag='.$tag , 'tag');
+    the_loop( 'tag='.$query , 'tag');
 
-    echo $before . $tag . $after;
+    echo $before . $query . $after;
 }
 
 
@@ -524,6 +526,9 @@ function the_menu( $menu_nav = '',  $before = '<ul class="menu">', $after = '</u
 
 function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '' ) {
 
+    global $query;
+
+
     $separator = (string) $separator;
     $before    = (string) $before;
     $after     = (string) $after;
@@ -545,7 +550,7 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
             $slug = substr( $queries , 0 , strpos($queries,'/') );
 
             if( $slug === '' )
-                $breadcrumb = sprintf( $breadcrumb_schema ,  get_the_blog('title')  , MP_HOME ) . $breadcrumb_schema_separator . $breadcrumb;
+                $breadcrumb = sprintf( $breadcrumb_schema ,  get_the_blog('title')  , guess_url() ) . $breadcrumb_schema_separator . $breadcrumb;
             else
                 $breadcrumb = ( is_page($slug) ) ? sprintf( $breadcrumb_schema , basename($slug) , get_permalink($slug) ) . $breadcrumb_schema_separator : '';
             
@@ -560,10 +565,12 @@ function the_breadcrumb( $separator = ' &rarr;&nbsp;' , $before = '', $after = '
         $breadcrumb = get_the_blog('title');
 
     if( is_tag() )
-        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , MP_HOME ) . $breadcrumb_schema_separator . __('tag'). ': ' . get_query_vars()['tag'];
+        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , guess_url() ) . $breadcrumb_schema_separator . __('tag'). ': ' . $query;
+    
 
     if( is_404() )
-        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , MP_HOME ) . $breadcrumb_schema_separator . '404';
+        $breadcrumb = sprintf( $breadcrumb_schema , get_the_blog('title') , guess_url() ) . $breadcrumb_schema_separator . '404';
+    
 
     echo $breadcrumb_begin . $before . $breadcrumb . $after . $breadcrumb_end;
 }

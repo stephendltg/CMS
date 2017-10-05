@@ -50,7 +50,6 @@
 
 function add_action( $action_name , $added_function = null , $priority = 10 , $args = array() ) {
 
-    //global $mp_hook_actions;
     $action_name     = (string) $action_name;
     $priority        = (int) $priority;
 
@@ -137,8 +136,6 @@ function do_action( $action_name , $args = null , $return = false ) {
  * @return mixed
  */
 function apply_filters( $filter_name, $value ) {
-
-    //global $mp_hook_filter;
 
     $filter_name = (string) $filter_name;
 
