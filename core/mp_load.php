@@ -80,6 +80,7 @@ require( ABSPATH . INC . '/mp_filters.php' );
 // On charge la gestion des fichier yaml
 require( ABSPATH . INC . '/mp_yaml.php' );
 // On charge les fonctions gérant les options ainsi que le gestionnaire de tâche
+require( ABSPATH . INC . '/mp_class_sqlite.php' );
 require( ABSPATH . INC . '/mp_options.php' );
 require( ABSPATH . INC . '/mp_cron.php' );
 

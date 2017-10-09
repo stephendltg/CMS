@@ -24,6 +24,9 @@ function mp_init_constants() {
 	if ( !defined('MP_CONTENT_DIR') )
 		define( 'MP_CONTENT_DIR', ABSPATH . 'mp-content' );
 
+	if ( !defined('MP_SQLITE_ENCRYPT') )
+		define( 'MP_SQLITE_ENCRYPT', substr( md5( __FILE__ ), 0, 8 ) );
+
 	if ( !defined('FORCE_RELOCATE') )
 		define( 'FORCE_RELOCATE', false );
 
@@ -78,7 +81,7 @@ function mp_plugin_directory_constants() {
 
 	// A l'heure actuel MP_CONTENT_URL n'accepte pas les sous domaines
 	if ( !defined('MP_CONTENT_URL') )
-		define( 'MP_CONTENT_URL', guess_url() . '/mp-content-' . substr( md5( __FILE__ ), 0, 8 ) );
+		define( 'MP_CONTENT_URL', guess_url() . '/mp-content');
 
     // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
 	define( 'MP_PAGES_URL',   MP_CONTENT_URL  . '/pages' );

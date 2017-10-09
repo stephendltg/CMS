@@ -70,17 +70,48 @@ function arrayToObject($array){
 * on filtre les valeurs ( null, '', false ) d'un tableau
 * @param $array
 */
-function filter_me(&$array) {
+function filter_me($array) { 
 
-    foreach ( $array as $key => $item ) {
+    foreach ($array as &$value)
+        if (is_array($value))   $value = filter_me($value); 
+    return array_filter($array); 
+} 
 
-        is_array ( $item ) && $array [$key] = filter_me ( $item );
-        if (empty ( $array [$key] ))
-            unset ( $array [$key] );
-    }
-    
-    return $array;
+
+/**
+* on convertit les booleans en chaine
+* @param $array
+*/
+function encode_bool($something){
+
+    if( !is_bool($something) )
+        return $something;
+
+    if( $something === true )   
+        return "true";
+    else
+        return "false";
 }
+
+
+/**
+* on decode les boolean dans une chaine
+* @param $array
+*/
+function decode_bool($something){
+
+    if( !is_string($something) )
+        return $something;
+
+    if( in_array($something, array('y','Y','yes','Yes','YES','true','True','TRUE','on','On','ON') ) )
+        return true;
+    elseif( in_array($something, array('n','N','no','No','NO','false','False','FALSE','off','Off','OFF') ) )
+        return false;
+
+    return $something;
+}
+
+
 /***********************************************/
 /*               path                          */
 /***********************************************/

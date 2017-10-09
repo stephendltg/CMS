@@ -217,24 +217,13 @@ function file_get_page( $path ){
 
     $yaml = array();
 
-    // function anonyme pour décoder les valeurs
-    $decode_value = function ( $value ){
-
-        $value = trim($value);
-        $value = json_decode($value, true) ?: $value;
-        if( $value === 'false' )      $value = false;
-        elseif( $value === '~' )      $value = null;
-        elseif( $value === 'null' )   $value = null;
-        elseif( is_array($value) )    $value = serialize($value);
-        return $value;
-    };
-
     // On ouvre le fichier de la page, on l'encode en utf8 et on nettoie
     $file = esc_attr( encode_utf8( file_get_content($path) ) );
 
     if( preg_match_all('/^[\s]*(\w*?)[ \t]*:[\s]*(.*?)[\s]*[-]{4}/mis', $file , $match ) ){
         $match[1] = array_map( 'strtolower', $match[1] );
-        $yaml     = array_combine($match[1], array_map($decode_value, $match[2]) );
+        $yaml     = array_combine($match[1], array_map('decode_bool', $match[2]) );
+        $yaml     = array_filter($yaml);
         unset($match);
     }
 
@@ -253,15 +242,12 @@ function file_put_page( $path, $array ){
 
     $text = '# generate by mini-pops'. PHP_EOL;
 
-    foreach( $array as $field => $value ){
+    // On encode les bool et on supprime les valeurs null et vide
+    $array = array_filter( array_map( 'encode_bool', $array) );
 
-        if(     $value === true  )   $value = "true";
-        elseif( $value === false )   $value = "false";
-        elseif( $value === null  )   $value = "~";
-
-        if( !empty($value) )
-            $text .= PHP_EOL . sanitize_key($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
-    }
+    foreach( $array as $field => $value )
+        $text .= PHP_EOL . sanitize_key($field) . ': ' . $value . PHP_EOL . PHP_EOL .'----' . PHP_EOL;
+    
 
     return file_put_content($path , $text);
 }
