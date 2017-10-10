@@ -67,7 +67,7 @@ function arrayToObject($array){
 
 
 /**
-* on filtre les valeurs ( null, '', false ) d'un tableau
+* on filtre les valeurs ( null, '', false ) d'un tableau recursif
 * @param $array
 */
 function filter_me($array) { 
@@ -215,6 +215,61 @@ function mp_cache_data( $key ) {
     }
 
     return isset( $data[ $key ] ) ? $data[ $key ] : null;
+}
+
+
+/***********************************************/
+/*               Cache session                 */
+/***********************************************/
+
+/**
+ * Enregistrer, récupérer ou supprimer une donnée session.
+ * Get:   Mettre juste la clé recherche en parametre
+ * Set:   Mettre un second parametres avec la valeur de la clé
+ * Delete: Mettre la valeur : null en second paramètres pour supprimer la clé
+ *
+ * @param (string) $key clé d'identification. 
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_cache_session( $key ) {
+
+    // On lance la session 1 seul fois
+    static $session = false;
+    if( !$session ) $session = session_start();
+
+    /* Condition pour purger le cache */
+    if( is_null($key) )
+        unset( $_SESSION['_cache'] ); return;
+
+    $func_get_args = func_get_args();
+
+    if ( array_key_exists( 1, $func_get_args ) ) {
+
+        if ( null === $func_get_args[1] ){
+
+            unset( $_SESSION['_cache'][$key] );
+
+        } else {
+
+            if( array_key_exists( 2, $func_get_args )  )
+                $_SESSION['_cache'][$key] = array( 'time'=>time() + (int) $func_get_args[2], 'value' => $func_get_args[1] );
+            else
+                $_SESSION['_cache'][$key] = $func_get_args[1];
+        }
+
+    }
+
+    // Verify expiration
+    if( isset( $_SESSION['_cache'][$key] ) ){
+
+        if( isset( $_SESSION['_cache'][$key]['time'] ) && time() > $_SESSION['_cache'][$key]['time'] )
+            unset( $_SESSION['_cache'][$key] );
+        else 
+            return $_SESSION['_cache'][$key];
+    }
+    
+    return null;
 }
 
 

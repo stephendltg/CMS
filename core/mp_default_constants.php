@@ -34,6 +34,7 @@ function mp_init_constants() {
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );
 	define( 'MP_SQLITE_DIR',  MP_CONTENT_DIR . '/sqlite'  );
 	define( 'MP_CONFIG_DIR',  MP_CONTENT_DIR . '/config'  );
+	define( 'MP_CACHE_DIR',   MP_CONTENT_DIR . '/cache'  );
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )

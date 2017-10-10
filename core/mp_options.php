@@ -219,7 +219,7 @@ class options {
     */
     public function save(){
 
-         _echo( self::$_db->query("SELECT * FROM options") );
+        // _echo( self::$_db->query("SELECT * FROM options") );
 
         if( self::$_flag ){
             if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_options) )
@@ -555,7 +555,7 @@ class options {
 
                 $node_name  = self::$_db->esc_sql($node_name);
                 $domain     = self::$_db->esc_sql($domain);
-                $node_value = filter_me($node_value[$node_name]);
+                $node_value = $node_value[$node_name];
 
                 if( is_array($node_value) || is_object($node_value) )
                     $node_value = serialize($node_value);

@@ -160,6 +160,69 @@ function rrmdir( $dir ) {
 }
 
 
+/***********************************************/
+/*               Cache file                 */
+/***********************************************/
+
+/**
+ * Enregistrer, récupérer ou supprimer une donnée cache.
+ * Get:   Mettre juste la clé recherche en parametre
+ * Set:   Mettre un second parametres avec la valeur de la clé
+ * Delete: Mettre la valeur : null en second paramètres pour supprimer la clé
+ *
+ * @param (string) $key clé d'identification. 
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_cache_file( $key ) {
+
+    /* Condition pour purger le cache */
+    if( is_null($key) )
+        return rrmdir(MP_CACHE_DIR . '/*');
+
+    /* Valide $key */
+    $key = sanitize_file_name($key);
+    if(strlen($key) == 0 )  return;
+
+    $key = base32_encode($key);
+
+    $func_get_args = func_get_args();
+
+    if ( array_key_exists( 1, $func_get_args ) ) {
+
+        if ( null === $func_get_args[1] ){
+
+            unlink( MP_CACHE_DIR . '/' . $key );
+            return null;
+
+        } else {
+
+            $cache = array( 'time' => 0 , 'value' => $func_get_args[1] );
+
+            if( array_key_exists( 2, $func_get_args )  )
+                $cache['time'] = time() + (int) $func_get_args[2] * MINUTE_IN_SECONDS;
+
+            if( @file_put_contents( MP_CACHE_DIR .'/'. $key , base32_encode(serialize($cache)), LOCK_EX ) )
+                return $func_get_args[1];
+        }
+    }
+
+
+    if( file_exists(MP_CACHE_DIR . '/' . $key) ){
+
+        if( ! $cache = unserialize( base32_decode( file_get_content( MP_CACHE_DIR . '/' . $key ) ) ) )
+            return;
+
+        if( $cache['time'] == 0 || $cache['time'] > time() )
+            return $cache['value'];
+        else
+            unlink( MP_CACHE_DIR . '/' . $key );
+    }
+
+    return;
+
+}
+
 
 /**
 * Arborescence d'un répertoire

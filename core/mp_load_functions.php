@@ -252,6 +252,10 @@ function cms_not_installed() {
     @mkdir( MP_SQLITE_DIR , 0755 , true );
     if ( !is_writable( MP_SQLITE_DIR ) ) 
         cms_maintenance( 'message=Error directory permissions : '. MP_SQLITE_DIR .' !' );
+    
+    @mkdir( MP_CACHE_DIR , 0755 , true );
+    if ( !is_writable( MP_CACHE_DIR ) ) 
+        cms_maintenance( 'message=Error directory permissions : '. MP_CACHE_DIR .' !' );
 
     @mkdir( MP_CONFIG_DIR , 0755 , true );
     if ( !is_writable( MP_CONFIG_DIR ) ) 
