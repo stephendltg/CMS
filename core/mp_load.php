@@ -1,4 +1,5 @@
-<?php //defined('ABSPATH') or die('No direct script access.');
+<?php defined('ABSPATH') or die('No direct script access.');
+
 /**
  * CHARGEMENT DU CMS mini POPS
  *
@@ -31,6 +32,7 @@ if( file_exists( ABSPATH . 'mp-config.php') ) {
 
 
 /** On inclut les fonctions primordiales  */
+require( ABSPATH . INC . '/mp_class_brackets.php' );
 require( ABSPATH . INC . '/mp_load_functions.php' );
 
 // On inclus les fichier pour l'initialisation du CMS.

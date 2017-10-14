@@ -1,7 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonction helper
  *
  *
  * @package cms mini POPS
@@ -239,8 +238,14 @@ function mp_cache_session( $key ) {
     if( !$session ) $session = session_start();
 
     /* Condition pour purger le cache */
-    if( is_null($key) )
-        unset( $_SESSION['_cache'] ); return;
+    if( is_null($key) ){
+        unset( $_SESSION['_cache'] ); 
+        return;
+    }
+
+    /* Valide $key */
+    if(strlen($key) == 0 )  return;
+    $key = md5($key);
 
     $func_get_args = func_get_args();
 
@@ -253,20 +258,21 @@ function mp_cache_session( $key ) {
         } else {
 
             if( array_key_exists( 2, $func_get_args )  )
-                $_SESSION['_cache'][$key] = array( 'time'=>time() + (int) $func_get_args[2], 'value' => $func_get_args[1] );
+                $_SESSION['_cache'][$key] = serialize( array( 'time'=>time() + (int) $func_get_args[2], 'value' => $func_get_args[1] ) );
             else
-                $_SESSION['_cache'][$key] = $func_get_args[1];
+                $_SESSION['_cache'][$key] = esc_html(serialize( array('value' => $func_get_args[1]) ) );
         }
-
     }
 
     // Verify expiration
     if( isset( $_SESSION['_cache'][$key] ) ){
 
-        if( isset( $_SESSION['_cache'][$key]['time'] ) && time() > $_SESSION['_cache'][$key]['time'] )
+        $cache = unserialize( html( $_SESSION['_cache'][$key] ) );
+
+        if( isset( $cache['time'] ) && time() > $cache['time'] )
             unset( $_SESSION['_cache'][$key] );
         else 
-            return $_SESSION['_cache'][$key];
+            return $cache['value'];
     }
     
     return null;

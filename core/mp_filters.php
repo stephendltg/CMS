@@ -1,7 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonction pages
  *
  *
  * @package cms mini POPS
@@ -347,6 +346,9 @@ function mp_load_meta_filter(){
 /*        Filter for the robot                 */
 /***********************************************/
 
+// On corrige le header
+add_filter('mp_http_header', 'mp_set_http_header');
+
 // On ajoute la fonction d'appel de construction du fichier robots
 add_action('do_robots' , 'mp_doing_robots');
 
@@ -361,18 +363,66 @@ add_action('do_humans' , 'mp_doing_humans');
 
 
 /**
+ * Gestion du header
+ * @return
+ */
+function mp_set_http_header(){
+
+    $header = array();
+
+    if( is_sitemap() )
+        $header = array( 
+            'response' => 200, 
+            'header' => array(
+                'Content-Type: text/xml; charset=' . CHARSET,
+                "X-Robots-Tag: noindex",
+                'Pragma: public',
+                'Cache-Control: maxage=' . DAY_IN_SECONDS,
+                'Expires: ' . gmdate('D, d M Y H:i:s', time() + DAY_IN_SECONDS) . ' GMT'
+        ) );
+
+
+    if( is_robots() )
+        $header = array( 
+            'response' => 200, 
+            'header' => array(
+                'Content-Type: text/plain; charset='.CHARSET,
+                "X-Robots-Tag: noindex",
+                'Pragma: public',
+                'Cache-Control: maxage=' . DAY_IN_SECONDS,
+                'Expires: ' . gmdate('D, d M Y H:i:s', time() + DAY_IN_SECONDS) . ' GMT'
+        ) );
+
+
+    if( is_feed() )
+        $header = array( 
+            'response' => 200, 
+            'header' => array(
+                'Cache-Control: must-revalidate, pre-check=0, post-check=0, max-age=0',
+                'Content-Type: application/rss+xml; charset=utf-8'
+        ) );
+
+
+    if( is_humans() )
+        $header = array( 
+            'response' => 200, 
+            'header' => array( 
+                'Content-Type: text/plain; charset=' . CHARSET,
+                'Pragma: public',
+                'Cache-Control: maxage='. DAY_IN_SECONDS,
+                'Expires: ' . gmdate('D, d M Y H:i:s', time() + DAY_IN_SECONDS) . ' GMT'
+        ) );
+
+
+    return $header;
+}
+
+
+/**
  * Générer un fichier robots.txt
  * @return
  */
 function mp_doing_robots(){
-
-    // On déclarer le bon header
-    header( 'Content-Type: text/plain; charset='.CHARSET );
-    header("X-Robots-Tag: noindex", true);
-    $expires = DAY_IN_SECONDS;
-    header('Pragma: public');
-    header('Cache-Control: maxage='.$expires);
-    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
 
     $robot = sanitize_words( get_the_blog('robots') );
     $robot = str_replace(' ', ',' , $robot);
@@ -390,9 +440,6 @@ function mp_doing_robots(){
     if( strlen($robots) == 0 )
         redirect( get_the_blog('home') );
 
-    // On donne le bon header
-    http_response_code(200);
-
     echo $robots;
 }
 
@@ -403,21 +450,13 @@ function mp_doing_robots(){
  */
 function mp_doing_sitemap(){
 
-    // On déclare le bon header
-    header( 'Content-Type: text/xml; charset='.CHARSET );
-    header("X-Robots-Tag: noindex", true);
-    $expires = DAY_IN_SECONDS;
-    header('Pragma: public');
-    header('Cache-Control: maxage='.$expires);
-    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
-
-
     $pages = apply_filters('sitemap_pages', get_all_page() );
 
     $args = array(
         'home'  => guess_url(),
         'pages' => map_deep( $pages, function($value){ return get_the_page('url',$value);} )
         );
+
 
     $args     = apply_filters('sitemap_args', $args);
     $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/sitemap.xml' );
@@ -426,9 +465,6 @@ function mp_doing_sitemap(){
 
     if( strlen($sitemap) == 0 )
         redirect( get_the_blog('home') );
-
-    // On donne le bon header
-    http_response_code(200);
 
     echo $sitemap;
 }
@@ -440,10 +476,6 @@ function mp_doing_sitemap(){
  * @return
  */
 function mp_doing_feed(){
-
-    // on déclarerle bon header
-    header('Cache-Control: must-revalidate, pre-check=0, post-check=0, max-age=0');
-    header('Content-Type: application/rss+xml; charset=utf-8');
 
     // Boucle pour flux rss
     $pages = the_loop( apply_filters('feed_loop', 'max=5&order=desc') , 'my_feed');
@@ -481,9 +513,6 @@ function mp_doing_feed(){
     if( strlen($feed) == 0 )
         redirect( get_the_blog('home') );
 
-    // On donne le bon header
-    http_response_code(200);
-
     echo $feed;
 }
 
@@ -494,20 +523,11 @@ function mp_doing_feed(){
  */
 function mp_doing_humans(){
 
-    header( 'Content-Type: text/plain; charset='.CHARSET );
-    $expires = DAY_IN_SECONDS;
-    header('Pragma: public');
-    header('Cache-Control: maxage='.$expires);
-    header('Expires: ' . gmdate('D, d M Y H:i:s', time()+$expires) . ' GMT');
-
     $template = apply_filters('sitemap_template', ABSPATH . INC .'/data/humans.txt' );
     $humans   = file_get_content( realpath($template) );
 
     if( strlen($humans) == 0 )
         redirect( get_the_blog('home') );
-
-    // On donne le bon header
-    http_response_code(200);
 
     echo $humans;
 }

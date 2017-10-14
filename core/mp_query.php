@@ -1,7 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Gestion des options du CMS mini POPS
  *
  * @package     cms mini POPS
  * @subpackage  query

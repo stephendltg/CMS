@@ -36,9 +36,9 @@ if (!function_exists('yaml_parse')) {
 * @param $path  chemin du fichier
 */
 if (!function_exists('yaml_parse_file')) {
-    function yaml_parse_file( $path, $pos = 0, $ndocs = null, $cached = false ){
+    function yaml_parse_file( $path, $pos = 0, $ndocs = null ){
         $yaml_parse = new YAML();
-        return $yaml_parse->parse_file( $path, $pos, $ndocs, $cached );
+        return $yaml_parse->parse_file( $path, $pos, $ndocs );
     }
 }
 
@@ -591,34 +591,11 @@ class yaml {
     * @param $ndocs  int         Nombre de documents recherche
     * @param $cached bool        Activation du cache
     */
-    public function parse_file( $path, $pos = 0, $ndocs = null, $cached = true ){
+    public function parse_file( $path, $pos = 0, $ndocs = null ){
 
-        if( is_readable($path) ){
-
-            $cache = dirname($path).'/.~'.basename($path);
-
-            if( $cached
-                && is_readable($cache)
-                && ( filemtime($path) === filemtime($cache) )
-                && $text = file_get_contents($cache)
-                ){
-
-                return @unserialize( gzinflate($text) );
-            
-            } elseif( $text = file_get_contents($path) ){
-
-                $text = $this->parse( $text, $pos, $ndocs );
-
-                if( $cached ){
-                    @file_put_contents($cache, gzdeflate( serialize($text) ), LOCK_EX);
-                    @touch($cache, filemtime($path) );
-                    @chmod($cache, 0644);
-                }
-                return $text;
-
-            } else return false;
-
-        } else return false;
+        if( is_readable($path) && false !== $text = file_get_contents($path) )
+            return $this->parse( $text, $pos, $ndocs );
+        return false;
     }
 
 

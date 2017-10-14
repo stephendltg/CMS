@@ -172,45 +172,52 @@ class options {
     * @access private
     * @var
     */
-    private static $_options, $_db, $_autoload = array();
-    private static $_flag = false, $_is_sqlite = true;
-
+    private static $_yaml_config, $_sqlite, $_autoload = array();
+    private static $_flag = false, $_is_sqlite = false;
 
     function __construct(){
 
         /*
         * On charge la base de donnée
-        * self::$_db = new sqlite( MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db' );
+        * self::$_sqlite = new sqlite( MP_PAGES_DIR. '/mp_'.substr( md5( __FILE__ ), 0, 8 ).'.db' );
         *
         * https://sqlite.org/inmemorydb.html
-        * self::$_db = new sqlite(':memory:');
+        * self::$_sqlite = new sqlite(':memory:');
         */
-        self::$_db = new sqlite(MP_SQLITE_DIR. '/mp_options_'.substr( md5( __FILE__ ), 0, 8 ).'.sqlite3');
 
-        // On valide l'utilisation de sqlite        
-        if( false === self::$_db)
-            self::$_is_sqlite = false;
+        // On créer un instance de sqlite
+        self::$_sqlite = new sqlite( MP_SQLITE_DIR. '/mp_options.sqlite3' );
+
 
         // On créer la table si la base est vide et on charge les données autoload
-        if( self::$_is_sqlite ){
+        if( false === self::$_sqlite ){
 
-            if( fileSize(MP_SQLITE_DIR. '/mp_options_'.substr( md5( __FILE__ ), 0, 8 ).'.sqlite3') == 0 )
-                self::$_db->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
+            // On valide l'utilisation de sqlite 
+            self::$_is_sqlite = true;
+            mp_cache_data('is_sqlite_enable', true);
 
-            // On charge les table autoload
-            $_autoload = self::$_db->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
+            if( fileSize(MP_SQLITE_DIR. '/mp_options.sqlite3') == 0 )
+                self::$_sqlite->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
+
+            // On charge les tables autoload
+            $_autoload = self::$_sqlite->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
+
             foreach ($_autoload as $v)
                 self::$_autoload[$v['domain']][$v['name']] = $v['value'];
+
             unset($_autoload); 
 
-        }
-        
-        // On charge la table option dans la variable static
-        $options = yaml_parse_file(MP_CONFIG_DIR. '/config.yml', 0, null, apply_filters('mp_options_cache',CACHE) );
-        self::$_options = !$options ? array():$options;
+        } else {
 
-        // On ajoute un hook pour la sauvegarde du fichier
-        add_action('shutdown', function (){ mp_cache_data('mp_options')->save(); });
+            /* On utilise le driver yaml */
+        
+            // On charge la table option dans la variable static
+            $yaml_config = yaml_parse_file( MP_CONFIG_DIR. '/config.yml', 0, null );
+            self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
+
+            // On ajoute un hook pour la sauvegarde du fichier
+            add_action('shutdown', function (){ mp_cache_data('mp_options')->save(); });
+        }
     }
 
     /**
@@ -219,13 +226,17 @@ class options {
     */
     public function save(){
 
-        // _echo( self::$_db->query("SELECT * FROM options") );
+        // _echo( self::$_sqlite->query("SELECT * FROM options") );
 
         if( self::$_flag ){
-            if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_options) )
+
+            if( ! yaml_emit_file(MP_CONFIG_DIR. '/config.yml', self::$_yaml_config) )
                 _doing_it_wrong( __CLASS__, 'Error saving file configuration: config.yaml!');
+
             @chmod(MP_CONFIG_DIR. '/config.yml', 0644);
+
         }
+
         self::$_flag = null;
     }
 
@@ -324,9 +335,8 @@ class options {
         $pre = apply_filters( 'pre_option_' . $_option, false, $_option, $domain );
         if ( false !== $pre ) return $pre;
 
-
         // On récupère la variable selon le noeud
-        if( self::$_is_sqlite && $domain != null ){
+        if( self::$_is_sqlite ){
 
             // On supprime le domaine devant le noeud
             $domain = array_shift($node);
@@ -334,14 +344,14 @@ class options {
             // Nom de l'option racine
             $node_name = $node[0];
 
-            $node_name = self::$_db->esc_sql($node_name);
-            $domain    = self::$_db->esc_sql($domain);
+            $node_name = self::$_sqlite->esc_sql($node_name);
+            $domain    = self::$_sqlite->esc_sql($domain);
 
             // On lit la valeur de l'option soit la table autolaod, soit sqlite
             if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name, self::$_autoload[$domain]) )
                 $value = self::$_autoload[$domain][$node_name];
             else
-                $value = self::$_db->query_single("SELECT value FROM options WHERE name='$node_name' AND domain='$domain'", false);
+                $value = self::$_sqlite->query_single("SELECT value FROM options WHERE name='$node_name' AND domain='$domain'", false);
 
             // On unserialize la valeur si besoin
             if( is_serialized($value) )
@@ -353,8 +363,11 @@ class options {
 
         } else {
 
-            $value = $this->_GetValueByNodeFromArray($node, self::$_options);
-
+            /* On utilise le driver yaml */
+            if( $domain !== null )
+                $value = mp_cache_php( $_option );
+            else
+                $value = $this->_GetValueByNodeFromArray($node, self::$_yaml_config);
         }
 
         // On nettoie la valeur
@@ -385,7 +398,7 @@ class options {
 
         $option = (string) $option;
 
-        // Si table enregistrer on ne peut plus rien inclure
+        // Si table enregistrer on ne peut plus rien inclure (fichier yaml uniquement)
         if( self::$_flag === null ) return false;
 
         // On récupère le noeuds passer en option
@@ -401,9 +414,10 @@ class options {
         // On nettoie la valeur
         $value = sanitize_option($_option, $value);
 
+        if( is_serialized($value) )     return false;
 
         // On récupère la valeur de l'option
-        if( self::$_is_sqlite && $domain != null ){
+        if( self::$_is_sqlite ){
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -420,7 +434,12 @@ class options {
 
         } else {
 
-            $get_value = $this->get($option, null, $domain);
+            /* On utilise le driver yaml */
+
+            if( $domain !== null )
+                $get_value = mp_cache_php( $_option );
+            else
+                $get_value = $this->get($option, null, $domain);
         }
 
 
@@ -431,7 +450,7 @@ class options {
             do_action( 'add_option', $_option, $value );
 
 
-            if( self::$_is_sqlite && $domain != null ){
+            if( self::$_is_sqlite ){
 
                 // On construit la variable qui va recevoir les données
                 $node_value = array( $node_name => $node_value );
@@ -440,15 +459,15 @@ class options {
                 $this->_SetValueByNodeToArray($node, $node_value , $value);
 
                 // On prepare les données pour sqlite
-                $node_name  = self::$_db->esc_sql($node_name);
-                $domain     = self::$_db->esc_sql($domain);
-                $autoload   = self::$_db->esc_sql($autoload);
+                $node_name  = self::$_sqlite->esc_sql($node_name);
+                $domain     = self::$_sqlite->esc_sql($domain);
+                $autoload   = self::$_sqlite->esc_sql($autoload);
                 $node_value = $node_value[$node_name];
 
                 if( is_array($node_value) || is_object($node_value) )
                     $node_value = serialize($node_value);
 
-                $node_value = self::$_db->esc_sql($node_value);
+                $node_value = self::$_sqlite->esc_sql($node_value);
 
                 // On met à jour le cache autoload
                 if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name,self::$_autoload[$domain]) ){
@@ -457,12 +476,20 @@ class options {
                     $autoload = 'yes';
                 }
                 
-                self::$_db->query("INSERT OR REPLACE INTO options(name,value,domain,autoload) VALUES ('$node_name','$node_value','$domain','$autoload')");
+                self::$_sqlite->query("INSERT OR REPLACE INTO options(name,value,domain,autoload) VALUES ('$node_name','$node_value','$domain','$autoload')");
 
             } else {
 
-                $this->_SetValueByNodeToArray($node, self::$_options, $value);
-                self::$_flag = true;
+                /* On utilise le driver yaml */
+                if( $domain !== null ){
+
+                    mp_cache_php( $_option, $value );
+
+                } else {
+
+                    $this->_SetValueByNodeToArray($node, self::$_yaml_config, $value);
+                    self::$_flag = true;
+                }
 
             }
 
@@ -488,17 +515,16 @@ class options {
 
         $option = (string) $option;
 
-        // Si table enregistrer on ne peut plus rien inclure
+        // Si table enregistrer on ne peut plus rien inclure (fichier yaml uniquement)
         if( self::$_flag === null ) return false;
 
         // On récupère le noeuds passer en option
         if( !$node = $this->_node($option, $domain) ) return false;
 
-        // On récupère la valeur existente
-        //$old_value = $this->get($option, null, $domain);
+        if( is_serialized($value) )     return false;
 
         // On récupère la valeur de l'option
-        if( self::$_is_sqlite && $domain != null ){
+        if( self::$_is_sqlite ) {
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -515,7 +541,11 @@ class options {
 
         } else {
 
-            $old_value = $this->get($option, null, $domain);
+            /* On utilise le driver yaml */
+            if( $domain !== null )
+                $old_value = mp_cache_php( implode('_', $node) );
+            else
+                $old_value = $this->get($option, null, $domain);
         }
 
         // On reconstruit l'option
@@ -545,7 +575,7 @@ class options {
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option, $domain );
 
-            if( self::$_is_sqlite && $domain != null ){
+            if( self::$_is_sqlite ){
 
                 // On construit la variable qui va recevoir les données
                 $node_value = array( $node_name => $node_value );
@@ -553,29 +583,37 @@ class options {
                 // On affecte les données
                 $this->_SetValueByNodeToArray($node, $node_value , $value);
 
-                $node_name  = self::$_db->esc_sql($node_name);
-                $domain     = self::$_db->esc_sql($domain);
+                $node_name  = self::$_sqlite->esc_sql($node_name);
+                $domain     = self::$_sqlite->esc_sql($domain);
                 $node_value = $node_value[$node_name];
 
                 if( is_array($node_value) || is_object($node_value) )
                     $node_value = serialize($node_value);
 
-                $node_value = self::$_db->esc_sql($node_value);
+                $node_value = self::$_sqlite->esc_sql($node_value);
 
                 // On met à jour le cache autoload
                 if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name,self::$_autoload[$domain]) )
                     self::$_autoload[$domain][$node_name] = $node_value;
 
-                self::$_db->query("UPDATE options SET value = '$node_value' WHERE name='$node_name' AND domain='$domain'");
+                self::$_sqlite->query("UPDATE options SET value = '$node_value' WHERE name='$node_name' AND domain='$domain'");
 
             } else {
 
-                // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
-                $this->_SetValueByNodeToArray($node, self::$_options, null);
+                /* On utilise le driver yaml */
+                if( $domain !== null ){
 
-                // On met à jour la nouvelle valeur
-                $this->_SetValueByNodeToArray($node, self::$_options, $value);
-                self::$_flag = true;
+                    mp_cache_php( $_option, $value );
+                
+                } else {
+
+                    // On met la valeur à null ( pour éviter que si $node est un tableau , on se retrouve avec l'ancienne valeur plus la nouvelle )
+                    $this->_SetValueByNodeToArray($node, self::$_yaml_config, null);
+
+                    // On met à jour la nouvelle valeur
+                    $this->_SetValueByNodeToArray($node, self::$_yaml_config, $value);
+                    self::$_flag = true;
+                }
             }
 
             // On ajoute des actions
@@ -599,7 +637,7 @@ class options {
 
         $option = (string) $option;
 
-        // Si table enregistrer on ne peut plus rien exclure
+        // Si table enregistrer on ne peut plus rien exclure (fichier yaml uniquement)
         if( self::$_flag === null ) return false;
 
         // On récupère le noeuds passer en option
@@ -611,7 +649,7 @@ class options {
         $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain, $domain );
         if ( null !== $pre ) return $pre;
 
-        if( self::$_is_sqlite && $domain != null ){
+        if( self::$_is_sqlite ){
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -623,19 +661,24 @@ class options {
             } else {
 
                 $node_name = $node[0];
-                $node_name = self::$_db->esc_sql($node_name);
-                $domain    = self::$_db->esc_sql($domain);
+                $node_name = self::$_sqlite->esc_sql($node_name);
+                $domain    = self::$_sqlite->esc_sql($domain);
 
                 // On met à jour le cache autoload
                 if( !empty(self::$_autoload[$domain]) && array_key_exists( $node_name,self::$_autoload[$domain]) )
                     unset(self::$_autoload[$domain][$node_name]);
 
-                $delete = self::$_db->query("DELETE from options where name = '$node_name' AND domain='$domain'");
+                $delete = self::$_sqlite->query("DELETE from options where name = '$node_name' AND domain='$domain'");
             }
         
         } else {
 
-            $delete = $this->update($option, null, $domain);
+            /* On utilise le driver yaml */
+
+            if( $domain !== null )
+                $delete = ( null === mp_cache_php( $_option, null ) ) ? true : false;
+            else
+                $delete = $this->update($option, null, $domain);
         }
 
         // On ajoute des actions
@@ -657,6 +700,11 @@ function delete_transient( $transient ){
     
     $option_timeout = '_transient_timeout_' . $transient;
     $option = '_transient_' . $transient;
+
+    // Cache php optimiser pour transient si sqlite est désactivé
+    if( null === mp_cache_data('is_sqlite_enable') )
+        return null === mp_cache_php($option, null) ? false : true;
+
     $result = delete_option( $option, 'mp_transient' );
 
     if ( $result )
@@ -676,7 +724,10 @@ function get_transient( $transient ) {
     $transient  = (string) $transient;
 
     $transient_option = '_transient_' . $transient;
-    
+
+    // Cache php optimiser pour transient si sqlite est désactivé
+    if( null === mp_cache_data('is_sqlite_enable') )
+        return null === mp_cache_php($transient_option) ? false : mp_cache_php($transient_option);
                                  
     $transient_timeout = '_transient_timeout_' . $transient;
     $timeout = get_option( $transient_timeout, false, 'mp_transient' );
@@ -705,6 +756,16 @@ function set_transient( $transient, $value, $expiration = 0 ) {
 
     $transient_timeout = '_transient_timeout_' . $transient;
     $transient_option = '_transient_' . $transient;
+
+    // Cache php optimiser pour transient si sqlite est désactivé
+    if( null === mp_cache_data('is_sqlite_enable') ){
+
+        if( null === $transient_cache = mp_cache_php($transient_option) )
+            $transient_cache = mp_cache_php($transient_option, $value, $expiration );
+
+        return ( null === $transient_cache ) ? false : true;
+    }
+
     
     if ( null === get_option( $transient_option, null, 'mp_transient' ) ) {
 

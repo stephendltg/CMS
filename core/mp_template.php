@@ -1,7 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Gestion des options du CMS mini POPS
  *
  * @package     cms mini POPS
  * @subpackage  template
@@ -78,7 +77,7 @@ function snippet( $snippet ){
     $snippets = glob( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
 
     if( !empty($snippets) ){
-        $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null, apply_filters('mp_snippets_cache', CACHE) );
+        $__args = yaml_parse_file( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.yml', 0, null );
         mp_cache_data('__args', $__args);
         include( MP_TEMPLATE_DIR . '/snippets/' . $snippet .'.php' );
         mp_cache_data('__args', null); // On décharge les arguments du snippet

@@ -132,7 +132,9 @@ function reschedule_event( $timestamp, $recurrence, $hook, $args = null ) {
     if ( ! is_numeric( $timestamp ) || $timestamp <= 0 )
         return false;
 
+
     $crons     = get_option('crons', array(), 'mp_cron');
+
     $schedules = get_schedules();
     $key       = md5( serialize( $args ) );
     $interval  = 0;
@@ -173,6 +175,7 @@ function unschedule_event( $timestamp, $hook, $args = null ) {
         return false;
 
     $crons = get_option('crons', array(), 'mp_cron');
+
     $key   = md5(serialize($args));
 
     unset( $crons[ '_'. $timestamp][$hook][$key] );
@@ -182,7 +185,7 @@ function unschedule_event( $timestamp, $hook, $args = null ) {
 
     if ( empty($crons[ '_'. $timestamp]) )
         unset( $crons[ '_'. $timestamp] );
-        
+    
     update_option( 'crons', $crons, 'mp_cron' );
 }
 
@@ -216,14 +219,13 @@ function clear_scheduled_event( $hook, $args = null ) {
  */
 function mp_cron() {
 
-    if ( false === $crons = get_option('crons', array(), 'mp_cron') )
+    if ( false === $crons = get_option('crons', array(), 'mp_cron') )  
         return; 
 
     $gmt_time = microtime( true );
     $keys     = array_keys( $crons );
 
-    // On laisse 10 minutes entre chaque action
-    if( $gmt_time < ( get_option('doing_cron', 0, 'mp_cron' ) + 10 * MINUTE_IN_SECONDS ) )
+    if( $gmt_time < ( get_option('doing_cron', 0, 'mp_cron') + 10 * MINUTE_IN_SECONDS ) )
         return;
 
     // On supprime l'option

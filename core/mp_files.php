@@ -1,11 +1,10 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonction helper
  *
  *
  * @package cms mini POPS
- * @subpackage helper - extend function php
+ * @subpackage files
  * @version 1
  */
 
@@ -181,28 +180,29 @@ function mp_cache_file( $key ) {
         return rrmdir(MP_CACHE_DIR . '/*');
 
     /* Valide $key */
-    $key = sanitize_file_name($key);
     if(strlen($key) == 0 )  return;
-
-    $key = base32_encode($key);
+    $key = md5($key);
 
     $func_get_args = func_get_args();
 
     if ( array_key_exists( 1, $func_get_args ) ) {
 
-        if ( null === $func_get_args[1] ){
+        if ( null === $func_get_args[1] && file_exists(MP_CACHE_DIR . '/' . $key) ){
 
             unlink( MP_CACHE_DIR . '/' . $key );
+
+        } elseif( is_serialized($func_get_args[1]) ){
+
             return null;
 
         } else {
 
             $cache = array( 'time' => 0 , 'value' => $func_get_args[1] );
 
-            if( array_key_exists( 2, $func_get_args )  )
+            if( array_key_exists( 2, $func_get_args )  && $func_get_args[2] > 0 )
                 $cache['time'] = time() + (int) $func_get_args[2] * MINUTE_IN_SECONDS;
 
-            if( @file_put_contents( MP_CACHE_DIR .'/'. $key , base32_encode(serialize($cache)), LOCK_EX ) )
+            if( @file_put_contents( MP_CACHE_DIR .'/'. $key , gzdeflate( esc_html( serialize($cache) ) ), LOCK_EX ) )
                 return $func_get_args[1];
         }
     }
@@ -210,7 +210,7 @@ function mp_cache_file( $key ) {
 
     if( file_exists(MP_CACHE_DIR . '/' . $key) ){
 
-        if( ! $cache = unserialize( base32_decode( file_get_content( MP_CACHE_DIR . '/' . $key ) ) ) )
+        if( ! $cache = unserialize( html( gzinflate( file_get_content( MP_CACHE_DIR . '/' . $key ) ) ) ) )
             return;
 
         if( $cache['time'] == 0 || $cache['time'] > time() )
@@ -221,6 +221,69 @@ function mp_cache_file( $key ) {
 
     return;
 
+}
+
+
+/***********************************************/
+/*               Cache PHP                     */
+/***********************************************/
+
+/**
+ * Enregistrer, récupérer ou supprimer une donnée session.
+ * Get:   Mettre juste la clé recherche en parametre
+ * Set:   Mettre un second parametres avec la valeur de la clé
+ * Delete: Mettre la valeur : null en second paramètres pour supprimer la clé
+ *
+ * @param (string) $key clé d'identification. 
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_cache_php( $key ) {
+
+    /* Condition pour purger le cache */
+    if( is_null($key) )
+        return rrmdir( MP_CACHE_DIR . '/*.php' );
+
+    /* Valide $key */
+    if(strlen($key) == 0 )  return;
+    $key = md5($key);
+
+    $func_get_args = func_get_args();
+
+    if ( array_key_exists( 1, $func_get_args ) ) {
+
+        if ( null === $func_get_args[1] && file_exists(MP_CACHE_DIR . '/' . $key .'.php') ){
+            unlink( MP_CACHE_DIR . '/' . $key .'.php' );
+           // return null;
+
+        } elseif( is_serialized($func_get_args[1]) ){
+
+            return null;
+
+        } else {
+
+            // Gestion expiration
+            $time = array_key_exists(2,$func_get_args) && $func_get_args[2]>0 ? 'if(time() < '.(time()+(int) $func_get_args[2]*MINUTE_IN_SECONDS).')' : '';
+
+            // On serialize les données
+            $func_get_args[1] = esc_html( serialize($func_get_args[1]) );
+
+            // On prepare les données à cacher
+            $cache = "<?php defined('ABSPATH') or die('No direct script access.');\n/**\n*\n* @package cms mini POPS\n* @subpackage cache\n* \n*/\n$time mp_cache_data('$key', '$func_get_args[1]');";
+
+            @file_put_contents( MP_CACHE_DIR .'/'. $key .'.php' , $cache, LOCK_EX );
+        }
+    }
+
+    if( file_exists(MP_CACHE_DIR . '/' . $key .'.php') && include_once( MP_CACHE_DIR . '/' . $key .'.php' ) ){
+
+        if( null === mp_cache_data($key) )
+            unlink( MP_CACHE_DIR . '/' . $key .'.php' );
+        else
+            return unserialize( html( mp_cache_data($key) ) );
+    }
+
+    return;
 }
 
 

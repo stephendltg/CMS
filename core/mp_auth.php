@@ -3,7 +3,7 @@
  *
  *
  * @package cms mini POPS
- * @subpackage API REST
+ * @subpackage auth
  * @version 1
  */
 

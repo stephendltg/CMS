@@ -38,4 +38,4 @@
         </item>
         {{/pages}}
     </channel>
-</rss>
+    </rss>

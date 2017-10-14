@@ -1,3 +1,5 @@
+{{#extend}}
+
 # SECURITY:[FILES]
     {{! htaccess protect }}
     <Files .htaccess>
@@ -309,7 +311,9 @@
             Header set Access-Control-Allow-Origin "*"
         </FilesMatch>
     </IfModule>
-    
+
+{{/extend}}
+
     {{#is_rewrite}}
     # MINIPOPS:[Rewrite url]
     <IfModule mod_rewrite.c>

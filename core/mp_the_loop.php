@@ -1,7 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
 
 /**
- * Fonction pages
  *
  *
  * @package cms mini POPS

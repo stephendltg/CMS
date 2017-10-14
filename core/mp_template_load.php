@@ -1,6 +1,6 @@
 <?php defined('ABSPATH') or die('No direct script access.');
+
 /**
- * CHARGEMENT DU CMS mini POPS
  *
  *
  * @package CMS mini POPS
