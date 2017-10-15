@@ -122,11 +122,8 @@ add_filter('the_blog_logo', function($logos){
 
 
 /*********************************************************/
-/*                         filter  Backup                 /
+/*                         fonction  Backup              */
 /*********************************************************/
-
-// Hook d'appel ( back up tous les jours )
-add_action('callback', 'do_backup_website');
 
 /**
  * Sauvegarde repertoire du site
@@ -180,13 +177,17 @@ function do_backup_website() {
 }
 
 
-/*********************************************************/
-/*        Filter pour optimiser chargement html          */
-/*********************************************************/
+/*****************************************************************************/
+/*        Filter pour optimiser chargement html et lancer sauvegarde         */
+/*****************************************************************************/
 
 /* On charge le cache s'il existe, sinon on lance un hook pour créer le cache */
-if( CACHE && !DEBUG ){
+if( !DEBUG ){
 
+    // Hook d'appel ( back up tous les jours )
+    add_action('callback', 'do_backup_website');
+
+    // Cache statique
     if( $_SERVER['REQUEST_METHOD'] == 'GET'
         && empty($_GET)
         && isset($_SERVER['HTTP_USER_AGENT'])
@@ -203,9 +204,20 @@ if( CACHE && !DEBUG ){
         }
 
         // Hook qui va créer le cache
-        add_action('TEMPLATE_REDIRECT', function(){ ob_start('mp_cache_pages'); } );
+        add_action('TEMPLATE_REDIRECT', 'mp_load_mp_cache_pages' );
     }
 
+}
+
+
+/**
+ * Chargement de la fonction de création du cache 
+ * @return
+ */
+function mp_load_mp_cache_pages(){
+
+    if( true === get_option('site.setting.static-cache', false ) )
+        ob_start('mp_cache_pages');
 }
 
 

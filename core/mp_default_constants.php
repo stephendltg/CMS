@@ -38,11 +38,7 @@ function mp_init_constants() {
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
-		define( 'DEBUG', true );
-
-	// Constante de mise en cache
-	if ( !defined('CACHE') )
-		define( 'CACHE', false );
+		define( 'DEBUG', false );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );

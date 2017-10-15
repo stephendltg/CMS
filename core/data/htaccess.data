@@ -325,7 +325,7 @@
         RewriteRule ^{{ContentDir}}/(.*)\.({{bad_exts}})$ error [R=301,L]
         {{/bad_exts}}{{/ContentDir}}
         {{! SECURITY:[FILES-CORE] }}
-        RewriteRule ^core/(.*) error [R=301,L]
+        RewriteRule ^core/(.*)\.(^css) error [R=301,L]
         RewriteCond %{REQUEST_FILENAME} !-f
         RewriteCond %{REQUEST_FILENAME} !-d
         RewriteRule ^(.*) index.php [L]

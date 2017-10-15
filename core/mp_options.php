@@ -92,6 +92,11 @@ function form_option( $option, $domain = null ){
     echo sanitize_allspecialschars($value);
 }
 
+function all_option(){
+    
+    return mp_cache_data('mp_options')->all();
+}
+
 
 
 // Fonction de nettoyage des options
@@ -172,8 +177,9 @@ class options {
     * @access private
     * @var
     */
-    private static $_yaml_config, $_sqlite, $_autoload = array();
-    private static $_flag = false, $_is_sqlite = false;
+    private static $_yaml_config, $_autoload = array();
+    private static $_sqlite = false;
+    private static $_flag = false;
 
     function __construct(){
 
@@ -185,39 +191,59 @@ class options {
         * self::$_sqlite = new sqlite(':memory:');
         */
 
-        // On créer un instance de sqlite
-        self::$_sqlite = new sqlite( MP_SQLITE_DIR. '/mp_options.sqlite3' );
+        if( true === self::$_sqlite = class_exists('SQLite3') ){
+
+            try{
+
+                self::$_sqlite = new sqlite( MP_SQLITE_DIR. '/mp_options.sqlite3' );
+
+                 // On valide l'utilisation de sqlite 
+                mp_cache_data('is_sqlite_enable', true);
+
+                if( fileSize(MP_SQLITE_DIR. '/mp_options.sqlite3') == 0 )
+                    self::$_sqlite->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
+
+                // On charge les tables autoload
+                $_autoload = self::$_sqlite->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
+
+                foreach ($_autoload as $v)
+                    self::$_autoload[$v['domain']][$v['name']] = $v['value'];
+                unset($_autoload); 
 
 
-        // On créer la table si la base est vide et on charge les données autoload
+                /* On surcharge avec le fichier config si présent */
+/***************
+                if( isset( self::$_autoload['site'] ) && file_exists( MP_CONFIG_DIR. '/config.yml' ) ) {
+                    
+                    $yaml_config = yaml_parse_file( MP_CONFIG_DIR. '/config.yml', 0, null );
+                    $yaml_config = !$yaml_config ? array() : $yaml_config;
+
+                    if( isset( $yaml_config['site'] ) ){
+
+                        foreach ($yaml_config['site'] as $k => $v)    $yaml_config['site'][$k] = serialize($v);
+                        self::$_autoload['site'] = array_merge(self::$_autoload['site'], $yaml_config['site']);
+                    }
+
+                    unset($yaml_config);
+                }
+ ****************/               
+
+            } catch (Exception $e){  self::$_sqlite = false;  }   
+
+        }
+
+        /* On utilise le driver yaml */
         if( false === self::$_sqlite ){
 
-            // On valide l'utilisation de sqlite 
-            self::$_is_sqlite = true;
-            mp_cache_data('is_sqlite_enable', true);
-
-            if( fileSize(MP_SQLITE_DIR. '/mp_options.sqlite3') == 0 )
-                self::$_sqlite->query("CREATE TABLE options( name TEXT PRIMARY KEY, value TEXT,domain TEXT, autoload TEXT )");
-
-            // On charge les tables autoload
-            $_autoload = self::$_sqlite->query("SELECT name,value,domain FROM options WHERE autoload='yes'");
-
-            foreach ($_autoload as $v)
-                self::$_autoload[$v['domain']][$v['name']] = $v['value'];
-
-            unset($_autoload); 
-
-        } else {
-
-            /* On utilise le driver yaml */
-        
             // On charge la table option dans la variable static
             $yaml_config = yaml_parse_file( MP_CONFIG_DIR. '/config.yml', 0, null );
             self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
 
             // On ajoute un hook pour la sauvegarde du fichier
             add_action('shutdown', function (){ mp_cache_data('mp_options')->save(); });
+
         }
+
     }
 
     /**
@@ -225,8 +251,6 @@ class options {
     * @access private
     */
     public function save(){
-
-        // _echo( self::$_sqlite->query("SELECT * FROM options") );
 
         if( self::$_flag ){
 
@@ -336,7 +360,7 @@ class options {
         if ( false !== $pre ) return $pre;
 
         // On récupère la variable selon le noeud
-        if( self::$_is_sqlite ){
+        if( false !== self::$_sqlite ){
 
             // On supprime le domaine devant le noeud
             $domain = array_shift($node);
@@ -417,7 +441,7 @@ class options {
         if( is_serialized($value) )     return false;
 
         // On récupère la valeur de l'option
-        if( self::$_is_sqlite ){
+        if( false !== self::$_sqlite ){
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -450,7 +474,7 @@ class options {
             do_action( 'add_option', $_option, $value );
 
 
-            if( self::$_is_sqlite ){
+            if( false !== self::$_sqlite ){
 
                 // On construit la variable qui va recevoir les données
                 $node_value = array( $node_name => $node_value );
@@ -524,7 +548,7 @@ class options {
         if( is_serialized($value) )     return false;
 
         // On récupère la valeur de l'option
-        if( self::$_is_sqlite ) {
+        if( false !== self::$_sqlite ) {
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -575,7 +599,7 @@ class options {
             // On ajoute des actions
             do_action( 'update_option', $old_value, $value, $_option, $domain );
 
-            if( self::$_is_sqlite ){
+            if( false !== self::$_sqlite ){
 
                 // On construit la variable qui va recevoir les données
                 $node_value = array( $node_name => $node_value );
@@ -649,7 +673,7 @@ class options {
         $pre = apply_filters( 'pre_delete_option_' . $_option, null, $_option, $domain, $domain );
         if ( null !== $pre ) return $pre;
 
-        if( self::$_is_sqlite ){
+        if( false !== self::$_sqlite ){
 
             // On met de côté le domain et on le supprime du noeud
             $domain = array_shift($node);
@@ -687,6 +711,23 @@ class options {
 
         return $delete;
     }
+
+
+    /**
+    * retourne toutes les options
+    * @access public
+    * @return array    tableau de toutes les options
+    */
+    public function all(){
+
+        if( false !== self::$_sqlite )
+            return self::$_sqlite->query("SELECT * FROM options");
+        else
+            return self::$_yaml_config;
+
+    }
+
+
 }
 
 

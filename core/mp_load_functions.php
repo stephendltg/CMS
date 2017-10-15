@@ -243,23 +243,23 @@ function cms_not_installed() {
 
     @mkdir( MP_CONTENT_DIR , 0755 , true );
     if ( !is_writable( MP_CONTENT_DIR ) ) 
-        cms_maintenance( 'message=Error directory permissions : '.  MP_CONTENT_DIR .' !' );
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_CONTENT_DIR !');
 
     @mkdir( MP_PAGES_DIR , 0755 , true );
     if ( !is_writable( MP_PAGES_DIR ) ) 
-        cms_maintenance( 'message=Error directory permissions : '. MP_PAGES_DIR .' !' );
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_PAGES_DIR !');
 
     @mkdir( MP_SQLITE_DIR , 0755 , true );
     if ( !is_writable( MP_SQLITE_DIR ) ) 
-        cms_maintenance( 'message=Error directory permissions : '. MP_SQLITE_DIR .' !' );
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_SQLITE_DIR !');
     
     @mkdir( MP_CACHE_DIR , 0755 , true );
     if ( !is_writable( MP_CACHE_DIR ) ) 
-        cms_maintenance( 'message=Error directory permissions : '. MP_CACHE_DIR .' !' );
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_CACHE_DIR !');
 
     @mkdir( MP_CONFIG_DIR , 0755 , true );
     if ( !is_writable( MP_CONFIG_DIR ) ) 
-        cms_maintenance( 'message=Error directory permissions : '. MP_CONFIG_DIR .' !' );
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_CONFIG_DIR !');
 
     @mkdir( MP_THEMES_DIR , 0755 , true );
 }
@@ -586,6 +586,7 @@ function init_the_blog(){
         'home'          => esc_url_raw(MP_HOME),
         'urlrewrite'    => $is_mod_rewrite,
         'urlrewrite-extend'    => false,
+        'static-cache'  => false,
         'timezone'      => 'Europe/London',
         'date_format'   => 'F j, Y',
         'time_format'   => 'g:i a',
@@ -615,10 +616,10 @@ function init_the_blog(){
         'menu'          => null );
 
 
-    add_option('blog', $blog);
-    add_option('setting', $setting);
-    add_option('plugins', $plugins);
-    add_option('customize', $customize);
+    add_option('blog', $blog, null, 'yes');
+    add_option('setting', $setting, null, 'yes');
+    add_option('plugins', $plugins, null, 'yes');
+    add_option('customize', $customize, null, 'yes');
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');
