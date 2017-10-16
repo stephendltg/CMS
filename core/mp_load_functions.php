@@ -327,7 +327,7 @@ function mp_rewrite_rules(){
 
         // Aurguments pour parser template
         $args = array(
-            'extend'                => get_option('setting.urlrewrite-extend', false),
+            'extend'                => get_option('setting.urlrewrite_extend', false),
             'bad_referrers'         => join('|', file_get_content_array( INC . '/data/bad-referrers.data') ),
             'bad_bots'              => join('|', file_get_content_array( INC . '/data/bad-bots.data') ),
             'bad_ips'               => file_get_content_array( INC . '/data/bad-ips.data'),
@@ -585,8 +585,8 @@ function init_the_blog(){
     $setting = array(
         'home'          => esc_url_raw(MP_HOME),
         'urlrewrite'    => $is_mod_rewrite,
-        'urlrewrite-extend'    => false,
-        'static-cache'  => false,
+        'urlrewrite_extend'    => false,
+        'static_cache'  => false,
         'timezone'      => 'Europe/London',
         'date_format'   => 'F j, Y',
         'time_format'   => 'g:i a',
@@ -616,10 +616,10 @@ function init_the_blog(){
         'menu'          => null );
 
 
-    add_option('blog', $blog, null, 'yes');
-    add_option('setting', $setting, null, 'yes');
-    add_option('plugins', $plugins, null, 'yes');
-    add_option('customize', $customize, null, 'yes');
+    add_option('blog', $blog);
+    add_option('setting', $setting);
+    add_option('plugins', $plugins);
+    add_option('customize', $customize);
 
     // Execution de tâche journalière
     do_event( time(), 'daily', 'callback');

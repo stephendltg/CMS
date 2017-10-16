@@ -190,6 +190,7 @@ function mp_cache_file( $key ) {
         if ( null === $func_get_args[1] && file_exists(MP_CACHE_DIR . '/' . $key) ){
 
             unlink( MP_CACHE_DIR . '/' . $key );
+            return;
 
         } elseif( is_serialized($func_get_args[1]) ){
 
@@ -255,6 +256,7 @@ function mp_cache_php( $key ) {
         if ( null === $func_get_args[1] && file_exists(MP_CACHE_DIR . '/' . $key .'.php') ){
             
             unlink( MP_CACHE_DIR . '/' . $key .'.php' );
+            return;
 
         } elseif( is_serialized($func_get_args[1]) ){
 

@@ -216,7 +216,7 @@ if( !DEBUG ){
  */
 function mp_load_mp_cache_pages(){
 
-    if( true === get_option('site.setting.static-cache', false ) )
+    if( true === get_option('setting.static_cache', false ) )
         ob_start('mp_cache_pages');
 }
 

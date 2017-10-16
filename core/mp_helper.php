@@ -254,6 +254,7 @@ function mp_cache_session( $key ) {
         if ( null === $func_get_args[1] ){
 
             unset( $_SESSION['_cache'][$key] );
+            return;
 
         } else {
 

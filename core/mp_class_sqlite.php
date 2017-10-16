@@ -8,6 +8,10 @@
  * @version 1
  */
 
+
+/*
+* https://sqlite.org/inmemorydb.html
+*/
 class sqlite
 {
     
@@ -172,5 +176,141 @@ class sqlite
 
         return $this->sqlite->querySingle($query, $entire_row );
     }
+}
 
+
+/**
+ * Enregistrer, récupérer ou supprimer une donnée sqlite.
+ * Get:   Mettre juste la clé recherche en parametre
+ * Set:   Mettre un second parametres avec la valeur de la clé
+ * Delete: Mettre la valeur : null en second paramètres pour supprimer la clé
+ *
+ * @param (string) $key clé d'identification. 
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_cache_sqlite( $key ) {
+
+    static $sqlite = null;
+    static $autoload = array();
+
+    $sqlite_name = substr( md5( __FILE__ ), 0, 8 ) .'.sqlite3';
+    $table = 'mp_cache';
+
+    // On créer un instance sqlite
+    if( $sqlite === null && true === $sqlite = class_exists('SQLite3') ){
+
+        try{
+
+            $sqlite = new sqlite( MP_SQLITE_DIR. '/mp_' . $sqlite_name );
+
+            if( fileSize( MP_SQLITE_DIR. '/mp_' . $sqlite_name ) == 0 )
+                $sqlite->query("CREATE TABLE '$table'( name TEXT PRIMARY KEY, value TEXT, autoload TEXT )");
+
+            // On charge les tables autoload
+            $_autoload = $sqlite->query("SELECT name,value FROM '$table' WHERE autoload='yes'");
+
+            foreach ($_autoload as $v)
+                $autoload[$v['name']] = $v['value'];
+
+            unset($_autoload);       
+
+        } catch (Exception $e){ 
+
+            $sqlite = false; 
+        }   
+    }
+
+
+    // On utilise le cache php si sqlite desactivé
+    if( false === $sqlite )
+        return mp_cache_php( func_get_args() );
+
+    /* Condition pour purger le cache */
+    if( is_null($key) )
+        return $sqlite->query("SELECT * FROM '$table'");
+
+
+    /* Valide $key */
+    if( strlen($key) == 0 )  return;
+
+    /* On extrait les arguments */
+    $func_get_args = func_get_args();
+
+
+    /* Condition pour purger le cache ou afficher la table */
+    if( is_null($key) ){
+        return $sqlite->query("DROP TABLE '$table'");
+
+        return $sqlite->query("SELECT * FROM '$table'");
+    }
+
+
+    /* update ou insert */
+    if ( array_key_exists( 1, $func_get_args ) ) {
+
+        if ( null === $func_get_args[1] ){
+
+            /* On supprime le cache */
+            $sqlite->query("DELETE from '$table' where name = '$key'");
+
+            /* On met à jour l'autoload */
+            if( isset($autoload[$key]) )    unset($autoload[$key]);
+
+            return;
+
+        } elseif( is_serialized($func_get_args[1]) ){
+
+            return null;
+
+        } else {
+
+            /* On serialize la valeur si besoin */
+            if( is_array($func_get_args[1]) || is_object($func_get_args[1]) )
+                $func_get_args[1] = serialize( $func_get_args[1] );
+
+            /* On nettoie la valeur */
+            $func_get_args[1] = $sqlite->esc_sql($func_get_args[1]);
+
+            /* Arguments pour clé autochargé */
+            if( array_key_exists( 2, $func_get_args )  )
+                $func_get_args[2] = $sqlite->esc_sql( strtolower($func_get_args[2]) );
+            else
+                $func_get_args[2] = 'no';
+
+            /* On stock la valeur */
+            if( null === $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
+
+                /* Insert */
+                $sqlite->query("INSERT OR REPLACE INTO '$table'(name,value,autoload) VALUES ('$key','$func_get_args[1]','$func_get_args[2]')");
+
+                /* On met à jour l'autoload */
+                if( $func_get_args[2] === 'yes' )      $autoload[$key] = $func_get_args[1];
+
+            } else {
+
+                /* Update */
+                $sqlite->query("UPDATE '$table' SET value = '$func_get_args[1]' WHERE name='$key'");
+
+                /* On met à jour l'autoload */
+                if( isset($autoload[$key]) )    $autoload[$key] = $func_get_args[1];
+
+            }
+
+            
+        }
+    }
+
+
+    /* On retourne la valeur */
+    if( isset($autoload[$key]) ){
+
+        return is_serialized($autoload[$key]) ? unserialize($autoload[$key]) : $autoload[$key];
+
+    } elseif( $value = $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
+        
+        return is_serialized($value) ? unserialize($value) : $value;
+    }
+
+    return;
 }
