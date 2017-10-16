@@ -221,10 +221,12 @@ function mp_cache_sqlite( $key ) {
         }   
     }
 
+    /* On extrait les arguments */
+    $func_get_args = func_get_args();
 
     // On utilise le cache php si sqlite desactivé
     if( false === $sqlite )
-        return mp_cache_php( func_get_args() );
+        return call_user_func_array( 'mp_cache_php', $func_get_args );
 
     /* Condition pour purger le cache */
     if( is_null($key) )
@@ -233,10 +235,6 @@ function mp_cache_sqlite( $key ) {
 
     /* Valide $key */
     if( strlen($key) == 0 )  return;
-
-    /* On extrait les arguments */
-    $func_get_args = func_get_args();
-
 
     /* Condition pour purger le cache ou afficher la table */
     if( is_null($key) ){

@@ -178,15 +178,3 @@ require( ABSPATH . INC . '/mp_template.php' );
 
 // Hook mini-Pops  - Core démarré
 do_action( 'loaded' );
-
-if( null === $test = mp_cache_sqlite('test') )
-	$test = mp_cache_sqlite('test', 'manger', 'yes');
-
-//$test = mp_cache_sqlite('test');
-
-//$test = mp_cache_sqlite('test');
-$test = mp_cache_sqlite('test', null);
-
-//_echo($test,1);
-
-//_echo( mp_cache_sqlite(null) );
