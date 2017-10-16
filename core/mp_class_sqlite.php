@@ -263,35 +263,46 @@ function mp_cache_sqlite( $key ) {
 
         } else {
 
-            /* On serialize la valeur si besoin */
-            if( is_array($func_get_args[1]) || is_object($func_get_args[1]) )
-                $func_get_args[1] = serialize( $func_get_args[1] );
+            /* time */
+            $time = false;
 
-            /* On nettoie la valeur */
-            $func_get_args[1] = $sqlite->esc_sql($func_get_args[1]);
+            /* Arguments pour clé autochargé ou expiration*/
+            if( array_key_exists( 2, $func_get_args )  ){
 
-            /* Arguments pour clé autochargé */
-            if( array_key_exists( 2, $func_get_args )  )
-                $func_get_args[2] = $sqlite->esc_sql( strtolower($func_get_args[2]) );
-            else
+                if( is_integer($func_get_args[2]) && $func_get_args[2] ){
+
+                    $time = time() + $func_get_args[2];
+                    $func_get_args[2] = 'yes';
+
+                } else {
+                    
+                    $func_get_args[2] = $sqlite->esc_sql( strtolower($func_get_args[2]) );
+                }
+
+            } else {
+
                 $func_get_args[2] = 'no';
+            }
+
+            /* on prépare la valeur */
+            $value = $sqlite->esc_sql( serialize( array( 'time'=>$time, 'value'=>$func_get_args[1] ) ) );
 
             /* On stock la valeur */
             if( null === $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
 
                 /* Insert */
-                $sqlite->query("INSERT OR REPLACE INTO '$table'(name,value,autoload) VALUES ('$key','$func_get_args[1]','$func_get_args[2]')");
+                $sqlite->query("INSERT OR REPLACE INTO '$table'(name,value,autoload) VALUES ('$key','$value','$func_get_args[2]')");
 
                 /* On met à jour l'autoload */
-                if( $func_get_args[2] === 'yes' )      $autoload[$key] = $func_get_args[1];
+                if( $func_get_args[2] === 'yes' )      $autoload[$key] = $value;
 
             } else {
 
                 /* Update */
-                $sqlite->query("UPDATE '$table' SET value = '$func_get_args[1]' WHERE name='$key'");
+                $sqlite->query("UPDATE '$table' SET value = '$value' WHERE name='$key'");
 
                 /* On met à jour l'autoload */
-                if( isset($autoload[$key]) )    $autoload[$key] = $func_get_args[1];
+                if( isset($autoload[$key]) )    $autoload[$key] = $value;
 
             }
 
@@ -303,11 +314,20 @@ function mp_cache_sqlite( $key ) {
     /* On retourne la valeur */
     if( isset($autoload[$key]) ){
 
-        return is_serialized($autoload[$key]) ? unserialize($autoload[$key]) : $autoload[$key];
+        $cache = unserialize($autoload[$key]);
+
+        if( false !== $cache['time'] && microtime(true) > $cache['time'] ){
+
+            $sqlite->query("DELETE from '$table' where name = '$key'");
+            unset($autoload[$key]);
+
+        } else {
+            return $cache['value'];
+        }
 
     } elseif( $value = $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
         
-        return is_serialized($value) ? unserialize($value) : $value;
+        return unserialize($value)['value'];
     }
 
     return;

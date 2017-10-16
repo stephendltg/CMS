@@ -183,15 +183,19 @@ class options {
 
     function __construct(){
 
+        /* fichier cache php */
+        $cache = MP_CACHE_DIR . '/'.md5(self::CONFIG).'.php';
+
         if( file_exists(self::CONFIG) ){
 
-            if( filemtime(self::CONFIG) > mp_cache_sqlite('_timeout_'. self::CONFIG) ){
+            if( !file_exists( $cache ) || filemtime(self::CONFIG) > filemtime( $cache ) ){
                 
                 $yaml_config = yaml_parse_file( self::CONFIG, 0, null );
                 self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
 
             } else {
-                self::$_yaml_config = mp_cache_sqlite( self::CONFIG );
+
+                self::$_yaml_config = mp_cache_php( self::CONFIG );
             }
         }
 
@@ -213,8 +217,7 @@ class options {
             @chmod( self::CONFIG, 0644 );
 
             /* Creation du cache */
-            mp_cache_sqlite( self::CONFIG, self::$_yaml_config , 'yes' );
-            mp_cache_sqlite( '_timeout_'. self::CONFIG, microtime(true), 'yes' );
+            mp_cache_php( self::CONFIG, self::$_yaml_config );
 
         }
 
