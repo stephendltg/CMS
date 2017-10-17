@@ -258,8 +258,8 @@ function mp_cache_session( $key ) {
 
         } else {
 
-            if( array_key_exists( 2, $func_get_args )  )
-                $_SESSION['_cache'][$key] = serialize( array( 'time'=>time() + (int) $func_get_args[2], 'value' => $func_get_args[1] ) );
+            if( array_key_exists( 2, $func_get_args ) && is_numeric($func_get_args[2]) && $func_get_args[2] > 0 )
+                $_SESSION['_cache'][$key] = serialize( array( 'time'=>time() + $func_get_args[2], 'value' => $func_get_args[1] ) );
             else
                 $_SESSION['_cache'][$key] = esc_html(serialize( array('value' => $func_get_args[1]) ) );
         }

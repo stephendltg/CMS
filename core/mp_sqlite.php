@@ -229,20 +229,18 @@ function mp_cache_sqlite( $key ) {
         return call_user_func_array( 'mp_cache_php', $func_get_args );
 
     /* Condition pour purger le cache */
-    if( is_null($key) )
-        return $sqlite->query("SELECT * FROM '$table'");
+    if( is_null($key) ){
+
+        if( true === $sqlite->query("DROP TABLE '$table'") )
+            return $sqlite->query("CREATE TABLE '$table'( name TEXT PRIMARY KEY, value TEXT, autoload TEXT )");
+        return;
+
+    }
 
 
     /* Valide $key */
-    if( strlen($key) == 0 )  return;
-
-    /* Condition pour purger le cache ou afficher la table */
-    if( is_null($key) ){
-        return $sqlite->query("DROP TABLE '$table'");
-
+    if( strlen($key) == 0 )
         return $sqlite->query("SELECT * FROM '$table'");
-    }
-
 
     /* update ou insert */
     if ( array_key_exists( 1, $func_get_args ) ) {
@@ -265,36 +263,33 @@ function mp_cache_sqlite( $key ) {
 
             /* time */
             $time = false;
+            $autoload_value = 'no';
 
             /* Arguments pour clé autochargé ou expiration*/
-            if( array_key_exists( 2, $func_get_args )  ){
+            if( array_key_exists( 2, $func_get_args ) ){
 
-                if( is_integer($func_get_args[2]) && $func_get_args[2] ){
+                if( is_numeric($func_get_args[2]) ){
 
-                    $time = time() + $func_get_args[2];
-                    $func_get_args[2] = 'yes';
+                    /* expiration */
+                    if( $func_get_args[2] > 0 )
+                        $time = time() + $func_get_args[2];
 
-                } else {
-                    
-                    $func_get_args[2] = $sqlite->esc_sql( strtolower($func_get_args[2]) );
+                    /* autoload */
+                    $autoload_value = 'yes';
                 }
-
-            } else {
-
-                $func_get_args[2] = 'no';
             }
 
             /* on prépare la valeur */
-            $value = $sqlite->esc_sql( serialize( array( 'time'=>$time, 'value'=>$func_get_args[1] ) ) );
+            $value = $sqlite->esc_sql( esc_html(serialize( array( 'time'=>$time, 'value'=>$func_get_args[1] ) ) ) );
 
             /* On stock la valeur */
             if( null === $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
 
                 /* Insert */
-                $sqlite->query("INSERT OR REPLACE INTO '$table'(name,value,autoload) VALUES ('$key','$value','$func_get_args[2]')");
+                $sqlite->query("INSERT OR REPLACE INTO '$table'(name,value,autoload) VALUES ('$key','$value','$autoload_value')");
 
                 /* On met à jour l'autoload */
-                if( $func_get_args[2] === 'yes' )      $autoload[$key] = $value;
+                if( $autoload_value === 'yes' )      $autoload[$key] = $value;
 
             } else {
 
@@ -305,8 +300,6 @@ function mp_cache_sqlite( $key ) {
                 if( isset($autoload[$key]) )    $autoload[$key] = $value;
 
             }
-
-            
         }
     }
 
@@ -314,8 +307,9 @@ function mp_cache_sqlite( $key ) {
     /* On retourne la valeur */
     if( isset($autoload[$key]) ){
 
-        $cache = unserialize($autoload[$key]);
+        $cache = @unserialize( html($autoload[$key]) );
 
+        /* On vérifie que le cache n'a pas expiré */
         if( false !== $cache['time'] && microtime(true) > $cache['time'] ){
 
             $sqlite->query("DELETE from '$table' where name = '$key'");
@@ -325,10 +319,67 @@ function mp_cache_sqlite( $key ) {
             return $cache['value'];
         }
 
-    } elseif( $value = $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
+    } elseif( null !== $value = $sqlite->query_single("SELECT value FROM '$table' WHERE name='$key'", false) ){
         
-        return unserialize($value)['value'];
+        return @unserialize( html($value) )['value'];
     }
 
     return;
 }
+
+
+
+/**
+ * Systeme de cache transient
+ *
+ * @param (string) transient. 
+ * @param (string) fonction d'appel. 
+ * @param (integer) expiration.
+ * @param (array) paramètres à passer à la fonction d'appel.  
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+function mp_transient_data( $transient , $function , $expiration = 60 , $params = array() ){
+
+    $transient  = (string) $transient;
+    $expiration = (int) $expiration;
+
+    $transient = '_transient_' . $transient;
+
+    if( null === $function || !is_callable($function) ){
+        mp_cache_sqlite( $transient, null );
+        return;
+    }
+
+    if ( null === ( $value = mp_cache_sqlite( $transient ) ) )
+        mp_cache_sqlite( $transient, call_user_func_array( $function, $params ) , $expiration );
+
+    return $value; 
+}
+
+
+
+/**
+ * Systeme de fichier transient
+ *
+ * @param (string) fichier. 
+ * @param (string) fonction d'appel. 
+ * @param (integer) expiration.
+ * @param (array) paramètres à passer à la fonction d'appel.  
+ *
+ * @return (mixed) La valeur enrégistrer ou null.
+ */
+/*
+function mp_transient_file( $path, $expiration = 0 ){
+
+    if( !file_exists($path) )   return;
+
+    if( null === mp_cache_file( $path ) )
+        return mp_cache_file( $path, file_get_content($path), $expiration );
+
+    if( filemtime($path) > filemtime( MP_CACHE_DIR.'/'.md5($path) ) )
+        return mp_cache_file( $path, file_get_content($path), $expiration );
+
+    return;
+}
+*/

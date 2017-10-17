@@ -200,8 +200,8 @@ function mp_cache_file( $key ) {
 
             $cache = array( 'time' => 0 , 'value' => $func_get_args[1] );
 
-            if( array_key_exists( 2, $func_get_args )  && $func_get_args[2] > 0 )
-                $cache['time'] = time() + (int) $func_get_args[2];
+            if( array_key_exists( 2, $func_get_args ) && is_numeric($func_get_args[2]) && $func_get_args[2] > 0 )
+                $cache['time'] = time() + $func_get_args[2];
 
             if( @file_put_contents( MP_CACHE_DIR .'/'. $key , gzdeflate( esc_html( serialize($cache) ) ), LOCK_EX ) )
                 return $func_get_args[1];
@@ -223,6 +223,7 @@ function mp_cache_file( $key ) {
     return;
 
 }
+
 
 
 /***********************************************/
@@ -265,7 +266,7 @@ function mp_cache_php( $key ) {
         } else {
 
             // Gestion expiration
-            $time = array_key_exists(2,$func_get_args) && $func_get_args[2]>0 ? 'if(microtime(true) < '.(time()+(int) $func_get_args[2]).')' : '';
+            $time = array_key_exists(2,$func_get_args) && is_numeric($func_get_args[2]) && $func_get_args[2] > 0 ? 'if(microtime(true) < '.(time()+(int) $func_get_args[2]).')' : '';
 
             // On serialize les données
             $func_get_args[1] = esc_html( serialize($func_get_args[1]) );
