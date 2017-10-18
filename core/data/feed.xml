@@ -27,14 +27,14 @@
         {{/logo}}
         {{#pages}}
         <item>
-            <title>{{title.{{.}}}}</title>
-            <link>{{url.{{.}}}}</link>
-            <pubDate>{{date.{{.}}}}</pubDate>
-            {{#author.{{.}}}}
-            <dc:creator><![CDATA[{{author.{{.}}}}]]></dc:creator>
-            {{/author.{{.}}}}
-            <guid isPermaLink="false">{{url.{{.}}}}</guid>
-            <description><![CDATA[{{#thumbnail.{{.}}}}<div><img src="{{thumbnail.{{.}}}}"/></div>{{/thumbnail.{{.}}}}<p>{{excerpt.{{.}}}}</p>]]></description>
+            <title>{{title.pages}}</title>
+            <link>{{url.pages}}</link>
+            <pubDate>{{date.pages}}</pubDate>
+            {{#author.pages}}
+            <dc:creator><![CDATA[{{author.pages}}]]></dc:creator>
+            {{/author.pages}}
+            <guid isPermaLink="false">{{url.pages}}</guid>
+            <description><![CDATA[{{#thumbnail.pages}}<div><img src="{{thumbnail.pages}}"/></div>{{/thumbnail.pages}}<p>{{excerpt.pages}}</p>]]></description>
         </item>
         {{/pages}}
     </channel>

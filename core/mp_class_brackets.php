@@ -197,7 +197,10 @@ class brackets {
                 if( is_array($args[$key]) ){
 
                     foreach ($args[$key] as $k => $v) {
-                        $temp = str_replace( array('{{.}}', '.}}', '.values}}', '.keys}}'), array($v, '.'.$v.'}}', '.'.$v.'}}' , '.'.$k.'}}') , ltrim($match[1]), $count);
+
+                        $_brackets  = array( '/[{]{2}.[}]{2}/' , '/({{)(\w+).(}})/', '/({{)(\w+).'.$key.'(}})/' );
+                        $_values    = array( $v                , '$1$2.'. $k .'$3' , '$1$2.'. $v .'$3'          );
+                        $temp = preg_replace( $_brackets, $_values , ltrim($match[1]), -1, $count);
                         $result .= ($count == 0) ? '' : $temp;
                     }
 

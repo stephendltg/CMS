@@ -380,3 +380,21 @@ function file_put_page( $path, $array ){
 
     return file_put_content($path , $text);
 }
+
+
+
+/**
+* Parse un document xml
+* @param  string    $path     Chemin absolu du fichier
+* @return array
+*/
+function parse_xml( $xml ) {
+
+    $xml = (string) $xml;
+
+    $xml = preg_replace('/(<\/?)(\w+):([^>]*>)/', '$1$2$3', $xml);
+    $xml = @simplexml_load_string($xml, null, LIBXML_NOENT | LIBXML_NOCDATA);
+    $xml = @json_encode($xml);
+    $xml = @json_decode($xml, true);
+    return is_array($xml) ? $xml : false;
+}

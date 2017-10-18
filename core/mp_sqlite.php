@@ -356,30 +356,3 @@ function mp_transient_data( $transient , $function , $expiration = 60 , $params 
 
     return $value; 
 }
-
-
-
-/**
- * Systeme de fichier transient
- *
- * @param (string) fichier. 
- * @param (string) fonction d'appel. 
- * @param (integer) expiration.
- * @param (array) paramètres à passer à la fonction d'appel.  
- *
- * @return (mixed) La valeur enrégistrer ou null.
- */
-/*
-function mp_transient_file( $path, $expiration = 0 ){
-
-    if( !file_exists($path) )   return;
-
-    if( null === mp_cache_file( $path ) )
-        return mp_cache_file( $path, file_get_content($path), $expiration );
-
-    if( filemtime($path) > filemtime( MP_CACHE_DIR.'/'.md5($path) ) )
-        return mp_cache_file( $path, file_get_content($path), $expiration );
-
-    return;
-}
-*/

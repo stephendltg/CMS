@@ -179,23 +179,23 @@ class options {
     */
     private static $_yaml_config = array(), $_autoload = array();
     private static $_flag = false;
-    const CONFIG = MP_CONFIG_DIR. '/config.yml';
+
 
     function __construct(){
 
         /* fichier cache php */
-        $cache = MP_CACHE_DIR . '/'.md5(self::CONFIG).'.php';
+        $cache = MP_CACHE_DIR . '/'.md5(MP_CONFIG_DIR.'/config.yml').'.php';
 
-        if( file_exists(self::CONFIG) ){
+        if( file_exists(MP_CONFIG_DIR.'/config.yml') ){
 
-            if( !file_exists( $cache ) || filemtime(self::CONFIG) > filemtime( $cache ) ){
+            if( !file_exists( $cache ) || filemtime(MP_CONFIG_DIR.'/config.yml') > filemtime( $cache ) ){
                 
-                $yaml_config = yaml_parse_file( self::CONFIG, 0, null );
+                $yaml_config = yaml_parse_file( MP_CONFIG_DIR.'/config.yml', 0, null );
                 self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
 
             } else {
 
-                self::$_yaml_config = mp_cache_php( self::CONFIG );
+                self::$_yaml_config = mp_cache_php( MP_CONFIG_DIR.'/config.yml' );
             }
         }
 
@@ -211,13 +211,13 @@ class options {
 
         if( self::$_flag ){
 
-            if( ! yaml_emit_file( self::CONFIG, self::$_yaml_config ) )
+            if( ! yaml_emit_file( MP_CONFIG_DIR.'/config.yml', self::$_yaml_config ) )
                 _doing_it_wrong( __CLASS__, 'Error saving file configuration: config.yaml!');
 
-            @chmod( self::CONFIG, 0644 );
+            @chmod( MP_CONFIG_DIR.'/config.yml', 0644 );
 
             /* Creation du cache */
-            mp_cache_php( self::CONFIG, self::$_yaml_config );
+            mp_cache_php( MP_CONFIG_DIR.'/config.yml', self::$_yaml_config );
 
         }
 
