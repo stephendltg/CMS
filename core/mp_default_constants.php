@@ -31,6 +31,7 @@ function mp_init_constants() {
 		define( 'FORCE_RELOCATE', false );
 
 	define( 'MP_PAGES_DIR',   MP_CONTENT_DIR . '/pages'   );
+	define( 'MP_THUMBS_DIR',  MP_CONTENT_DIR . '/thumbs'   );
 	define( 'MP_THEMES_DIR',  MP_CONTENT_DIR . '/themes'  );
 	define( 'MP_SQLITE_DIR',  MP_CONTENT_DIR . '/sqlite'  );
 	define( 'MP_CONFIG_DIR',  MP_CONTENT_DIR . '/config'  );
@@ -38,7 +39,7 @@ function mp_init_constants() {
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
-		define( 'DEBUG', false );
+		define( 'DEBUG', true );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );
@@ -82,6 +83,7 @@ function mp_plugin_directory_constants() {
 
     // Definit les constantes pour l'utilisation des plugins répertoire et url des répertoires
 	define( 'MP_PAGES_URL',   MP_CONTENT_URL  . '/pages' );
+	define( 'MP_THUMBS_URL',  MP_CONTENT_URL . '/thumbs'   );
 	define( 'MP_PLUGIN_DIR',  MP_CONTENT_DIR  . '/plugins' );
 	define( 'MP_PLUGIN_URL',  MP_CONTENT_URL  . '/plugins' );
 	define( 'MU_PLUGIN_DIR',  MP_CONTENT_DIR  . '/mu-plugins' );

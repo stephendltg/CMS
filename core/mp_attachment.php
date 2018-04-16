@@ -265,7 +265,7 @@ function get_the_image( $args, $mode = 'scheme' ){
         // On charge l'image recalculée par imagify
         $images = array_map( function($image) use ($imagify_args){ return imagify( $image, $imagify_args); }, $images );
 
-        $images = array_map( function($image){ return esc_url_raw( str_replace(MP_PAGES_DIR,MP_PAGES_URL,$image) ); } , $images );
+        $images = array_map( function($image){ return esc_url_raw( str_replace(ABSPATH,MP_HOME .'/',$image) ); } , $images );
     }
 
     return $args['max'] == 1 ? $images[0] : $images;
@@ -303,7 +303,14 @@ function imagify( $image, $args = null){
     $params = !$args['width'] ? '': ( $args['width'] / ceil($args['grid']) ) . ( !$args['height'] ? '' : 'x'.$args['height'] );
 
     // Nouveau nom d'image 
-    $new_image = str_replace($extension, '@'.$params.$extension, $image);
+    $basename   = basename( realpath($image) );
+    $dirname    = dirname( realpath($image) );
+    $path       = str_replace(MP_PAGES_DIR, MP_THUMBS_DIR, $dirname );
+    if( $dirname === $path )
+        $path   = str_replace(ABSPATH, MP_THUMBS_DIR .'/', dirname( realpath($image) ) );
+    @mkdir( $path, 0755, true); // On créer le répertoire qui va recevoir l'image
+    $new_image  = $path . '/'. str_replace($extension, '@'.$params.$extension, $basename);
+
 
     if( !file_exists($new_image) ){
 

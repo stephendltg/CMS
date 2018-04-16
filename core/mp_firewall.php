@@ -7,7 +7,7 @@
  */
 
 
-function mp_die( $arg = array() ){
+function mp_dies( $arg = array() ){
 
 	$args = parse_args( $args, array( 
         'message'  => 'Service Unavailable !',
@@ -25,6 +25,7 @@ function mp_die( $arg = array() ){
 	// On lance l'action
 	call_user_func_array( $function, $args );
 }
+
 
 
 /***********************************************/
@@ -197,7 +198,7 @@ function mp_block_bad_url_contents() {
 		return;
 	}
 
-	$bad_url_contents = '%%30%30, %00, ../, .ini, 127.0.0.1, AND%201=, AND+1=, AND 1=, base64_decode, base64_encode, etc/passwd, eval(, GLOBALS[, information_schema, input_file, javascript:, REQUEST[, UNION%20ALL%20SELECT, UNION%20SELECT, UNION+ALL+SELECT, UNION+SELECT, UNION ALL SELECT, UNION SELECT, wp-config.php';
+	$bad_url_contents = '%%30%30, %00, ../, .ini, 127.0.0.1, AND%201=, AND+1=, AND 1=, base64_decode, base64_encode, etc/passwd, eval(, GLOBALS[, information_schema, input_file, javascript:, REQUEST[, UNION%20ALL%20SELECT, UNION%20SELECT, UNION+ALL+SELECT, UNION+SELECT, UNION ALL SELECT, UNION SELECT, mp-config.php';
 
 	if ( ! empty( $bad_url_contents ) ) {
 		$bad_url_contents = preg_replace( '/\s*,\s*/', '|', preg_quote( $bad_url_contents, '/' ) );

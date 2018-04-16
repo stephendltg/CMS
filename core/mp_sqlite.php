@@ -23,7 +23,7 @@ class sqlite
     */
     function __construct( $path = ':memory:' ) {
 
-        $this->sqlite = new SQLite3( $path, SQLITE3_OPEN_READWRITE  | SQLITE3_OPEN_CREATE | SQLITE3_OPEN_SHAREDCACHE, MP_SQLITE_ENCRYPT );
+        $this->sqlite = new SQLite3( $path, SQLITE3_OPEN_READWRITE  | SQLITE3_OPEN_CREATE | SQLITE3_OPEN_SHAREDCACHE, MP_SQLITE_ENCRYPT);
     }
 
 

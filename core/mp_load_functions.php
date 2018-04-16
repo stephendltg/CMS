@@ -138,7 +138,7 @@ function map_deep( $value, $callback ) {
 function mp_check_php_versions() {
 
     if ( version_compare( phpversion() , "5.2.0", "<" ) )
-        cms_maintenance( 'message=<p>Server PHP version ' . phpversion() . ' .</p><p>this cms need PHP version 5.2 .</p>' );
+        mp_die( 'message=<p>Server PHP version ' . phpversion() . ' .</p><p>this cms need PHP version 5.2 .</p>' );
 }
 
 
@@ -239,7 +239,7 @@ function cms_not_installed() {
     static $one_shot = false;if($one_shot) return;else $one_shot = true; // FUNCTION SECURE
 
     if ( !is_writable( ABSPATH ) ) 
-        cms_maintenance( 'message=Error directory permissions !' );
+        mp_die( 'message=Error directory permissions !' );
 
     @mkdir( MP_CONTENT_DIR , 0755 , true );
     if ( !is_writable( MP_CONTENT_DIR ) ) 
@@ -248,6 +248,10 @@ function cms_not_installed() {
     @mkdir( MP_PAGES_DIR , 0755 , true );
     if ( !is_writable( MP_PAGES_DIR ) ) 
         _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_PAGES_DIR !');
+
+    @mkdir( MP_THUMBS_DIR , 0755 , true );
+    if ( !is_writable( MP_THUMBS_DIR ) ) 
+        _doing_it_wrong('cms_not_installed', 'message=Error directory permissions : MP_THUMBS_DIR !');
 
     @mkdir( MP_SQLITE_DIR , 0755 , true );
     if ( !is_writable( MP_SQLITE_DIR ) ) 
@@ -359,7 +363,7 @@ function mp_rewrite_rules(){
  * Mise en maintenance de CMS
  *
  */
-function cms_maintenance( $args = array() ) {
+function mp_die( $args = array() ) {
 
     $args = parse_args( $args, array( 
         'message'  => 'Service Unavailable !',
@@ -375,6 +379,7 @@ function cms_maintenance( $args = array() ) {
     $template = @file_get_contents( realpath($args['template']) );
     unset($args['template']);
     @ini_set( 'display_errors', 0 );
+    
     die( mp_brackets( $template, $args)?: $message );
 }
 

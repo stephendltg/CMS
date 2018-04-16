@@ -73,7 +73,7 @@ function get_the_page( $field, $slug = '' ){
     static $page = array();
 
     // Protection de la memoire
-    if( !empty($page) && round( get_cms_memory()*100 / get_limit_memory() ) > 60 )
+    if( !empty($page) && round( intval(get_cms_memory())*100 / intval(get_limit_memory()) ) > 60 )
         $page = array();
 
     $field = (string) $field;

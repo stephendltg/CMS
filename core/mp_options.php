@@ -192,6 +192,7 @@ class options {
                 
                 $yaml_config = yaml_parse_file( MP_CONFIG_DIR.'/config.yml', 0, null );
                 self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
+                self::$_flag = CACHE;
 
             } else {
 
