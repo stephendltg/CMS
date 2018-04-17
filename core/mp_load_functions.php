@@ -332,9 +332,6 @@ function mp_rewrite_rules(){
         // Aurguments pour parser template
         $args = array(
             'extend'                => get_option('setting.urlrewrite_extend', false),
-            'bad_referrers'         => join('|', file_get_content_array( INC . '/data/bad-referrers.data') ),
-            'bad_bots'              => join('|', file_get_content_array( INC . '/data/bad-bots.data') ),
-            'bad_ips'               => file_get_content_array( INC . '/data/bad-ips.data'),
             'ServerHttpHost'        => $_SERVER['HTTP_HOST'],
             'HotlinkingWhitelist'   => file_get_content_array( INC . '/data/hotlinking-whitelist.data'),
             'home'                  => guess_url(),

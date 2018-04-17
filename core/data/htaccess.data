@@ -8,14 +8,21 @@
     </Files>
 
     {{! block listing files }}
-    Options All -Indexes
+    <IfModule mod_autoindex.c>
+        Options -Indexes
+    </IfModule>
     {{! Force index.php the others are blocked }}
-    DirectoryIndex index.php
-    {{! block all files begin by index }}
-    <Files ~ "^(index)\.(p?s?x?htm?|txt|aspx?|cfml?|cgi|pl|php[3-9]|jsp|xml)$">
-        order allow,deny
-        deny from all
-    </Files>
+    <IfModule mod_dir.c>
+        DirectoryIndex index.php index.html index.htm index.cgi index.pl index.xhtml
+    </IfModule>
+
+# SECURITY:[PHP_DISCLOSURE]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{QUERY_STRING} \=PHP[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12} [NC]
+    RewriteRule .* - [F]
+</IfModule>
+
 
 # SECURITY:[SERVEUR]
     {{! Masquer les informations du serveur }}
@@ -32,160 +39,28 @@
         Header unset X-Powered-By
     </IfModule>
 
-# 6G FIREWALL/BLACKLIST
-
-
-    {{! 
-        @ https://perishablepress.com/6g/
-
-        6G:[QUERY STRINGS]
-        Cette partie vérifie que l'URL demandée par le client n'a pas été faite pour profiter de failles sur votre serveur web ou votre code PHP. 
-        Si c'est le cas, il va interdire l'accès à la page grace à (RewriteRule .* - [F]), ou le [F] signifie que l'accès n'est pas autorisé.
-
-    }}
-
-    # 6G:[QUERY STRINGS]
-    <IfModule mod_rewrite.c>
-        RewriteEngine On
-        RewriteCond %{QUERY_STRING} (eval\() [NC,OR]
-        RewriteCond %{QUERY_STRING} (127\.0\.0\.1) [NC,OR]
-        RewriteCond %{QUERY_STRING} ([a-z0-9]{2000}) [NC,OR]
-        RewriteCond %{QUERY_STRING} (javascript:)(.*)(;) [NC,OR]
-        RewriteCond %{QUERY_STRING} (base64_encode)(.*)(\() [NC,OR]
-        RewriteCond %{QUERY_STRING} (GLOBALS|REQUEST)(=|\[|%) [NC,OR]
-        RewriteCond %{QUERY_STRING} (<|%3C)(.*)script(.*)(>|%3) [NC,OR]
-        RewriteCond %{QUERY_STRING} (\\|\.\.\.|\.\./|~|`|<|>|\|) [NC,OR]
-        RewriteCond %{QUERY_STRING} (boot\.ini|etc/passwd|self/environ) [NC,OR]
-        RewriteCond %{QUERY_STRING} (thumbs?(_editor|open)?|tim(thumb)?)\.php [NC,OR]
-        RewriteCond %{QUERY_STRING} (\'|\")(.*)(drop|insert|md5|select|union) [NC]
-        RewriteRule .* - [F]
-    </IfModule>
-
-
-    {{!
-
-        6G: [REQUEST METHOD]
-        Cette partie teste les méthodes HTTP envoyées. 
-        Les navigateurs ne prenant en charge que GET et POST, toutes les autres se retrouvent bloquées avec la même méthode que le bloc précédent.
-
-    }}
-
-    # 6G:[REQUEST METHOD]
-    <IfModule mod_rewrite.c>
-        RewriteCond %{REQUEST_METHOD} ^(connect|debug|delete|move|put|trace|track) [NC]
-        RewriteRule .* - [F]
-    </IfModule>
-
-
-    {{!
-
-        6G:[REFERRERS]
-        Ce bloc est là pour bloquer le trafique provenant de certains referers (c'est-à-dire les referents, les sites d'où proviennent les visiteurs).
-        Si vos êtes soumis a dû référer spam, c'est à cet endroit que vous pourrez lister les adresses de spammeur.
-
-    }}
-
-    {{#bad_referrers}}
-    # 6G:[REFERRERS]
-    <IfModule mod_rewrite.c>
-        RewriteCond %{HTTP_REFERER} ([a-z0-9]{2000}) [NC,OR]
-        RewriteCond %{HTTP_REFERER} ({{bad_referrers}}) [NC]
-        RewriteRule .* - [F]
-    </IfModule>
-    {{/bad_referrers}}
+# SECURITY:[hotlinking]
+{{! Disable hotlinking of images }}
+# RewriteEngine On
+# RewriteCond %{HTTP_REFERER} !^$
+# RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{ServerHttpHost}}[NC]
+{{#HotlinkingWhitelist}}
+# RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{.}}[NC]
+{{/HotlinkingWhitelist}}
+# RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
     
 
-    {{!
+# CHARSET:[Set default charset utf-8]
+AddDefaultCharset UTF-8
 
-        6G:[REQUEST STRINGS]
-        Ce bloc est là pour bloquer les appels les plus fréquents fait pas des Bots essayant de déterminer le type de site que vous possédez.
-
-    }}
-
-    # 6G:[REQUEST STRINGS]
-    <IfModule mod_alias.c>
-        RedirectMatch 403 (?i)([a-z0-9]{2000})
-        RedirectMatch 403 (?i)(https?|ftp|php):/
-        RedirectMatch 403 (?i)(base64_encode)(.*)(\()
-        RedirectMatch 403 (?i)(=\\\'|=\\%27|/\\\'/?)\.
-        RedirectMatch 403 (?i)/(\$(\&)?|\*|\"|\.|,|&|&amp;?)/?$
-        RedirectMatch 403 (?i)(\{0\}|\(/\(|\.\.\.|\+\+\+|\\\"\\\")
-        RedirectMatch 403 (?i)(~|`|<|>|:|;|,|%|\\|\s|\{|\}|\[|\]|\|)
-        RedirectMatch 403 (?i)/(=|\$&|_mm|cgi-|etc/passwd|muieblack)
-        RedirectMatch 403 (?i)(&pws=0|_vti_|\(null\)|\{\$itemURL\}|echo(.*)kae|etc/passwd|eval\(|self/environ)
-        RedirectMatch 403 (?i)\.(aspx?|bash|bak?|cfg|cgi|dll|exe|git|hg|ini|jsp|log|mdb|out|sql|svn|swp|tar|rar|rdf)$
-        RedirectMatch 403 (?i)/(^$|(mp-)?config|mobiquo|phpinfo|shell|sqlpatch|thumb|thumb_editor|thumbopen|timthumb|webshell)\.php
-    </IfModule>
+# TYPE:[Format file]
+AddType audio/ogg  .ogg
+AddType audio/mp3  .mp3
+AddEncoding gzip svgz
+AddType image/svg+xml svg svgz
 
 
-    {{!
-
-        6G:[USER AGENTS]
-        Cette ligne bloque les bots dont le nom est dans la grande liste que vous pouvez voir.
-        Notez la présence de archive.org en tout premier. 
-        J'ai personnellement autorise ce bot, car je trouve que la présence d'une copie de son site sur la waybackmachine n'est pas un mal, au contraire.
-
-    }}
-
-    # 6G:[USER AGENTS]
-    <IfModule mod_setenvif.c>
-        SetEnvIfNoCase User-Agent ([a-z0-9]{2000}) bad_bot
-        {{#bad_bots}}
-        SetEnvIfNoCase User-Agent ({{bad_bots}}) bad_bot
-        {{/bad_bots}}
-        # Apache < 2.3
-        <IfModule !mod_authz_core.c>
-            Order Allow,Deny
-            Allow from All
-            Deny from env=bad_bot
-        </IfModule>
-        # Apache >= 2.3
-        <IfModule mod_authz_core.c>
-            <RequireAll>
-                Require all Granted
-                Require not env bad_bot
-            </RequireAll>
-        </IfModule>
-    </IfModule>
-
-
-    {{!
-
-        6G:[BAD IPS]
-        Enfin, ce bloc actuellement vide vous permet de bloquer des ips spécifiques.
-        Si vous subissez les assauts d'un bot ou une tentative de DDOS depuis une IP, c'est à cet endroit qu'il faudra l'inserer !
-
-    }}
-
-    # 6G:[BAD IPS]
-    <Limit GET HEAD OPTIONS POST PUT>
-        Order Allow,Deny
-        {{#bad_ips}}Deny from {{.}}{{/bad_ips}}
-        Allow from All
-    </Limit>
-
-    # SECURITY:[hotlinking]
-    {{! Disable hotlinking of images }}
-    # RewriteEngine On
-    # RewriteCond %{HTTP_REFERER} !^$
-    # RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{ServerHttpHost}}[NC]
-    {{#HotlinkingWhitelist}}
-    # RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{.}}[NC]
-    {{/HotlinkingWhitelist}}
-    # RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
-    
-
-    # CHARSET:[Set default charset utf-8]
-    AddDefaultCharset UTF-8
-
-    # TYPE:[Format file]
-    AddType audio/ogg  .ogg
-    AddType audio/mp3  .mp3
-    AddEncoding gzip svgz
-    AddType image/svg+xml svg svgz
-
-
-    # CACHE:[Expires headers {{! for better cache control }}]
+# CACHE:[Expires headers {{! for better cache control }}]
     <IfModule mod_expires.c>
         ExpiresActive on
 
@@ -314,22 +189,22 @@
 
 {{/extend}}
 
-    {{#is_rewrite}}
-    # MINIPOPS:[Rewrite url]
-    <IfModule mod_rewrite.c>
-        RewriteEngine on
-        # if you homepage is {{home}}
-        # RewriteBase {{root}}
-        {{#ContentDir}}{{#bad_exts}}
-        {{! SECURITY:[FILES] }}
-        RewriteRule ^{{ContentDir}}/(.*)\.({{bad_exts}})$ error [R=301,L]
-        {{/bad_exts}}{{/ContentDir}}
-        {{! SECURITY:[FILES-CORE] }}
-        RewriteRule ^core/(.*)\.(^css) error [R=301,L]
-        RewriteCond %{REQUEST_FILENAME} !-f
-        RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule ^(.*) index.php [L]
-        # Update code bellow for SEO improvements
-        # Redirect 301 /index {{home}}/
-    </IfModule>
-    {{/is_rewrite}}
+{{#is_rewrite}}
+# MINIPOPS:[Rewrite url]
+<IfModule mod_rewrite.c>
+    RewriteEngine on
+    # if you homepage is {{home}}
+    # RewriteBase {{root}}
+    {{#ContentDir}}{{#bad_exts}}
+    {{! SECURITY:[FILES] }}
+    RewriteRule ^{{ContentDir}}/(.*)\.({{bad_exts}})$ error [R=301,L]
+    {{/bad_exts}}{{/ContentDir}}
+    {{! SECURITY:[FILES-CORE] }}
+    RewriteRule ^core/(.*)\.(^css) error [R=301,L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*) index.php [L]
+    # Update code bellow for SEO improvements
+    # Redirect 301 /index {{home}}/
+</IfModule>
+{{/is_rewrite}}
