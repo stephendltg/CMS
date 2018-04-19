@@ -182,7 +182,7 @@ function mp_debug_mode() {
 
         if ( DEBUG_DISPLAY ){
             @ini_set( 'display_errors', 1 );
-            @ini_set('error_prepend_string','<div style="background-color:#eee;padding:10px">');
+            @ini_set('error_prepend_string','<div class="alert--danger"');
             @ini_set('error_append_string','<br/></div>');
         }
         elseif ( null !== DEBUG_DISPLAY )
@@ -206,10 +206,10 @@ function _echo( $var, $var_dump = 0 ){
 
     if (!DEBUG) return null;
 
-    echo '<pre>';
+    echo '<pre class="alert--inverse"><strong>DEBUG: </strong>';
     if($var_dump) var_dump($var);
     else print_r($var);
-    echo '<pre>';
+    echo '</pre>';
 
 }
 
