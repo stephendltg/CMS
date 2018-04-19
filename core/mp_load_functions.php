@@ -366,10 +366,11 @@ function mp_die( $args = array() ) {
         'message'  => 'Service Unavailable !',
         'subtitle' => 'Minipops',
         'http_response_code' => 503,
+        'style' => sprintf("<link rel='stylesheet' type='text/css' href='%s' media='all'>", INC.'/theme/assets/css/style.css' ),
         'template' => ABSPATH . INC . '/data/maintenance.html') 
     );
     
-    header( 'Content-Type: text/html; charset=utf-8' );
+    header( 'Content-Type: text/html; charset=utf-8;' );
     http_response_code($args['http_response_code']);
  	header( 'Retry-After: 600' );
 

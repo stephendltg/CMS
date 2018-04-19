@@ -1,0 +1,128 @@
+/*  
+  ## Table of Contents
+  
+  1 Global Rules & Definitions
+  1.1 Font Definitions
+  1.2 Reset & Normalization
+  1.3 General Typography
+  1.4 Images & Figures
+  
+  2 Layout Helpers & Reusable Components
+  2.1 Kirbytext
+  2.2 Button
+  2.3 Grid & Layout
+  2.4 Pagination
+  2.5 Projects Showcase
+  
+  3 Site Layout
+  3.1 Header
+  3.2 Menu
+  3.3 Sticky Footer
+  3.4 Main Content
+  
+  4 Template-specific Components
+  4.1 Homepage
+  4.2 Blog Article
+  4.3 Team
+  4.4 Contact
+  
+*/
+
+/* =====  1 Global Rules & Definitions  ===================================== */
+
+/* -----  1.1 Font Definitions  --------------------------------------------- */
+
+
+
+
+/* -----  1.2 Reset & Normalization  ---------------------------------------- */
+
+/* Gestion alignement  vertical */
+.u-row {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.u-row > *{
+  display: table-cell;
+  vertical-align: middle;
+}
+
+
+body{
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  height: 100vh;
+  width: 100vw;
+
+}
+
+
+/* Horizontal scroll */
+.scroll-X {
+    overflow: auto;
+    overflow: -moz-scrollbars-none;
+    -ms-overflow-style: none;
+    scrollbar-base-color:       #aaa;
+    scrollbar-base-color:       #00568c;
+    scrollbar-3dlight-color:    #aaa;
+    scrollbar-highlight-color: #aaa;
+    scrollbar-track-color:      #aaa;
+    scrollbar-arrow-color:      #aaa;
+    scrollbar-shadow-color:     #aaa;
+    scrollbar-dark-shadow-color: #aaa;
+    -webkit-overflow-scrolling: touch;
+}
+  
+.scroll-X::-webkit-scrollbar {
+    display: none;
+}
+  
+.scroll-X > *{
+    white-space: nowrap;
+}
+
+/* Fixer espace entre éléments en ligne ( LF CR )*/
+.fix_white_space{    
+  font-size:0px;
+}
+
+
+/* -----  1.3 General Typography  ------------------------------------------- */
+
+
+.breadcrumb > span::after{
+    content:" →";
+}
+  
+.breadcrumb > span:first-child::after{
+    content:"";
+}
+  
+.breadcrumb > span:last-child::after{
+    content:"";
+}
+
+/* -----  1.4 Images  ---------------------------------------------------- */
+
+.cover{
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  -o-object-fit: cover;
+  object-fit: cover; //scale-down, contain, fill, none
+  overflow: hidden;
+}
+
+
+/* =====  3 site layout  ===================================== */
+
+/* -----  3.1 header  --------------------------------------------- */
+
+.u-light{
+  font-weight: lighter;
+}
+
+
+/* ----- 3.4 Main Content --------------------------------------------- */

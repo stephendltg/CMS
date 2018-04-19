@@ -318,7 +318,7 @@ function imagify( $image, $args = null){
 
             try {
 
-                $img = new abeautifulsite\SimpleImage($image);
+                $img = new claviska\SimpleImage($image);
 
                 // effet mirroir
                 if( $args['flip'] === 'x' )
@@ -368,7 +368,7 @@ function imagify( $image, $args = null){
                 }
 
                 // Save the image
-                $img->save($new_image, intval($args['quality']) );
+                $img->toFile($new_image, null, intval($args['quality']) );
 
             } catch(Exception $e) {
                 _doing_it_wrong(__FUNCTION__, $e->getMessage() );
