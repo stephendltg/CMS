@@ -352,7 +352,7 @@ function mp_transient_data( $transient , $function , $expiration = 60 , $params 
     }
 
     if ( null === ( $value = mp_cache_sqlite( $transient ) ) )
-        mp_cache_sqlite( $transient, call_user_func_array( $function, $params ) , $expiration );
+        $value = mp_cache_sqlite( $transient, call_user_func_array( $function, $params ) , $expiration );
 
     return $value; 
 }

@@ -84,7 +84,8 @@ add_filter('the_page_tag', function($value){
 add_filter('get_the_page_content', function($value, $slug){
 
     if( true === get_option('customize.pages.content.shortcode', false) )
-        $value = mp_pops($value, $slug);
+        $value = do_shortcode($value);
+        //$value = mp_pops($value, $slug);
 
     if( true === get_option('customize.pages.content.markdown', false) )
         $value = parse_markdown( $value);
@@ -130,6 +131,11 @@ add_filter('the_blog_logo', function($logos){
  * @return
  */
 function do_backup_website() {
+
+
+    // Conditionel sur fichier de config
+    if( false === get_option('setting.backup', false ) )    return;
+    
 
     $backup_file     = 'website-' . date( 'd-m-Y-G-i' );  // nom de l'archive de backup 
     $backup_dir      = $_SERVER['DOCUMENT_ROOT'].'/backup-website-' . substr( md5( __FILE__ ), 0, 8 ); // nom du dossier où sera stocké tous les backup 

@@ -590,6 +590,7 @@ function init_the_blog(){
         'urlrewrite'    => $is_mod_rewrite,
         'urlrewrite_extend'    => false,
         'static_cache'  => false,
+        'backup'        => false,
         'timezone'      => 'Europe/London',
         'date_format'   => 'F j, Y',
         'time_format'   => 'g:i a',

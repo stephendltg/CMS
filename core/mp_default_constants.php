@@ -22,7 +22,7 @@ function mp_init_constants() {
 
     // Definit les constantes pour les répertoires de stockage du site
 	if ( !defined('MP_CONTENT_DIR') )
-		define( 'MP_CONTENT_DIR', ABSPATH . 'mp-content' );
+		define( 'MP_CONTENT_DIR', ABSPATH . 'content' );
 
 	if ( !defined('MP_SQLITE_ENCRYPT') )
 		define( 'MP_SQLITE_ENCRYPT', substr( md5( __FILE__ ), 0, 8 ) );
@@ -39,7 +39,7 @@ function mp_init_constants() {
 
     // Definit les constantes debug
 	if ( !defined('DEBUG') )
-		define( 'DEBUG', false );
+		define( 'DEBUG', true );
 
 	if ( !defined('DEBUG_DISPLAY') )
 		define( 'DEBUG_DISPLAY', true );

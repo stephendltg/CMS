@@ -192,7 +192,9 @@ class options {
                 
                 $yaml_config = yaml_parse_file( MP_CONFIG_DIR.'/config.yml', 0, null );
                 self::$_yaml_config = !$yaml_config ? array() : $yaml_config;
-                self::$_flag = CACHE;
+
+                // On créer le cache
+                add_action('shutdown', function (){ mp_cache_data('mp_options')->cache(); });
 
             } else {
 
@@ -202,6 +204,15 @@ class options {
 
         // On ajoute un hook pour la sauvegarde du fichier
         add_action('shutdown', function (){ mp_cache_data('mp_options')->save(); });
+    }
+
+    /**
+    * cache de la table option
+    * @access private
+    */
+    public function cache(){
+
+        mp_cache_php( MP_CONFIG_DIR.'/config.yml', self::$_yaml_config );
     }
 
     /**
@@ -216,9 +227,6 @@ class options {
                 _doing_it_wrong( __CLASS__, 'Error saving file configuration: config.yaml!');
 
             @chmod( MP_CONFIG_DIR.'/config.yml', 0644 );
-
-            /* Creation du cache */
-            mp_cache_php( MP_CONFIG_DIR.'/config.yml', self::$_yaml_config );
 
         }
 

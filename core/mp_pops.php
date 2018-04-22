@@ -3,9 +3,11 @@
  *
  *
  * @package cms mini POPS
- * @subpackage pops
+ * @subpackage shortcode
  * @version 1
  */
+
+
 
 /***********************************************/
 /*   Recherche shortcode dans contenu          */
@@ -48,8 +50,10 @@ function mp_pops( $content , $slug = '' ){
 
                 // On récupère le nom du paramètre
                 $pops_param_name = strtolower( trim( substr( $pops_param , 0 , strpos($pops_param,':') ) ) );
+
                 // On récupère la valeur du paramètre
                 $pops_param_value = trim( substr( $pops_param , strpos($pops_param,':')+1 , size($pops_param) ) );
+
                 // On associe nom et valeur sur la table de paramètre
                 $params[$pops_param_name] = $pops_param_value;
             }
@@ -70,9 +74,318 @@ function mp_pops( $content , $slug = '' ){
 }
 
 
+
+
+
+
+
+/**
+ * On parse les arguments des pops
+ * @param  array      arguments
+ * @param  array      params par défaut
+ * @return array      arguments
+ */
+function pops_parse_args( $args = array() , $params = array() ){
+
+  $args = parse_args( $args, parse_args($params) );
+
+  if( !empty( $args['text'] ) )
+    $args['text'] = sanitize_allspecialschars($args['text']);
+  else
+    $args['text'] = '';
+
+  if( !empty($args['class']) )
+    $args['class'] = ' class="'.sanitize_html_class($args['class']).'"';
+  
+  if ( !empty( $args['slug'] ) )
+    $args['slug']  = trim( $args['slug'] , '/' );
+  else
+    $args['slug']  = isset($GLOBALS['query']) ? $GLOBALS['query'] : '';
+
+  if ( !empty( $args['limit'] ) )
+    $args['limit'] = intval($args['limit']);
+  else
+    $args['limit'] = 10;
+
+  if ( !empty( $args['rel'] ) && is_in ($args['rel'] , array('me','nofollow') ) )
+    $args['rel'] = ' rel="me"';
+  else
+    $args['rel'] = '';
+
+  return $args;
+}
+
+
+
+
+
+
+
+/**
+* Adds a new shortcode.
+*
+* @param string   $tag      Shortcode tag to be searched in post content.
+* @param callable $callback The callback function to run when the shortcode is found.
+*                           Every shortcode callback is passed three parameters by default,
+*                           including an array of attributes (`$atts`), the shortcode content
+*                           or null if not set (`$content`), and finally the shortcode tag
+*                           itself (`$shortcode_tag`), in that order.
+*/
+function add_shortcode( $tag, $callback ) {
+
+    $shortcode_tags = mp_cache_data('shortcode_tags');
+  
+    if ( '' == trim( $tag ) ) {
+        $message = __( 'Invalid shortcode name: Empty name given.' );
+        _doing_it_wrong( __FUNCTION__, $message );
+        return;
+    }
+    
+    if ( 0 !== preg_match( '@[<>&/\[\]\x00-\x20=]@', $tag ) ) {
+        /* translators: 1: shortcode name, 2: space separated list of reserved characters */
+        $message = sprintf( __( 'Invalid shortcode name: %1$s. Do not use spaces or reserved characters: %2$s' ), $tag, '& / < > [ ] =' );
+        _doing_it_wrong( __FUNCTION__, $message );
+        return;
+    }
+
+    $shortcode_tags[ $tag ] = $callback;
+
+    mp_cache_data('shortcode_tags', $shortcode_tags );
+
+  }
+
+
+
+
+
+
+/**
+ * Removes hook for shortcode.
+ */
+function remove_shortcode($tag){
+
+    $shortcode_tags = mp_cache_data('shortcode_tags');
+
+    unset($shortcode_tags[$tags]);
+
+    mp_cache_data('shortcode_tags', $shortcode_tags );
+}
+
+
+
+
+
+/**
+ * Removes all shortcode.
+ */
+function remove_all_shortcode(){
+
+    mp_cache_data('shortcode_tags', null );
+}
+
+
+
+
+
+
+/**
+* On cherche les shortcode dans du contenu
+*
+* @param string $content Contenu ou chercher les shortcodes.
+* @return string Contenu avec le resultat du filtrage des shortcodes.
+*/
+function do_shortcode( $content ) {
+
+    $shortcode_tags = mp_cache_data('shortcode_tags');
+ 
+    if ( false === strpos( $content, '(' ) ) {
+        return $content;
+    }
+    
+    if (empty($shortcode_tags) || !is_array($shortcode_tags))
+        return $content;
+ 
+
+    foreach ( $shortcode_tags as $tag => $callback ) {
+
+        $pattern = '/\([ \t]*'. $tag .'[ \t]*:(.*?)\)/i';
+
+        $content = preg_replace_callback( $pattern , 'do_shortcode_tag' , $content );
+    }
+ 
+    // On rajoute les parenthèses si elles sont utilisé en retour d'un shortcode
+    $content = strtr( $content, array( '&#40;' => '(', '&#41;' => ')' ) );
+ 
+    return $content;
+}
+
+
+
+
+
+/**
+* On construit le shortcode d'un tag avant de l'envoyer à l'execution et on récupère sa sortie
+*
+* @param array $m Regular expression match array
+* @return string|false False on failure
+*/
+function do_shortcode_tag( $array ){
+
+    $shortcode_tags = mp_cache_data('shortcode_tags');
+
+    // On nettoie shortcode trouvé
+    $attrs = trim( rtrim( ltrim( $array[0] , '(' ) , ')' ) );
+
+    // On récupère les paramètres du shortcode
+    $attrs = explode( '|' , $attrs );
+
+    // On construit la table des paramètres du shortcode
+    foreach( $attrs as $key => $attr ){
+
+        // On récupère le nom du paramètre
+        $attr_name = strtolower( trim( substr( $attr , 0 , strpos($attr,':') ) ) );
+
+        // On récupère la valeur du paramètre
+        $attr_value = trim( substr( $attr , strpos($attr,':')+1 , size($attr) ) );
+
+        // On supprime le clé une fois la lecture effectué
+        unset($attrs[$key]);
+
+        // On associe nom et valeur sur la table de paramètre
+        $attrs[$attr_name] = $attr_value;
+    }
+
+    // tag
+    $tag = key($attrs);
+ 
+    if ( ! is_callable( $shortcode_tags[ $tag ] ) ) {
+        /* translators: %s: shortcode tag */
+        $message = sprintf( __( 'Attempting to parse a shortcode without a valid callback: %s' ), $tag );
+        _doing_it_wrong( __FUNCTION__, $message );
+        return $array[0];
+    }
+
+    $output = call_user_func( $shortcode_tags[ $tag ], $attrs, $tag );
+
+    return apply_filters( 'do_shortcode_tag', $output, $tag, $attr );
+}
+
+
+
+
+
+
+/**
+* Combine user attributes with known attributes and fill in defaults when needed.
+*
+* @param array  $pairs     valeures par défaut
+* @param array  $atts      paramètres passer par do_shortcode_tag
+* @param string $shortcode Option
+* @return array Combine et filtre les parametres.
+*
+*/
+function shortcode_atts( $pairs, $attrs, $shortcode = '' ) {
+
+    $attrs = parse_args( $attrs );
+    $pairs = parse_args( $pairs );
+    
+    $out = array();
+
+    foreach ($pairs as $name => $default) {
+
+        if ( array_key_exists($name, $attrs) )
+            $out[$name] = $attrs[$name];
+        else
+            $out[$name] = $default;
+    }
+
+    if ( $shortcode ) {
+        $out = apply_filters( "shortcode_atts_{$shortcode}", $out, $pairs, $attrs, $shortcode );
+    }
+
+    if( !empty( $args['text'] ) )
+    $args['text'] = sanitize_allspecialschars($args['text']);
+  else
+    $args['text'] = '';
+
+  if( !empty($args['class']) )
+    $args['class'] = ' class="'.sanitize_html_class($args['class']).'"';
+  
+  if ( !empty( $args['slug'] ) )
+    $args['slug']  = trim( $args['slug'] , '/' );
+  else
+    $args['slug']  = isset($GLOBALS['query']) ? $GLOBALS['query'] : '';
+
+  if ( !empty( $args['limit'] ) )
+    $args['limit'] = intval($args['limit']);
+  else
+    $args['limit'] = 10;
+
+  if ( !empty( $args['rel'] ) && is_in ($args['rel'] , array('me','nofollow') ) )
+    $args['rel'] = ' rel="me"';
+  else
+    $args['rel'] = '';
+ 
+    return $out;
+}
+
+
+
+
+
 /***********************************************/
-/*                      SHORTCODE              */
+/*        DECLARATION  DES SHORTCODES          */
 /***********************************************/
+
+// twitter
+add_shortcode('twitter', 'twitter');
+
+// Instagram
+add_shortcode('instagram', 'instagram');
+
+
+
+/***********************************************/
+/*              LIST SHORTCODE                 */
+/***********************************************/
+
+
+/**
+ * Shortcode Twitter
+ *
+ * mp_pops( '( twitter :  peusdo twitter |  text: texte | class : classe css | rel : me )' );
+ *
+ * @param  $array     Paramètres du shortcode
+ * @return string     Retourne le contenu parsé par le shortcode
+ */
+function twitter( $param ){
+
+    // paramètres du shortcode
+    extract( shortcode_atts('twitter&class&text&rel',$param) );
+
+    // Sanitize 
+    $text  = sanitize_allspecialschars($text);
+    $class = ' class="'.sanitize_html_class($class).'"';
+    $rel   = is_in($rel, array('me','nofollow') ) ? $rel : '';     
+
+    // On valide le pseudo twitter
+    if( !is_match($twitter, '/@([A-Za-z0-9_]{1,15})/') ) return;
+
+    $twitter  = str_replace( '@' , '' ,  $twitter );
+    $text     = strlen($text) == 0 ? $twitter : $text;
+
+    // Scheme du shortcode
+    $schema = apply_filters('shortcode_twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
+
+    return sprintf( $schema, $twitter, $text, $class, $rel );
+}
+
+
+
+
+
+
+
 
 
 /**
@@ -80,32 +393,15 @@ function mp_pops( $content , $slug = '' ){
  *
  * mp_pops( '( audio :  *.mp3[, *.ogg] |  text : description | class : classe css )', $slug );
  *
- * ou
- *
- * $array = (
- *          'slug'  => nom du repertoire de la page,
- *          'audio' => *.mp3 [.ogg]
- *          'text'  => 'texte',
- *          'class' => css
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_audio( $args ){
 
-    $args = parse_args( $args, array(
-            'class' => 'my_audio',
-            'text'  => null,
-            'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
-            ));
-
-    // On nettoie
-    $slug  = trim( $args['slug'], '/');
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_audio');
 
     // On prépare le fichier audio pour la recherche
-    $audio = sanitize_file_name($args['audio']);
+    $audio  = sanitize_file_name($args['audio']);
     $medias = basename($audio, '.mp3');
 
     if($medias === $audio)
@@ -121,17 +417,16 @@ function pops_audio( $args ){
 
     if( count($medias) == 2 )
         $medias = '<source src="'. $medias[0] .'" type="audio/mp3"><source src="'. $medias[1] .'" type="audio/ogg">';
-    
     else
         $medias = '<source src="'. $medias[0] .'" type="audio/'.substr(strrchr($medias[0],'.'), 1).'">';
 
     // On associe la description
-    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
+    $text  = strlen($args['text']) == 0 ? '' : sprintf( "<figcaption>$s</figcaption>" , $args['text'] );
 
     // Scheme du shortcode
     $schema = apply_filters('pops_audio_schema' ,'<figure%s><audio controls="controls">%s<a href=%s download=%s>$mp3</a></audio>%s</figure>');
 
-    return sprintf( $schema, $class, $medias, $download, basename($download), $text );
+    return sprintf( $schema, $args['class'], $medias, $download, basename($download), $text );
 }
 
 
@@ -140,45 +435,26 @@ function pops_audio( $args ){
  *
  * mp_pops( '( email :  s.deletang@yahoo.com |  text : texte | class : classe css | rel : me )' );
  *
- * ou
- *
- * $array = (
- *          'email' => email,
- *          'text'  => text,
- *          'rel'   => me,
- *          'class' => css
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_email( $args ){
 
-    $args = parse_args( $args, array(
-            'class' => 'my_email',
-            'text'  => null
-            ));
-
-     // On nettoie
-    $slug  = trim( $args['slug'], '/');
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_email');
 
     // On verifie de l'email est valid
     if( !is_email( $args['email'] ) ) return;
-    else $email = $args['email'];
 
     // On associe le texte, class et rel
-    $text   = strlen($text) == 0 ? '@'. sanitize_words(substr( $email , 0 , strpos($email,'@') ) ) : $text;
-    $rel    = !empty($args['rel']) && is_same($args['rel'] , 'me') ? ' rel="'. $args['rel'] .'"' : '';
-
-    $email  = str_replace('@', '[at]', $email);
+    $text   = strlen($args['text']) == 0 ? '@'. sanitize_words(substr( $email , 0 , strpos($email,'@') ) ) : $args['text'];
+    $args['email']  = str_replace('@', '[at]', $args['email']);
 
     // Scheme du shortcode
     $schema_with_rel = apply_filters('pops_email_schema_with_rel','<address%3$s><a href="mailto:?to=%1$s"%4$s>%2$s</a></address>');
     $schema_no_rel   = apply_filters('pops_email_schema_no_rel','<a href="mailto:%1$s"%3$s%4$s>%2$s</a>');
-    $schema          = !empty($rel) ? $schema_with_rel : $schema_no_rel;
+    $schema          = !empty($args['rel']) ? $schema_with_rel : $schema_no_rel;
 
-    return sprintf( $schema, $email, $text, $class, $rel );
+    return sprintf( $schema, $args['email'], $text, $args['class'], $args['rel'] );
 }
 
 
@@ -187,29 +463,12 @@ function pops_email( $args ){
  *
  * mp_pops( '( file :  nom du fichier |  text : texte | class : classe css )', $slug );
  *
- * ou
- *
- * $array = (
- *          'slug'  => nom du repertoire de la page,
- *          'file'  => filename,
- *          'text'  => text,
- *          'class' => css
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_file( $args ){
 
-    $args = parse_args( $args, array(
-            'class' => 'my_file',
-            'text'  => null,
-            'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
-            ));
-
-    // On nettoie
-    $slug  = trim( $args['slug'], '/');
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_file');
 
     // On cherche ...
     $file = get_attached_media(array('file'=>$args['file'],'slug'=>$args['slug'],'type'=>'pdf,zip,ppt,pps,xls,doc,docx,txt'), 'uri');
@@ -217,12 +476,12 @@ function pops_file( $args ){
     if( empty($file) ) return;
 
     // On associe le texte, class et link_file
-    $text  = strlen($text) == 0 ? $args['file'] : $text;
+    $text  = strlen($args['text']) == 0 ? $args['file'] : $args['text'];
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_file_schema', '<a href=%2$s download=%1$s%3$s>%4$s</a>');
 
-    return sprintf( $schema, $args['file'], $file[0], $class, $text );
+    return sprintf( $schema, $args['file'], $file[0], $args['class'], $text );
 }
 
 
@@ -231,45 +490,30 @@ function pops_file( $args ){
  *
  * mp_pops( '( image :  nom du fichier |  alt: texte |text : texte | class : classe css | ratio: 1OO )', $slug );
  *
- * ou
- *
- * $array = (
- *          'slug'  => nom du repertoire de la page,
- *          'image' => filename,
- *          'text'  => text,
- *          'class' => css,
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_image( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_image',
-        'text'  => null,
-        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : '',
-        'size'  => 'large' // Large, medium, small, thumbnail ( voir mp_attachement.php )
-        ));
 
-    // On nettoie
-    $slug  = trim( $args['slug'], '/');
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_image&size=large');
 
     // On récupère l'image
-    $url = get_the_image( array('file'=>$args['image'], 'size'=>$args['size'] , 'slug'=>$slug), 'uri' );
+    $url = get_the_image( array('file'=>$args['image'], 'size'=>$args['size'] , 'slug'=>$args['slug']), 'uri' );
 
     // On verifie si l'image existe
     if( !$url ) return;
 
     // On associe le texte, class
-    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
+    $text  = strlen($args['text']) == 0 ? '' : sprintf("<figcaption>$s</figcaption>" , $args['text'] );
 
     // Scheme du shortcode
-    $schema   = apply_filters('pops_image_schema', '<figure%s><img class="img" src="%s"/>%s</figure>', $args['image'], $slug );
+    $schema   = apply_filters('pops_image_schema', '<figure%s><img class="img" src="%s"/>%s</figure>', $args['image'], $args['slug'] );
 
-    return sprintf( $schema, $class, $url, $text );
+    return sprintf( $schema, $args['class'], $url, $text );
 }
+
+
 
 /**
  * Shortcode Gallery
@@ -278,30 +522,21 @@ function pops_image( $args ){
  */
 function pops_gallery( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_gallery',
-        'text'  => null,
-        'slug'  => isset($GLOBALS['query']) ? $GLOBALS['query'] : ''
-        ));
-
-    // On nettoie
-    $slug  = trim( $args['slug'], '/');
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_gallery');
 
     // On récupère l'image en mode large
-    $images = get_the_image( array('size'=>'large','file'=>$args['gallery'],'slug'=>$slug,'max'=>'auto'), 'uri' );
+    $images = get_the_image( array('size'=>'large','file'=>$args['gallery'],'slug'=>$args['slug'],'max'=>'auto'), 'uri' );
 
     // On verifie si l'image existe
     if( empty($images) ) return;
 
     // On cherche les différents formats
-    $small  = get_the_image( array('size'=>'small','file'=>$args['gallery'],'slug'=>$slug, 'max'=>'auto'), 'uri' );
-    $medium = get_the_image( array('size'=>'medium','file'=>$args['gallery'],'slug'=>$slug, 'max'=>'auto'), 'uri' );
+    $small  = get_the_image( array('size'=>'small','file'=>$args['gallery'],'slug'=>$args['slug'], 'max'=>'auto'), 'uri' );
+    $medium = get_the_image( array('size'=>'medium','file'=>$args['gallery'],'slug'=>$args['slug'], 'max'=>'auto'), 'uri' );
 
 
     // On associe le texte, class
-    $text  = strlen($text) == 0 ? '' : "<figcaption>$text</figcaption>";
+    $text  = strlen($args['text']) == 0 ? '' : sprintf( "<figcaption>$s</figcaption>" , $args['text'] );
 
     // Scheme du shortcode
     $scheme = '<img class="item-%s" srcset="%s 1024w, %s 640w, %s 320w" sizes="(min-width: 36em) 33.3vw, 100vw" src="%s">';
@@ -314,7 +549,7 @@ function pops_gallery( $args ){
     foreach ($images as $key => $image)
         $gallery .= sprintf( $scheme, $key, $image, $medium[$key], $small[$key], $small[$key] );
     
-    return "<figure $class >$gallery $text</figure>";
+    return sprintf( "<figure%1$s>%2$s %3$s</figure>" , $args['class'] , $gallery , $text );
 }
 
 
@@ -323,28 +558,12 @@ function pops_gallery( $args ){
  *
  * mp_pops( '( link :  liens |  title: texte | text : texte | class : classe css | rel: me/nofollow )' );
  *
- * ou
- *
- * $array = (
- *          'link'   => lien,
- *          'title'  => titre du lien,
- *          'text'   => text,
- *          'class'  => css,
- *          'rel'    => me/nofollow
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_link( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_link',
-        'text'  => null
-        ));
-
-     // On nettoie
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_link');
 
     // Si c'est une page ou 'home' on récupère le lien
     if( is_page( strtolower($args['link']) ) )
@@ -359,14 +578,13 @@ function pops_link( $args ){
     }
 
     // On associe le texte, titre, class, rel
-    $title      = !empty($args['title']) ? ' title="'. $args['title'] .'"' : '';
-    $text       = strlen($text) == 0 ? esc_html($link): $text ;
-    $rel        = !empty($args['rel']) && is_in($args['rel'] , array('me','nofollow')) ? ' rel="'. $args['rel'] .'"' : '';
+    $title  = !empty($args['title']) ? ' title="'. $args['title'] .'"' : '';
+    $text   = strlen($args['text']) == 0 ? esc_html($link): $args['text'] ;
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_link_schema', '<a href="%1$s"%2$s%3$s%4$s>%5$s</a>');
 
-    return sprintf( $schema, $link, $title, $class, $rel, $text );
+    return sprintf( $schema, $link, $title, $args['class'], $args['rel'], $text );
 }
 
 
@@ -375,33 +593,20 @@ function pops_link( $args ){
  *
  * mp_pops( '( map :  lieu |  text: texte | zoom : 1-10 | class : classe css | heigh: hauteur | with : largeur )' );
  *
- * ou
- *
- * $array = (
- *          'map'   => lieu,
- *          'text'  => text,
- *          'zoom'  => 1-10,
- *          'class' => css,
- *          'height' => hauteur,
- *          'width' => largeur
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_map( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_map'
-        ));
+    $args = pops_parse_args( $args, 'class=my_map');
 
-     // On nettoie
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+
+    $class = $args['class'];
 
     // On associe lieu, text, zoom, class, height, width
     $map        = str_replace( ' ' , '+' , sanitize_words($args['map']) );
 
-    $text = '<figcaption>'. strlen($text) == 0 ? sanitize_words($args['map']) : $text .'</figcaption>';
+    $text = '<figcaption>'. strlen($args['text']) == 0 ? sanitize_words($args['map']) : $args['text'] .'</figcaption>';
     
     $zoom   = !empty( $args['zoom']) && is_intgr($args['zoom']) && is_between($args['zoom'] , 1 , 10) ? '&zoom='.($args['zoom']+10) : '';
     
@@ -421,37 +626,20 @@ function pops_map( $args ){
  *
  * mp_pops( '( tel :  numero de telephone |  text: texte | class : classe css )' );
  *
- * ou
- *
- * $array = (
- *          'tel'   => numero de tél,
- *          'text'  => text,
- *          'class' => css,
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_tel( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_phone',
-        'text'  => null
-        ));
-
-     // On nettoie
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_phone');
 
     // On valide le numéro de téléphone
     if( !is_match($args['tel'] , '#^0[1-678]([-. ]?[0-9]{2}){4}$#') ) return;
 
-    $tel        = $args['tel'];
-    $text       = strlen($text) == 0 ? $tel : $text;
-
     // Scheme du shortcode
     $schema   = apply_filters('pops_tel_schema', '<a href="tel:%1$s"%3$s>%2$s</a>');
 
-    return sprintf( $schema, $tel, $text, $class );
+    return sprintf( $schema, $args['tel'], $text, $args['class'] );
 }
 
 
@@ -460,39 +648,23 @@ function pops_tel( $args ){
  *
  * mp_pops( '( twitter :  peusdo twitter |  text: texte | class : classe css | rel : me )' );
  *
- * ou
- *
- * $array = (
- *          'twitter'   => numero de tél,
- *          'text'  => text,
- *          'class' => css,
- *          'rel'   => me
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_twitter( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'my_twitter',
-        'text'  => null
-        ));
-
-     // On nettoie
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=my_twitter');
 
     // On valide le pseudo twitter
     if( !is_match($args['twitter'], '/@([A-Za-z0-9_]{1,15})/') ) return;
 
     $twitter  = str_replace( '@' , '' ,  $args['twitter'] );
-    $text     = strlen($text) ? $args['twitter'] : $text;
-    $rel      = !empty($args['rel']) && is_same($args['rel'] , 'me') ? ' rel="'. $args['rel'] .'"' : '';
+    $text     = strlen($args['text']) == 0 ? $args['twitter'] : $args['text'];
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
 
-    return sprintf( $schema, $twitter, $text, $class, $rel );
+    return sprintf( $schema, $twitter, $text, $args['class'], $args['rel'] );
 }
 
 /**
@@ -500,35 +672,59 @@ function pops_twitter( $args ){
  *
  * mp_pops( '( youtube :  url video |  text: texte | class : classe css )' );
  *
- * ou
- *
- * $array = (
- *          'youtube' => url video,
- *          'text'    => text,
- *          'class'   => css,
- *          )
  * @param  $array     Paramètres du shortcode
  * @return string     Retourne le contenu parsé par le shortcode
  */
 function pops_youtube( $args ){
 
-    $args = parse_args( $args, array(
-        'class' => 'youtube',
-        'text'  => null
-        ));
-
-     // On nettoie
-    $text  = sanitize_allspecialschars($args['text']);
-    $class = ' class="'.sanitize_html_class($args['class']).'"';
+    $args = pops_parse_args( $args, 'class=youtube');
 
     // On vérifie si url valid
     if( !is_url($args['youtube']) ) return;
 
-    $youtube     = str_replace ( 'watch?v=' , '' , basename($args['youtube']) );
-    $text        = strlen($text) ? '' : '<figcaption>'. $text .'</figcaption>';
+    $youtube = str_replace ( 'watch?v=' , '' , basename($args['youtube']) );
+    $text = strlen($args['text']) == 0 ? '' : '<figcaption>'. $args['text'] .'</figcaption>';
 
     // Scheme du shortcode
     $schema   = apply_filters('pops_youtube_schema', '<figure%3$s><iframe src="//youtube.com/embed/%1$s" width=560 height=315 frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>%2$s</figure>');
 
-    return sprintf( $schema, $youtube, $text, $class );
+    return sprintf( $schema, $youtube, $text, $args['class'] );
+}
+
+
+/**
+ * Pop instagram
+ * username ou tag: @username ou tag instagram 
+ *
+ * https://github.com/scottsweb/wp-instagram-widget
+ *
+ * mp_pops( '( instagram :  instagram  |  text: texte | class : classe css | limit = 10 )' );
+ *
+ * @param  $array     Paramètres du shortcode
+ * @return string     Retourne le contenu parsé par le shortcode
+ */
+function pops_instagram( $args){
+
+  $args = pops_parse_args( $args, 'class=instagram');
+
+  $args['text']  = strlen( $args['text'] ) == 0 ? $args['instagram'] : $text;
+ 
+  // On valide le tag ou pseudo instagram
+  if( !is_match($args['instagram'], '/[@|#]([A-Za-z0-9_]{1,30})/') ) return;
+ 
+  // On verifie si tag ou username
+  switch ( substr( $args['instagram'], 0, 1 ) ) {
+ 
+    case '#':
+      $url = 'https://instagram.com/explore/tags/' . str_replace( '#', '', $args['instagram'] );
+      break;
+    default:
+      $url = 'https://instagram.com/' . str_replace( '@', '', $args['instagram'] );
+      break;
+  }
+
+  // Scheme du shortcode
+  $schema   = apply_filters('pops_instagram_schema', '<a href="%1$s"%3$s%4$s>%2$s</a>');
+
+  return sprintf( $schema, $url, $args['text'], $args['class'], $args['rel'] );
 }

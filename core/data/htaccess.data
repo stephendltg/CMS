@@ -48,10 +48,13 @@
 # RewriteCond %{HTTP_REFERER} !^http(s)?://(www\.)?{{.}}[NC]
 {{/HotlinkingWhitelist}}
 # RewriteRule \.(jpg|jpeg|png|gif)$ http://fakeimg.pl/400x200/?text=:-)_Oups_! [NC,R,L]
-    
+
+{{/extend}}
 
 # CHARSET:[Set default charset utf-8]
 AddDefaultCharset UTF-8
+
+{{#extend}}
 
 # TYPE:[Format file]
 AddType audio/ogg  .ogg
@@ -207,4 +210,6 @@ AddType image/svg+xml svg svgz
     # Update code bellow for SEO improvements
     # Redirect 301 /index {{home}}/
 </IfModule>
+
+php_flag short_open_tag on
 {{/is_rewrite}}

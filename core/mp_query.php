@@ -29,12 +29,10 @@ function get_current_url( $mode = 'base' ){
         case 'raw' :
             return $url;
         case 'uri' :
-            $home = guess_url();
             $url  = explode( '?', $url, 2 );
             $url  = reset( $url );
-            $url  = str_replace( $home, '', $url );
+            $url  = str_replace( guess_url(), '', $url );
             return trim( str_replace('index.php', '', $url ) , '/');
-            //return trim( $url, '/' );
         default :
             $url  = explode( '?', $url, 2 );
             return reset( $url );
@@ -42,11 +40,17 @@ function get_current_url( $mode = 'base' ){
 
 }
 
+
 /**
  * Récupere les args passer à l'url courante
  * @return array retourne les arguments
  */
-function get_query_vars(){
+function get_query_vars( $strict = false ){
+
+
+    if( $strict != false && strlen(get_current_url('uri')) != 0 )
+        return false;
+
 
     $args = parse_url( get_current_url('raw'), PHP_URL_QUERY);
 
@@ -234,7 +238,7 @@ function is_tag(){
 
     global $query;
 
-    $args = get_query_vars();
+    $args = get_query_vars( true );
 
     if( !isset($query) || !$args)
         return false;
