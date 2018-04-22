@@ -9,118 +9,6 @@
 
 
 
-/***********************************************/
-/*   Recherche shortcode dans contenu          */
-/***********************************************/
-
-
-/**
- * On recherche les shortcodes dans le contenu
- * @param  $content   Contentu ou recherché les pops
- * @param  $slug      nom du repertoire de la page type blog ou blog/post ( identique au résultat de  get_url_queries )
- * @return strin      Retourne le contenu
- */
-function mp_pops( $content , $slug = '' ){
-
-    $content   = (string) $content;
-    $slug      = (string) $slug;
-
-    // Liste shortcode
-    $pops = array('link','email','tel','image','gallery','file','twitter','youtube','audio', 'map');
-    //$pops = apply_filters('pops_shortcode' , $pops );
-    $pops = array_merge( apply_filters( 'pops_shortcode', array() ), $pops );
-
-    // On boucle sur la recherche des shortcode et on affecte à la fonction associé si elle existe en lui passant les paramètres du shortcode
-    foreach ( $pops as $name ) {
-
-        // Callback du shortcode trouvé ( fonction anonyme )
-        $shortcode_replace_callback = function( $array ) use ( $slug , $name ) {
-
-            // On nettoie shortcode trouvé
-            $pops_params = trim(rtrim(ltrim($array[0] , '(') , ')'));
-
-            // On récupère les paramètres du shortcode
-            $pops_params = explode( '|' , $pops_params );
-
-            // On créer les paramètres indispensable à passer au shortcode
-            $params['slug'] = $slug;
-
-            // On construit la table des paramètres du shortcode
-            foreach( $pops_params as $pops_param ){
-
-                // On récupère le nom du paramètre
-                $pops_param_name = strtolower( trim( substr( $pops_param , 0 , strpos($pops_param,':') ) ) );
-
-                // On récupère la valeur du paramètre
-                $pops_param_value = trim( substr( $pops_param , strpos($pops_param,':')+1 , size($pops_param) ) );
-
-                // On associe nom et valeur sur la table de paramètre
-                $params[$pops_param_name] = $pops_param_value;
-            }
-
-            // On lance le shortcode
-            $func = "pops_$name";
-            return $func( $params );
-
-        };
-
-        // Recherche des shortcodes si et seulement si la fonction du shortcode existe
-        if( function_exists("pops_$name") )
-            $content = preg_replace_callback( '/\([ \t]*'. $name .'[ \t]*:(.*?)\)/i' , $shortcode_replace_callback  , $content );
-
-    }
-
-    return $content;
-}
-
-
-
-
-
-
-
-/**
- * On parse les arguments des pops
- * @param  array      arguments
- * @param  array      params par défaut
- * @return array      arguments
- */
-function pops_parse_args( $args = array() , $params = array() ){
-
-  $args = parse_args( $args, parse_args($params) );
-
-  if( !empty( $args['text'] ) )
-    $args['text'] = sanitize_allspecialschars($args['text']);
-  else
-    $args['text'] = '';
-
-  if( !empty($args['class']) )
-    $args['class'] = ' class="'.sanitize_html_class($args['class']).'"';
-  
-  if ( !empty( $args['slug'] ) )
-    $args['slug']  = trim( $args['slug'] , '/' );
-  else
-    $args['slug']  = isset($GLOBALS['query']) ? $GLOBALS['query'] : '';
-
-  if ( !empty( $args['limit'] ) )
-    $args['limit'] = intval($args['limit']);
-  else
-    $args['limit'] = 10;
-
-  if ( !empty( $args['rel'] ) && is_in ($args['rel'] , array('me','nofollow') ) )
-    $args['rel'] = ' rel="me"';
-  else
-    $args['rel'] = '';
-
-  return $args;
-}
-
-
-
-
-
-
-
 /**
 * Adds a new shortcode.
 *
@@ -151,8 +39,7 @@ function add_shortcode( $tag, $callback ) {
     $shortcode_tags[ $tag ] = $callback;
 
     mp_cache_data('shortcode_tags', $shortcode_tags );
-
-  }
+}
 
 
 
@@ -258,12 +145,14 @@ function do_shortcode_tag( $array ){
     // tag
     $tag = key($attrs);
  
+
     if ( ! is_callable( $shortcode_tags[ $tag ] ) ) {
         /* translators: %s: shortcode tag */
         $message = sprintf( __( 'Attempting to parse a shortcode without a valid callback: %s' ), $tag );
         _doing_it_wrong( __FUNCTION__, $message );
         return $array[0];
     }
+
 
     $output = call_user_func( $shortcode_tags[ $tag ], $attrs, $tag );
 
@@ -302,29 +191,6 @@ function shortcode_atts( $pairs, $attrs, $shortcode = '' ) {
     if ( $shortcode ) {
         $out = apply_filters( "shortcode_atts_{$shortcode}", $out, $pairs, $attrs, $shortcode );
     }
-
-    if( !empty( $args['text'] ) )
-    $args['text'] = sanitize_allspecialschars($args['text']);
-  else
-    $args['text'] = '';
-
-  if( !empty($args['class']) )
-    $args['class'] = ' class="'.sanitize_html_class($args['class']).'"';
-  
-  if ( !empty( $args['slug'] ) )
-    $args['slug']  = trim( $args['slug'] , '/' );
-  else
-    $args['slug']  = isset($GLOBALS['query']) ? $GLOBALS['query'] : '';
-
-  if ( !empty( $args['limit'] ) )
-    $args['limit'] = intval($args['limit']);
-  else
-    $args['limit'] = 10;
-
-  if ( !empty( $args['rel'] ) && is_in ($args['rel'] , array('me','nofollow') ) )
-    $args['rel'] = ' rel="me"';
-  else
-    $args['rel'] = '';
  
     return $out;
 }
@@ -351,7 +217,7 @@ add_shortcode('instagram', 'instagram');
 
 
 /**
- * Shortcode Twitter
+ * Twitter
  *
  * mp_pops( '( twitter :  peusdo twitter |  text: texte | class : classe css | rel : me )' );
  *
@@ -375,13 +241,57 @@ function twitter( $param ){
     $text     = strlen($text) == 0 ? $twitter : $text;
 
     // Scheme du shortcode
-    $schema = apply_filters('shortcode_twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
+    $schema = apply_filters('twitter_schema', '<a href="https://twitter.com/%1$s"%3$s%4$s>%2$s</a>');
 
     return sprintf( $schema, $twitter, $text, $class, $rel );
 }
 
 
 
+
+
+/**
+ * instagram
+ * username ou tag: @username ou tag instagram 
+ *
+ * https://github.com/scottsweb/wp-instagram-widget
+ *
+ * mp_pops( '( instagram :  instagram  |  text: texte | class : classe css | limit = 10 )' );
+ *
+ * @param  $array     Paramètres du shortcode
+ * @return string     Retourne le contenu parsé par le shortcode
+ */
+function pops_instagram( $args){
+
+    // paramètres du shortcode
+    extract( shortcode_atts('instagram&class&text&rel',$param) );
+
+    // Sanitize 
+    $text  = sanitize_allspecialschars($text);
+    $class = ' class="'.sanitize_html_class($class).'"';
+    $rel   = is_in($rel, array('me','nofollow') ) ? $rel : '';  
+ 
+    // On valide le tag ou pseudo instagram
+    if( !is_match($instagram, '/[@|#]([A-Za-z0-9_]{1,30})/') ) return;
+
+    $text  = strlen( $text ) == 0 ? $instagram : $text;
+ 
+    // On verifie si tag ou username
+    switch ( substr( $instagram, 0, 1 ) ) {
+     
+        case '#':
+          $url = 'https://instagram.com/explore/tags/' . str_replace( '#', '', $instagram );
+          break;
+        default:
+          $url = 'https://instagram.com/' . str_replace( '@', '', $instagram );
+          break;
+    }
+
+    // Scheme du shortcode
+    $schema   = apply_filters('instagram_schema', '<a href="%1$s"%3$s%4$s>%2$s</a>');
+
+    return sprintf( $schema, $url, $text, $class, $rel );
+}
 
 
 

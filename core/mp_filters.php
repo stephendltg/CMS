@@ -85,7 +85,6 @@ add_filter('get_the_page_content', function($value, $slug){
 
     if( true === get_option('customize.pages.content.shortcode', false) )
         $value = do_shortcode($value);
-        //$value = mp_pops($value, $slug);
 
     if( true === get_option('customize.pages.content.markdown', false) )
         $value = parse_markdown( $value);
