@@ -122,7 +122,10 @@ function get_attached_media( $args = array(), $mode = 'path' ) {
         $slug  = strlen($args['slug']) == 0 ? '/': '/'. trim($args['slug'],'/') .'/';
 
         /* On formate les types */
-        $types = explode(',', rtrim($types,',') );
+        if( strlen($types) == 0 )
+            $types = $extension;
+        else    
+            $types = explode(',', rtrim($types,',') );
 
         /* On test tous les fichiers */
         foreach ($files as $file) {
@@ -348,7 +351,7 @@ function imagify( $image, $args = null){
                 }
 
                 elseif( $args['width'] && !$args['height'] )
-                    $img->fit_to_width($args['width']);
+                    $img->fitToWidth($args['width']);
 
                 elseif( $args['width'] && $args['height'] ){
 
