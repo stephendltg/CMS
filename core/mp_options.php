@@ -197,9 +197,9 @@ class options {
                 add_action('shutdown', function (){ mp_cache_data('mp_options')->cache(); });
 
             } else {
-
                 self::$_yaml_config = mp_cache_php( MP_CONFIG_DIR.'/config.yml' );
             }
+
         }
 
         // On ajoute un hook pour la sauvegarde du fichier

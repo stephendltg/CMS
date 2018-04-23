@@ -116,15 +116,23 @@ function get_the_page( $field, $slug = '' ){
         do_action('do_after_get_the_page', array($field, $slug) );
     }
 
+
+    // Current page
+    mp_cache_data('current_page', $slug );
+
+
+    // output
     if( !empty($page[$slug][$field]) ){
 
         if( $field === 'slug' || $field === 'url' )
             return $page[$slug][$field];
         else
             return apply_filters('get_the_page_'.$field, sanitize_page($field,$page[$slug][$field],$slug), $slug);
-    }
-    else
+    
+    } else {
+
         return apply_filters( 'default_page_'. $field, '', $field, $slug );
+    }
 
 }
 

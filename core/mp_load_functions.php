@@ -591,6 +591,7 @@ function init_the_blog(){
         'urlrewrite_extend'    => false,
         'static_cache'  => false,
         'backup'        => false,
+        'default_shortcode' => true,
         'timezone'      => 'Europe/London',
         'date_format'   => 'F j, Y',
         'time_format'   => 'g:i a',

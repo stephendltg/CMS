@@ -121,7 +121,12 @@ require( ABSPATH . INC . '/mp_query.php' );
 require( ABSPATH . INC . '/mp_pages.php' );
 require( ABSPATH . INC . '/mp_the_loop.php' );
 require( ABSPATH . INC . '/mp_attachment.php' );
-require( ABSPATH . INC . '/mp_pops.php' );
+require( ABSPATH . INC . '/mp_shortcode.php' );
+
+// On charge les shortcode par défaut si activé
+if( true === get_option('setting.default_shortcode', false) )
+	include_once( ABSPATH . INC . '/mp_add_shortcode.php' );
+
 require( ABSPATH . INC . '/vendors/parsedown.php' );
 require( ABSPATH . INC . '/vendors/SimpleImage.php' );
 // On charge les fonctions gérant la date

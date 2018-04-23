@@ -6,33 +6,6 @@
  * @subpackage Rhythmicon
  * @version 1
  */
-
-//_echo ( pops_map('map=rue du calvaire 44000 nantes') );
-
-
-add_shortcode('test', 'lekleklee');
-add_shortcode('manger', 'lekleklee');
-
-//remove_all_shortcode();
-
-$content = "
-j'aim bien mager (test: la soupe)
-oui mais bon (test: manger | class: test) mlmslms smls mqsqs ( manger: dsdsdsd) mlml
-(audio: lire.mp3)
-:mlmsldmlsdml
-";
-
-$content = "
-j'aim bien mager (testss: la soupe)
-oui mais bon  mlmslms smls mqsqs  mlml
-(twitter: @stephen | class: test )
-:mlmsldmlsdml
-";
-
-$test = do_shortcode( $content );
-_echo($test);
-
-
 ?>
 
 <?php snippet('header'); ?>
@@ -84,7 +57,6 @@ _echo($test);
     </table>
 
     <?php snippet('footer'); ?>
-
 
 <?php mp_footer(); ?>
 </body>
