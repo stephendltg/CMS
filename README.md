@@ -4,6 +4,11 @@ MiniPops est un moteur pour CMS sans base de donnée SQL.
 Le moteur repose sur les fichiers yaml ( un format de représentation de données ).
 
 
+AUTHOR
+======
+
+stephen deletang
+
 
 SYSTEME REQUIS
 --------------
